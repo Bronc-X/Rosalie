@@ -14,9 +14,9 @@ import {
 } from '@/lib/timing-game.mjs';
 
 const JUDGE_COPY = {
-  perfect: '正中红心，算两次。',
-  good: '拉到了，勉强算。',
-  miss: '空气被拉了一下。',
+  perfect: '完美。',
+  good: '命中。',
+  miss: '未命中。',
 } as const;
 
 export function TimingGame() {
@@ -48,16 +48,16 @@ export function TimingGame() {
   }
 
   const resultCopy = game.status === 'won'
-    ? `卡点成功，距离连续撤回 ${game.score} 格。`
+    ? `卡点成功：${game.score} 格。`
     : game.status === 'lost'
-      ? `本轮只撤回 ${game.score} 格，系统建议不要乱按。`
-      : '看准中间的心，再戳下面的小东西。';
+      ? `本轮：${game.score} 格。`
+      : '游标进入心区时点击。';
 
   return (
     <section className={`timing-game timing-${game.status}`} aria-labelledby="timing-game-title">
       <div className="lab-game-heading">
         <p>TAP TIMING · SEVEN TRIES</p>
-        <h2 id="timing-game-title">卡点拉近</h2>
+        <h2 id="timing-game-title">卡点</h2>
         <span>游标进入心区时戳控制器，正中一次算两格。</span>
       </div>
 
@@ -93,4 +93,3 @@ export function TimingGame() {
     </section>
   );
 }
-

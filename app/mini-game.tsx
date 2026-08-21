@@ -146,17 +146,17 @@ export function MiniGame() {
   }
 
   const resultCopy = game.status === 'won'
-    ? `拉扯有效，距离被非法缩短了 ${game.score} 次。`
+    ? `本轮抓到 ${game.score} 朵。`
     : game.hearts === 0
-      ? '工作混进来了。证据不足，再拉一次。'
-      : `只抓到 ${game.score} 朵，距离拒绝配合。`;
+      ? '工作混进来了，再试一次。'
+      : `本轮抓到 ${game.score} 朵。`;
 
   return (
     <section className={`mini-game game-${game.status} ${game.streak >= 3 ? 'has-game-streak' : ''}`} aria-labelledby="mini-game-title">
       <div className="game-heading">
         <p className="game-kicker">PULL TEST · 18 SEC</p>
-        <h2 id="mini-game-title">等她的时候，先抓紧拉扯</h2>
-        <p>接樱花，别接活。道理很简单。</p>
+        <h2 id="mini-game-title">接住樱花</h2>
+        <p>接樱花，躲开工作。</p>
       </div>
 
       <div
@@ -220,7 +220,7 @@ export function MiniGame() {
         ) : (
           <div className="game-curtain">
             {game.status === 'idle' ? (
-              <p>十八秒，不耽误正事。</p>
+              <p>限时十八秒。</p>
             ) : (
               <p className="game-result" aria-live="polite">{resultCopy}</p>
             )}

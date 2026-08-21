@@ -19,10 +19,8 @@
 .unlock-keyhole { position: absolute; left: 50%; top: -33px; width: 118px; height: 112px; transform: translateX(-50%); }
 .unlock-keyhole span { position: absolute; left: 50%; bottom: 7px; width: 49px; height: 57px; border: 1px solid rgb(198 116 146 / 34%); border-radius: 50% 50% 45% 45% / 43% 43% 57% 57%; background: linear-gradient(180deg, rgb(255 255 255 / 65%), rgb(243 205 219 / 57%)); box-shadow: inset 0 12px 24px rgb(116 75 91 / 8%); transform: translateX(-50%); }
 .unlock-keyhole img { position: absolute; z-index: 2; left: 30px; top: 16px; width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(0 12px 14px rgb(104 69 56 / 21%)); transform: rotate(-9deg); animation: unlock-key 3s ease-in-out infinite; }
-.unlock-kicker { margin: 0 0 12px; color: #bd8998; font-family: var(--font-display), serif; font-size: 9px; font-weight: 600; letter-spacing: .26em; }
 .unlock-card h1 { margin: 0; font-family: var(--font-chinese), serif; font-size: clamp(31px, 9vw, 43px); font-weight: 400; letter-spacing: .13em; }
-.unlock-copy { margin: 11px 0 30px; color: var(--unlock-muted); font-size: 11px; letter-spacing: .13em; }
-.unlock-card form { display: grid; gap: 12px; }
+.unlock-card form { margin-top: 30px; display: grid; gap: 12px; }
 .unlock-card label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .unlock-input-wrap { position: relative; }
 .unlock-input-wrap input { width: 100%; height: 62px; padding: 0 21px; border: 1px solid rgb(197 125 151 / 26%); border-radius: 22px; outline: 0; background: rgb(255 255 255 / 52%); color: #684b54; font-family: var(--font-display), serif; font-size: 24px; letter-spacing: .32em; text-align: center; box-shadow: inset 0 1px rgb(255 255 255 / 88%); transition: border-color .2s ease, box-shadow .2s ease; }
@@ -41,4 +39,3 @@
 @keyframes unlock-shake { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-7px); } 62% { transform: translateX(6px); } }
 @media (max-width: 440px) { .unlock-card { padding: 74px 22px 27px; border-radius: 36px 36px 55px 55px; } }
 @media (prefers-reduced-motion: reduce) { .unlock-card, .unlock-keyhole img { animation: none; } }
-

@@ -66,21 +66,21 @@ export function ArrowGame() {
   }
 
   const copy = game.status === 'won'
-    ? '三箭进洞，系统怀疑你蓄谋已久。'
+    ? '完成。'
     : game.status === 'lost'
-      ? '箭有自己的想法，戳一下重新谈判。'
+      ? '未通过，点击重试。'
       : flight?.judge === 'hit'
-        ? '这箭知道该去哪。'
+        ? '命中。'
         : flight
-          ? '洞在装没看见。'
-          : '等虚线对准小洞，戳屏幕。';
+          ? '未命中。'
+          : '虚线对准小洞时点击。';
 
   return (
     <section className={`arrow-game arrow-${game.status} ${flight ? `arrow-flight-${flight.judge}` : ''}`} aria-labelledby="arrow-game-title">
       <div className="lab-game-heading">
         <p>ONE TAP · TINY HOLE</p>
         <h2 id="arrow-game-title">箭有箭的去处</h2>
-        <span>方向会自己晃，你只负责在刚好的时候戳一下。</span>
+        <span>虚线对准小洞时点击。</span>
       </div>
 
       <div
@@ -137,4 +137,3 @@ export function ArrowGame() {
     </section>
   );
 }
-

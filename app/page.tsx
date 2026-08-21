@@ -215,7 +215,7 @@ export default function Home() {
         <p className="whisper">从来都是负距离，这次离得太遥远</p>
       </header>
 
-      <section className="meeting-scene" aria-label="Toni 和 Rosalie 正在随着倒计时逐渐靠近">
+      <section className="meeting-scene" aria-label="Toni 和 Rosalie 的十日倒计时">
         <div className="glow-arc" aria-hidden="true" />
         <div className="closing-thread" aria-hidden="true">
           <span className="thread-traveller traveller-toni" />
@@ -225,7 +225,7 @@ export default function Home() {
         <span className="center-pull-ring" aria-hidden="true" />
         <p className="closing-whisper" aria-hidden="true">
           <i className="pull-arrow pull-arrow-left">→</i>
-          <span>抓紧拉扯</span>
+          <span>倒计时中</span>
           <i className="pull-arrow pull-arrow-right">←</i>
         </p>
         <div className="orbit-dot orbit-dot-one" aria-hidden="true" />
@@ -309,7 +309,7 @@ export default function Home() {
         </div>
       </section>
 
-      <Link className="game-entry" href="/play" aria-label="进入拉扯实验室，玩三个等待小游戏">
+      <Link className="game-entry" href="/play" aria-label="进入小游戏页面">
         <span className="game-entry-charm" aria-hidden="true">
           <img src="/soft-pull-cursor.png" alt="" />
         </span>

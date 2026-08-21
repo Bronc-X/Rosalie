@@ -12,9 +12,9 @@ import { TimingGame } from './timing-game';
 type GameId = 'catch' | 'route' | 'timing' | 'arrow';
 
 const GAMES: Array<{ id: GameId; index: string; label: string; note: string }> = [
-  { id: 'catch', index: '01', label: '抓紧拉扯', note: '接花，躲活' },
-  { id: 'route', index: '02', label: '一笔撤回', note: '画线，绕活' },
-  { id: 'timing', index: '03', label: '卡点拉近', note: '卡点，别急' },
+  { id: 'catch', index: '01', label: '接住樱花', note: '接花，躲活' },
+  { id: 'route', index: '02', label: '一笔通关', note: '画线，绕活' },
+  { id: 'timing', index: '03', label: '卡点', note: '看准再按' },
   { id: 'arrow', index: '04', label: '箭有去处', note: '放箭，进洞' },
 ];
 
@@ -31,8 +31,8 @@ export function GameLab() {
         <Link className="lab-back" href="/">← 回倒计时</Link>
         <div>
           <p>TONI × ROSALIE · WAITING ROOM</p>
-          <h1>拉扯实验室</h1>
-          <span>这里的输赢，不进入人事档案。</span>
+          <h1>小游戏</h1>
+          <span>四个小游戏。</span>
         </div>
         <div className="lab-header-side">
           <Link className="lab-treehole-link" href="/treehole">去树洞 ↗</Link>

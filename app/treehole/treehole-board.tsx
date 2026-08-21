@@ -32,7 +32,7 @@ export function TreeholeBoard() {
   const [draft, setDraft] = useState('');
   const [loadState, setLoadState] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
-  const [feedback, setFeedback] = useState('不会留下名字，只留下这句话。');
+  const [feedback, setFeedback] = useState('匿名留言。');
 
   async function loadMessages() {
     setLoadState('loading');
@@ -62,7 +62,7 @@ export function TreeholeBoard() {
     event.preventDefault();
     if (!draft.trim() || sendState === 'sending') return;
     setSendState('sending');
-    setFeedback('树洞正在吞字。');
+    setFeedback('正在发送。');
 
     try {
       const response = await fetch('/api/treehole', {
@@ -75,10 +75,10 @@ export function TreeholeBoard() {
       setMessages((current) => [data.message as Message, ...current]);
       setDraft('');
       setSendState('sent');
-      setFeedback('已掉进树洞，撤回键不存在。');
-    } catch (error) {
+      setFeedback('已留言。');
+    } catch {
       setSendState('error');
-      setFeedback(error instanceof Error && error.message.length < 40 ? error.message : '树洞刚才打了个盹，再投一次。');
+      setFeedback('发送失败，请重试。');
     }
   }
 
@@ -107,7 +107,7 @@ export function TreeholeBoard() {
             <textarea
               value={draft}
               maxLength={TREEHOLE_MAX_LENGTH}
-              placeholder="比如：今天也没有正确使用距离。"
+              placeholder="写点什么。"
               onChange={(event) => {
                 setDraft(event.target.value);
                 if (sendState !== 'idle') setSendState('idle');
@@ -131,19 +131,19 @@ export function TreeholeBoard() {
           <p>INSIDE THE TREE</p>
           <h2 id="treehole-messages-title">最近掉进去的</h2>
           <button type="button" onClick={() => void loadMessages()} disabled={loadState === 'loading'}>
-            {loadState === 'loading' ? '在听' : '再听一下'}
+            {loadState === 'loading' ? '加载中' : '刷新'}
           </button>
         </div>
 
         {loadState === 'error' ? (
           <div className="treehole-empty" role="status">
             <span>…</span>
-            <p>树洞暂时把耳朵关了。</p>
+            <p>加载失败。</p>
           </div>
         ) : loadState === 'loading' && messages.length === 0 ? (
-          <div className="treehole-empty" role="status"><span>○</span><p>正在听里面的回声。</p></div>
+          <div className="treehole-empty" role="status"><span>○</span><p>加载中。</p></div>
         ) : messages.length === 0 ? (
-          <div className="treehole-empty" role="status"><span>○</span><p>里面还很空，第一句话没有先例可循。</p></div>
+          <div className="treehole-empty" role="status"><span>○</span><p>暂无留言。</p></div>
         ) : (
           <ol className="message-list">
             {messages.map((message, index) => (
