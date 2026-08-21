@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
+import Link from 'next/link';
 
 import { COUNTDOWN_START, getCountdownState, splitDuration } from '@/lib/countdown.mjs';
 import { getDropChoice } from '@/lib/drag-choice.mjs';
 import { INITIAL_INVITATION, respondToInvitation } from '@/lib/invitation.mjs';
 import { pickTapParticle } from '@/lib/tap-particle.mjs';
-import { MiniGame } from './mini-game';
 import { WechatShare } from './wechat-share';
 
 type TapParticle = {
@@ -65,7 +65,7 @@ export default function Home() {
 
   function plantTapParticle(event: ReactPointerEvent<HTMLElement>) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    if ((event.target as HTMLElement).closest('.invitation, .mobile-charm-stage, .mini-game')) return;
+    if ((event.target as HTMLElement).closest('.invitation, .mobile-charm-stage, .game-entry')) return;
 
     const id = nextTapParticleId.current++;
     setTapParticles((current) => [
@@ -309,7 +309,17 @@ export default function Home() {
         </div>
       </section>
 
-      <MiniGame />
+      <Link className="game-entry" href="/play" aria-label="进入拉扯实验室，玩三个等待小游戏">
+        <span className="game-entry-charm" aria-hidden="true">
+          <img src="/soft-pull-cursor.png" alt="" />
+        </span>
+        <span className="game-entry-copy">
+          <small>WAITING ROOM · 3 GAMES</small>
+          <strong>进去玩点没用的</strong>
+          <em>首页不负责这些。</em>
+        </span>
+        <i aria-hidden="true">↗</i>
+      </Link>
 
       <section
         className={`invitation no-step-${Math.min(invitation.noCount, 4)}`}
