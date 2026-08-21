@@ -1,0 +1,44 @@
+.unlock-page {
+  --unlock-ink: #674d55;
+  --unlock-muted: #aa828d;
+  min-height: 100svh;
+  padding: max(30px, env(safe-area-inset-top)) 18px max(30px, env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 38%, rgb(255 255 255 / 92%) 0 18%, transparent 65%),
+    linear-gradient(180deg, rgb(248 245 255 / 65%), rgb(255 245 244 / 72%) 58%, rgb(255 231 213 / 68%)),
+    url("/aurora-rainbow-bg.jpg") center / cover;
+  color: var(--unlock-ink);
+}
+
+.unlock-aurora { position: fixed; width: 42vw; aspect-ratio: 1; left: 50%; top: 50%; border-radius: 50%; background: #f1aeca; opacity: .15; filter: blur(90px); transform: translate(-50%, -50%); pointer-events: none; }
+.unlock-card { position: relative; width: min(410px, 100%); padding: 78px 34px 30px; overflow: hidden; border: 1px solid rgb(210 142 167 / 28%); border-radius: 46px 46px 70px 70px; background: linear-gradient(155deg, rgb(255 255 255 / 70%), rgb(255 241 247 / 55%)); text-align: center; box-shadow: 0 35px 90px rgb(125 79 98 / 14%), inset 0 1px rgb(255 255 255 / 90%); animation: unlock-arrive .8s cubic-bezier(.2, .8, .2, 1) both; }
+.unlock-card::after { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .25; background-image: radial-gradient(circle, #e58baa 0 1px, transparent 1.3px); background-size: 22px 22px; }
+.unlock-keyhole { position: absolute; left: 50%; top: -33px; width: 118px; height: 112px; transform: translateX(-50%); }
+.unlock-keyhole span { position: absolute; left: 50%; bottom: 7px; width: 49px; height: 57px; border: 1px solid rgb(198 116 146 / 34%); border-radius: 50% 50% 45% 45% / 43% 43% 57% 57%; background: linear-gradient(180deg, rgb(255 255 255 / 65%), rgb(243 205 219 / 57%)); box-shadow: inset 0 12px 24px rgb(116 75 91 / 8%); transform: translateX(-50%); }
+.unlock-keyhole img { position: absolute; z-index: 2; left: 30px; top: 16px; width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(0 12px 14px rgb(104 69 56 / 21%)); transform: rotate(-9deg); animation: unlock-key 3s ease-in-out infinite; }
+.unlock-kicker { margin: 0 0 12px; color: #bd8998; font-family: var(--font-display), serif; font-size: 9px; font-weight: 600; letter-spacing: .26em; }
+.unlock-card h1 { margin: 0; font-family: var(--font-chinese), serif; font-size: clamp(31px, 9vw, 43px); font-weight: 400; letter-spacing: .13em; }
+.unlock-copy { margin: 11px 0 30px; color: var(--unlock-muted); font-size: 11px; letter-spacing: .13em; }
+.unlock-card form { display: grid; gap: 12px; }
+.unlock-card label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.unlock-input-wrap { position: relative; }
+.unlock-input-wrap input { width: 100%; height: 62px; padding: 0 21px; border: 1px solid rgb(197 125 151 / 26%); border-radius: 22px; outline: 0; background: rgb(255 255 255 / 52%); color: #684b54; font-family: var(--font-display), serif; font-size: 24px; letter-spacing: .32em; text-align: center; box-shadow: inset 0 1px rgb(255 255 255 / 88%); transition: border-color .2s ease, box-shadow .2s ease; }
+.unlock-input-wrap input:focus { border-color: rgb(205 102 142 / 58%); box-shadow: 0 0 0 5px rgb(223 123 160 / 10%), inset 0 1px rgb(255 255 255 / 90%); }
+.unlock-input-wrap i { position: absolute; left: 50%; top: 50%; color: rgb(193 122 147 / 23%); font-family: serif; font-size: 15px; font-style: normal; letter-spacing: .3em; transform: translate(-50%, -50%); pointer-events: none; }
+.unlock-input-wrap input:not(:placeholder-shown) + i { opacity: 0; }
+.unlock-card button { min-height: 58px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; border: 0; border-radius: 21px 21px 30px 30px; background: linear-gradient(135deg, #c98692, #de7699); color: #fffaf8; box-shadow: 0 16px 30px rgb(173 90 121 / 20%), inset 0 1px rgb(255 255 255 / 24%); letter-spacing: .14em; transition: transform .2s ease, opacity .2s ease; }
+.unlock-card button:not(:disabled):active { transform: scale(.975); }
+.unlock-card button:disabled { opacity: .48; }
+.unlock-card button b { font-family: var(--font-display), serif; font-size: 18px; }
+.unlock-feedback { min-height: 1.5em; margin: 17px 0 0; color: #ad8791; font-size: 10px; letter-spacing: .1em; }
+.unlock-error { animation: unlock-shake .42s ease both; }
+.unlock-error .unlock-feedback { color: #c96183; }
+@keyframes unlock-arrive { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes unlock-key { 0%, 100% { opacity: .62; transform: rotate(-12deg) translateY(2px); } 50% { opacity: 1; transform: rotate(-5deg) translateY(-5px); } }
+@keyframes unlock-shake { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-7px); } 62% { transform: translateX(6px); } }
+@media (max-width: 440px) { .unlock-card { padding: 74px 22px 27px; border-radius: 36px 36px 55px 55px; } }
+@media (prefers-reduced-motion: reduce) { .unlock-card, .unlock-keyhole img { animation: none; } }
+

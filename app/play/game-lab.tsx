@@ -5,15 +5,17 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 import { MiniGame } from '../mini-game';
+import { ArrowGame } from './arrow-game';
 import { RouteGame } from './route-game';
 import { TimingGame } from './timing-game';
 
-type GameId = 'catch' | 'route' | 'timing';
+type GameId = 'catch' | 'route' | 'timing' | 'arrow';
 
 const GAMES: Array<{ id: GameId; index: string; label: string; note: string }> = [
   { id: 'catch', index: '01', label: '抓紧拉扯', note: '接花，躲活' },
   { id: 'route', index: '02', label: '一笔撤回', note: '画线，绕活' },
   { id: 'timing', index: '03', label: '卡点拉近', note: '卡点，别急' },
+  { id: 'arrow', index: '04', label: '箭有去处', note: '放箭，进洞' },
 ];
 
 export function GameLab() {
@@ -32,7 +34,10 @@ export function GameLab() {
           <h1>拉扯实验室</h1>
           <span>这里的输赢，不进入人事档案。</span>
         </div>
-        <img src="/soft-pull-cursor.png" alt="" width={86} height={86} aria-hidden="true" />
+        <div className="lab-header-side">
+          <Link className="lab-treehole-link" href="/treehole">去树洞 ↗</Link>
+          <img src="/soft-pull-cursor.png" alt="" width={86} height={86} aria-hidden="true" />
+        </div>
       </header>
 
       <nav className="game-switcher" aria-label="选择小游戏">
@@ -56,6 +61,7 @@ export function GameLab() {
         {activeGame === 'catch' ? <MiniGame /> : null}
         {activeGame === 'route' ? <RouteGame /> : null}
         {activeGame === 'timing' ? <TimingGame /> : null}
+        {activeGame === 'arrow' ? <ArrowGame /> : null}
       </div>
 
       <footer className="lab-footer">

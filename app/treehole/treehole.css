@@ -1,0 +1,74 @@
+.treehole-page {
+  --tree-ink: #624b52;
+  --tree-muted: #a77f89;
+  min-height: 100svh;
+  overflow: hidden;
+  padding: max(24px, env(safe-area-inset-top)) 18px max(36px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(ellipse at 50% 15%, rgb(255 255 255 / 88%) 0 18%, transparent 61%),
+    linear-gradient(180deg, rgb(246 244 255 / 60%), rgb(255 246 247 / 70%) 46%, rgb(255 229 211 / 64%)),
+    url("/aurora-rainbow-bg.jpg") center / cover fixed;
+  color: var(--tree-ink);
+}
+.treehole-glow { position: fixed; z-index: 0; left: 50%; top: 33%; width: 50vw; aspect-ratio: 1; border-radius: 50%; background: #e7a8bd; opacity: .13; filter: blur(100px); transform: translate(-50%, -50%); pointer-events: none; }
+.treehole-header { position: relative; z-index: 2; width: min(880px, 100%); margin: 0 auto 30px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
+.treehole-header > a { color: #9f7782; font-size: 10px; letter-spacing: .12em; text-decoration: none; }
+.treehole-header > a:last-child { justify-self: end; }
+.treehole-header > a:hover { color: #d06b8d; }
+.treehole-header > div { text-align: center; }
+.treehole-header p, .treehole-form-wrap > p, .treehole-list-heading > p { margin: 0 0 8px; color: #bd8998; font-family: var(--font-display), serif; font-size: 9px; font-weight: 600; letter-spacing: .28em; }
+.treehole-header h1 { margin: 0; font-family: var(--font-chinese), serif; font-size: clamp(31px, 6vw, 47px); font-weight: 400; letter-spacing: .13em; }
+.treehole-header span { display: block; margin-top: 7px; color: #ae8791; font-size: 10px; letter-spacing: .13em; }
+.treehole-compose { position: relative; z-index: 2; width: min(760px, 100%); margin: 0 auto; padding: clamp(22px, 5vw, 42px); display: grid; grid-template-columns: minmax(190px, .78fr) 1.22fr; align-items: center; gap: clamp(22px, 5vw, 54px); border: 1px solid rgb(211 146 169 / 27%); border-radius: 43px 43px 68px 68px; background: linear-gradient(150deg, rgb(255 255 255 / 66%), rgb(255 241 247 / 49%)); box-shadow: 0 32px 80px rgb(129 81 99 / 12%), inset 0 1px rgb(255 255 255 / 88%); }
+.tree-rings { position: relative; width: min(260px, 100%); aspect-ratio: 1; margin: auto; display: grid; place-items: center; border-radius: 48% 52% 46% 54% / 51% 45% 55% 49%; background: radial-gradient(circle, rgb(255 255 255 / 74%) 0 16%, rgb(244 205 216 / 42%) 17% 32%, rgb(255 249 247 / 68%) 33% 48%, rgb(231 181 198 / 33%) 49% 66%, rgb(255 246 241 / 56%) 67%); box-shadow: inset 0 0 0 1px rgb(190 121 147 / 15%), 0 22px 50px rgb(130 83 98 / 10%); transform: rotate(-5deg); }
+.tree-rings > i { position: absolute; inset: 10%; border: 1px solid rgb(186 119 143 / 16%); border-radius: 45% 55% 49% 51% / 56% 44% 56% 44%; }
+.tree-rings > i:nth-child(2) { inset: 22%; transform: rotate(21deg); }
+.tree-rings > i:nth-child(3) { inset: 34%; transform: rotate(-14deg); }
+.tree-rings > i:nth-child(4) { inset: 44%; border-color: rgb(99 65 78 / 28%); background: rgb(103 69 80 / 10%); }
+.tree-rings img { position: absolute; z-index: 3; right: -7%; bottom: 5%; width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(0 13px 15px rgb(105 72 59 / 20%)); animation: tree-charm-listen 3.4s ease-in-out infinite; }
+.treehole-form-wrap h2, .treehole-list-heading h2 { margin: 0; font-family: var(--font-chinese), serif; font-size: clamp(22px, 5vw, 30px); font-weight: 400; letter-spacing: .11em; }
+.treehole-form-wrap form { margin-top: 20px; }
+.treehole-form-wrap textarea { width: 100%; min-height: 130px; resize: vertical; padding: 17px 18px; border: 1px solid rgb(201 134 157 / 25%); border-radius: 21px 21px 30px 30px; outline: 0; background: rgb(255 255 255 / 53%); color: #674c54; font-size: 14px; line-height: 1.8; letter-spacing: .06em; box-shadow: inset 0 1px rgb(255 255 255 / 90%); transition: border-color .2s ease, box-shadow .2s ease; }
+.treehole-form-wrap textarea:focus { border-color: rgb(207 110 147 / 53%); box-shadow: 0 0 0 5px rgb(223 123 160 / 9%), inset 0 1px rgb(255 255 255 / 92%); }
+.treehole-form-wrap textarea::placeholder { color: #b99ba3; }
+.treehole-form-bottom { margin-top: 9px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.treehole-form-bottom > span { color: #b08b94; font-family: var(--font-display), serif; font-size: 9px; letter-spacing: .1em; }
+.treehole-form-bottom button { min-width: 132px; min-height: 47px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 0; border-radius: 17px 17px 24px 24px; background: linear-gradient(135deg, #c88994, #dc7698); color: #fffaf7; font-size: 11px; letter-spacing: .12em; box-shadow: 0 13px 25px rgb(169 90 119 / 18%); }
+.treehole-form-bottom button:disabled { opacity: .45; }
+.treehole-form-bottom button:not(:disabled):active { transform: scale(.97); }
+.treehole-form-bottom button i { font-family: var(--font-display), serif; font-size: 16px; font-style: normal; }
+.treehole-feedback { min-height: 1.5em; margin: 12px 0 0; color: #a9848d; font-size: 9px; letter-spacing: .1em; }
+.feedback-sent { color: #c65f83; }
+.feedback-error { color: #a45f69; }
+.treehole-messages { position: relative; z-index: 2; width: min(760px, 100%); margin: 23px auto 0; padding: clamp(22px, 4vw, 34px); border: 1px solid rgb(211 146 169 / 20%); border-radius: 35px 35px 54px 54px; background: rgb(255 255 255 / 38%); box-shadow: inset 0 1px rgb(255 255 255 / 78%); }
+.treehole-list-heading { position: relative; text-align: center; }
+.treehole-list-heading button { position: absolute; right: 0; top: 8px; border: 0; background: transparent; color: #a67e88; font-size: 9px; letter-spacing: .1em; }
+.message-list { margin: 27px 0 0; padding: 0; display: grid; gap: 10px; list-style: none; }
+.message-list li { --message-index: 0; position: relative; min-height: 86px; padding: 18px 76px 18px 53px; overflow: hidden; border: 1px solid rgb(207 143 165 / 20%); border-radius: 25px 25px 33px 33px; background: linear-gradient(135deg, rgb(255 255 255 / 57%), rgb(255 241 246 / 36%)); box-shadow: inset 0 1px rgb(255 255 255 / 83%); animation: message-arrive .5s calc(min(var(--message-index), 5) * .06s) cubic-bezier(.2, .8, .2, 1) both; }
+.message-list li::after { content: ""; position: absolute; right: -27px; bottom: -34px; width: 100px; aspect-ratio: 1; border: 1px solid rgb(194 124 148 / 10%); border-radius: 48% 52%; box-shadow: inset 0 0 0 13px rgb(224 161 183 / 6%), inset 0 0 0 28px rgb(224 161 183 / 5%); }
+.message-number { position: absolute; left: 18px; top: 20px; color: #d08ba3; font-family: var(--font-display), serif; font-size: 10px; }
+.message-list p { margin: 0; white-space: pre-wrap; color: #71565e; font-size: 13px; line-height: 1.8; letter-spacing: .06em; }
+.message-list time { position: absolute; z-index: 2; right: 17px; top: 20px; color: #b18d96; font-family: var(--font-display), serif; font-size: 8px; letter-spacing: .06em; }
+.treehole-empty { min-height: 150px; display: grid; place-items: center; align-content: center; gap: 8px; color: #a6868e; text-align: center; }
+.treehole-empty span { color: #d1849f; font-family: var(--font-display), serif; font-size: 25px; }
+.treehole-empty p { margin: 0; font-size: 10px; letter-spacing: .12em; }
+@keyframes tree-charm-listen { 0%, 100% { opacity: .58; transform: rotate(-9deg) translateY(3px); } 50% { opacity: .96; transform: rotate(-2deg) translateY(-5px); } }
+@keyframes message-arrive { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 640px) {
+  .treehole-page { padding-inline: 12px; }
+  .treehole-header { grid-template-columns: 50px 1fr 50px; }
+  .treehole-header h1 { font-size: 31px; }
+  .treehole-header p { font-size: 7px; letter-spacing: .16em; }
+  .treehole-header > a { width: 50px; overflow: hidden; white-space: nowrap; }
+  .treehole-header > a:last-child { text-align: right; }
+  .treehole-compose { padding: 25px 15px 20px; grid-template-columns: 1fr; gap: 17px; border-radius: 31px 31px 48px 48px; }
+  .tree-rings { width: 145px; }
+  .tree-rings img { width: 58px; height: 58px; }
+  .treehole-form-wrap { width: 100%; }
+  .treehole-messages { padding: 22px 10px 14px; }
+  .treehole-list-heading button { position: static; margin-top: 9px; }
+  .message-list li { padding: 17px 16px 37px 48px; }
+  .message-list time { left: 48px; right: auto; top: auto; bottom: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .tree-rings img, .message-list li { animation: none; } }
+
