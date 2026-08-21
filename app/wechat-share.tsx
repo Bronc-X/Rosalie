@@ -68,7 +68,7 @@ export function WechatShare() {
             script.async = true;
             script.onload = () => resolve();
             script.onerror = () => reject(new Error('WeChat SDK failed to load'));
-            document.head.append(script);
+            document.head.appendChild(script);
           });
         }
 
