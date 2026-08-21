@@ -7,6 +7,7 @@ import { COUNTDOWN_START, getCountdownState, splitDuration } from '@/lib/countdo
 import { getDropChoice } from '@/lib/drag-choice.mjs';
 import { INITIAL_INVITATION, respondToInvitation } from '@/lib/invitation.mjs';
 import { pickTapParticle } from '@/lib/tap-particle.mjs';
+import { MiniGame } from './mini-game';
 import { WechatShare } from './wechat-share';
 
 type TapParticle = {
@@ -64,7 +65,7 @@ export default function Home() {
 
   function plantTapParticle(event: ReactPointerEvent<HTMLElement>) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    if ((event.target as HTMLElement).closest('.invitation, .mobile-charm-stage')) return;
+    if ((event.target as HTMLElement).closest('.invitation, .mobile-charm-stage, .mini-game')) return;
 
     const id = nextTapParticleId.current++;
     setTapParticles((current) => [
@@ -307,6 +308,8 @@ export default function Home() {
           ) : null}
         </div>
       </section>
+
+      <MiniGame />
 
       <section
         className={`invitation no-step-${Math.min(invitation.noCount, 4)}`}
