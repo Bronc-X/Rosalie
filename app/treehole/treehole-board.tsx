@@ -98,7 +98,7 @@ export function TreeholeBoard() {
       <section className="treehole-compose" aria-labelledby="treehole-compose-title">
         <div className="tree-rings" aria-hidden="true">
           <i /><i /><i /><i />
-          <img src="/soft-pull-cursor.png" alt="" />
+          <img src="/soft-pull-controller.webp" alt="" />
         </div>
         <div className="treehole-form-wrap">
           <p>DROP A SECRET</p>
@@ -138,7 +138,8 @@ export function TreeholeBoard() {
         {loadState === 'error' ? (
           <div className="treehole-empty" role="status">
             <span>…</span>
-            <p>加载失败。</p>
+            <p>树洞暂时没接上。</p>
+            <button type="button" onClick={() => void loadMessages()}>再试一次</button>
           </div>
         ) : loadState === 'loading' && messages.length === 0 ? (
           <div className="treehole-empty" role="status"><span>○</span><p>加载中。</p></div>

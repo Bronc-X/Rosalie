@@ -36,7 +36,7 @@ export function UnlockForm({ nextPath }: { nextPath: string }) {
       <section className={`unlock-card unlock-${status}`} aria-labelledby="unlock-title">
         <div className="unlock-keyhole" aria-hidden="true">
           <span />
-          <img src="/soft-pull-cursor.png" alt="" />
+          <img src="/soft-pull-controller.webp" alt="" />
         </div>
         <h1 id="unlock-title">先测健康度</h1>
 

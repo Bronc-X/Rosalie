@@ -1,15 +1,20 @@
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 import {
   ACCESS_COOKIE,
   ACCESS_TTL_MS,
+  PLAYER_COOKIE,
+  PLAYER_TTL_MS,
   createAccessToken,
+  createPlayerToken,
   matchesAccessPassword,
+  readPlayerId,
 } from '@/lib/access.mjs';
 
 export const runtime = 'nodejs';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const contentLength = Number(request.headers.get('content-length') ?? 0);
   if (contentLength > 1_024) {
     return NextResponse.json({ ok: false, error: 'INVALID_REQUEST' }, { status: 413 });
@@ -49,6 +54,14 @@ export async function POST(request: Request) {
     maxAge: Math.floor(ACCESS_TTL_MS / 1_000),
     path: '/',
   });
+  const playerId = await readPlayerId(request.cookies.get(PLAYER_COOKIE)?.value, secret)
+    ?? crypto.randomUUID();
+  response.cookies.set(PLAYER_COOKIE, await createPlayerToken(secret, playerId), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: Math.floor(PLAYER_TTL_MS / 1_000),
+    path: '/',
+  });
   return response;
 }
-

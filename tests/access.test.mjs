@@ -30,3 +30,16 @@ test('only local return paths are allowed after unlocking', () => {
   assert.equal(access.safeNextPath('/unlock'), '/');
 });
 
+test('a signed player token restores the same player until it expires', async () => {
+  assert.equal(typeof access.createPlayerToken, 'function');
+  assert.equal(typeof access.readPlayerId, 'function');
+
+  const now = Date.UTC(2026, 7, 22);
+  const playerId = '11111111-1111-4111-8111-111111111111';
+  const token = await access.createPlayerToken('secret-for-tests', playerId, now, 60_000);
+
+  assert.equal(await access.readPlayerId(token, 'secret-for-tests', now + 59_999), playerId);
+  assert.equal(await access.readPlayerId(token, 'wrong-secret', now + 1), null);
+  assert.equal(await access.readPlayerId(`${token}tampered`, 'secret-for-tests', now + 1), null);
+  assert.equal(await access.readPlayerId(token, 'secret-for-tests', now + 60_001), null);
+});

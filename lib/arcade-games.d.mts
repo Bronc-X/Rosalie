@@ -1,0 +1,15 @@
+export type SandColor = 'rose' | 'peach' | 'lilac' | 'mint';
+export type SandBoard = Array<Array<SandColor | null>>;
+export function connectedGroup(board: SandBoard, row: number, column: number): Array<[number, number]>;
+export function clearSandGroup(board: SandBoard, row: number, column: number): { board: SandBoard; removed: number };
+export function topWaterColor(tube: string[]): string | null;
+export function canPourWater(source: string[], target: string[], capacity?: number): boolean;
+export function pourWater(tubes: string[][], sourceIndex: number, targetIndex: number, capacity?: number): string[][];
+export function waterPuzzleSolved(tubes: string[][], capacity?: number): boolean;
+export function trayAfterPick(tray: string[], color: string, matchSize?: number, capacity?: number): { tray: string[]; cleared: boolean; overflow: boolean };
+export type ParkingCar = { id: string; row: number; column: number; length: number; horizontal: boolean; direction?: 'forward' | 'backward'; removed?: boolean };
+export function canCarExit(car: ParkingCar, cars: ParkingCar[], boardSize?: number): boolean;
+export function parkingLayoutHasOverlap(cars: ParkingCar[]): boolean;
+export function holeSizeAfterSequence(initialSize: number, objectSizes: number[]): number | null;
+export function swallowObject(hole: { x: number; y: number; size: number }, object: { x: number; y: number; size: number }): boolean;
+export function nextHoleSize(currentSize: number, objectSize: number): number;

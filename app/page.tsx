@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -58,9 +59,12 @@ export default function Home() {
   } as CSSProperties;
 
   useEffect(() => {
-    setNow(Date.now());
+    const initialTick = window.setTimeout(() => setNow(Date.now()), 0);
     const timer = window.setInterval(() => setNow(Date.now()), 1_000);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(initialTick);
+      window.clearInterval(timer);
+    };
   }, []);
 
   function plantTapParticle(event: ReactPointerEvent<HTMLElement>) {
@@ -193,7 +197,7 @@ export default function Home() {
 
       <span className="custom-cursor" ref={cursorRef} aria-hidden="true">
         <i className="cursor-hotspot" />
-        <img src="/soft-pull-cursor.png" alt="" />
+        <img src="/soft-pull-controller.webp" alt="" />
       </span>
 
       <div className="aurora aurora-pink" aria-hidden="true" />
@@ -206,7 +210,7 @@ export default function Home() {
       </div>
       <div className="falling-charms" aria-hidden="true">
         {Array.from({ length: 6 }, (_, index) => (
-          <img src="/soft-pull-cursor.png" alt="" key={index} />
+          <img src="/soft-pull-controller.webp" alt="" key={index} />
         ))}
       </div>
 
@@ -268,7 +272,7 @@ export default function Home() {
           {isReunited ? '系统提示：人员已归队。' : (
             <span className="countdown-copy-content">
               <span><span className="work-emphasis">干</span>活倒计时</span>
-              <img className="countdown-charm" src="/soft-pull-cursor.png" alt="" aria-hidden="true" />
+              <img className="countdown-charm" src="/soft-pull-controller.webp" alt="" aria-hidden="true" />
             </span>
           )}
         </p>
@@ -296,13 +300,13 @@ export default function Home() {
             onClick={tapMobileCharm}
             onPointerDown={startCharmDrag}
           >
-            <img src="/soft-pull-cursor.png" alt="" />
+            <img src="/soft-pull-controller.webp" alt="" />
             <span>{isCharmDragging ? '拖到按钮上松手' : '拖拽它去选择'}</span>
           </button>
           {mobileCharmBurst > 0 ? (
             <div className="mobile-charm-burst" key={mobileCharmBurst} aria-hidden="true">
               {Array.from({ length: 6 }, (_, index) => (
-                <img src="/soft-pull-cursor.png" alt="" key={index} />
+                <img src="/soft-pull-controller.webp" alt="" key={index} />
               ))}
             </div>
           ) : null}
@@ -311,7 +315,7 @@ export default function Home() {
 
       <Link className="game-entry" href="/play" aria-label="进入小游戏页面">
         <span className="game-entry-charm" aria-hidden="true">
-          <img src="/soft-pull-cursor.png" alt="" />
+          <img src="/soft-pull-controller.webp" alt="" />
         </span>
         <span className="game-entry-copy">
           <small>WAITING ROOM · 3 GAMES</small>
@@ -373,7 +377,7 @@ export default function Home() {
           {particle.kind === 'blossom' ? (
             <BlossomShape className="tap-blossom" />
           ) : (
-            <img className="tap-charm" src="/soft-pull-cursor.png" alt="" />
+            <img className="tap-charm" src="/soft-pull-controller.webp" alt="" />
           )}
         </span>
       ))}

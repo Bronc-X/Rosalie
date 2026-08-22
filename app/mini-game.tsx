@@ -214,7 +214,7 @@ export function MiniGame() {
             onPointerCancel={finishPlayerDrag}
             onKeyDown={movePlayerWithKeys}
           >
-            <img src="/soft-pull-cursor.png" alt="" width={82} height={82} draggable="false" />
+            <img src="/soft-pull-controller.webp" alt="" width={82} height={82} draggable="false" />
             <span>左右拉</span>
           </button>
         ) : (
@@ -225,7 +225,7 @@ export function MiniGame() {
               <p className="game-result" aria-live="polite">{resultCopy}</p>
             )}
             <button className="game-start" type="button" onClick={startRound}>
-              <img src="/soft-pull-cursor.png" alt="" width={82} height={82} />
+              <img src="/soft-pull-controller.webp" alt="" width={82} height={82} />
               <span>{game.status === 'idle' ? '戳它开局' : '再拉一下'}</span>
             </button>
           </div>

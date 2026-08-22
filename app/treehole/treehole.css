@@ -52,6 +52,7 @@
 .treehole-empty { min-height: 150px; display: grid; place-items: center; align-content: center; gap: 8px; color: #a6868e; text-align: center; }
 .treehole-empty span { color: #d1849f; font-family: var(--font-display), serif; font-size: 25px; }
 .treehole-empty p { margin: 0; font-size: 10px; letter-spacing: .12em; }
+.treehole-empty button { margin-top: 5px; padding: 9px 16px; border: 1px solid rgb(205 126 154 / 30%); border-radius: 999px; color: #986f7b; background: rgb(255 255 255 / 58%); font-size: 9px; letter-spacing: .12em; }
 @keyframes tree-charm-listen { 0%, 100% { opacity: .58; transform: rotate(-9deg) translateY(3px); } 50% { opacity: .96; transform: rotate(-2deg) translateY(-5px); } }
 @keyframes message-arrive { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 640px) {
@@ -71,4 +72,3 @@
   .message-list time { left: 48px; right: auto; top: auto; bottom: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .tree-rings img, .message-list li { animation: none; } }
-
