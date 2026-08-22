@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 
 import { aimFromPoint, segmentHitsCircle } from '@/lib/precision-arrow-engine.mjs';
 
+import { createHighDpiGameConfig, logicalPointer, prepareHighDpiScene } from '../immersive/game-rendering';
 import { ARROW_LEVELS } from './levels';
 
 export type ArrowGameOptions = {
@@ -50,6 +51,7 @@ class ArrowScene extends Phaser.Scene {
   }
 
   create() {
+    prepareHighDpiScene(this);
     this.cameras.main.setBackgroundColor('#fff5ef');
     this.drawWorld();
     this.createTarget();
@@ -62,16 +64,21 @@ class ArrowScene extends Phaser.Scene {
       if (this.locked || this.arrow) return;
       this.unlockAudio();
       this.dragging = true;
-      this.setAim(pointer.x, pointer.y);
+      const position = logicalPointer(this, pointer);
+      this.setAim(position.x, position.y);
       this.tone(310, 0.035, 0.025);
     });
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (this.dragging) this.setAim(pointer.x, pointer.y);
+      if (this.dragging) {
+        const position = logicalPointer(this, pointer);
+        this.setAim(position.x, position.y);
+      }
     });
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
       if (!this.dragging) return;
       this.dragging = false;
-      this.setAim(pointer.x, pointer.y);
+      const position = logicalPointer(this, pointer);
+      this.setAim(position.x, position.y);
       this.fire();
     });
     this.input.on('pointerupoutside', () => {
@@ -315,20 +322,5 @@ class ArrowScene extends Phaser.Scene {
 }
 
 export function createArrowGame(parent: HTMLElement, options: ArrowGameOptions) {
-  return new Phaser.Game({
-    type: Phaser.AUTO,
-    parent,
-    width: 390,
-    height: 780,
-    transparent: true,
-    backgroundColor: '#fff5ef',
-    autoFocus: false,
-    input: { activePointers: 1 },
-    render: { antialias: true, roundPixels: false },
-    scale: {
-      mode: Phaser.Scale.FIT,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-    },
-    scene: new ArrowScene(options),
-  });
+  return new Phaser.Game(createHighDpiGameConfig(parent, new ArrowScene(options), '#fff5ef'));
 }

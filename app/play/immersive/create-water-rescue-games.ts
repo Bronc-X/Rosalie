@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 
+import { createHighDpiGameConfig, prepareHighDpiScene } from './game-rendering';
+
 export type WaterRescueGameOptions = {
   initialLevel: number;
   muted: boolean;
@@ -233,6 +235,7 @@ class WaterSortScene extends Phaser.Scene {
   }
 
   create() {
+    prepareHighDpiScene(this);
     drawToyBackdrop(this, PALETTE.sky);
     this.createHud();
     this.controller = createController(this);
@@ -612,6 +615,7 @@ class RescueScene extends Phaser.Scene {
   }
 
   create() {
+    prepareHighDpiScene(this);
     drawToyBackdrop(this, PALETTE.mint);
     this.createHud();
     this.createKittenAndCage();
@@ -942,22 +946,7 @@ class RescueScene extends Phaser.Scene {
 }
 
 function createGameConfig(parent: HTMLElement, scene: Phaser.Scene) {
-  return {
-    type: Phaser.AUTO,
-    parent,
-    width: 390,
-    height: 780,
-    transparent: true,
-    backgroundColor: '#fff7f1',
-    autoFocus: false,
-    input: { activePointers: 1 },
-    render: { antialias: true, roundPixels: false },
-    scale: {
-      mode: Phaser.Scale.FIT,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-    },
-    scene,
-  } satisfies Phaser.Types.Core.GameConfig;
+  return createHighDpiGameConfig(parent, scene, '#fff7f1');
 }
 
 export function createWaterGame(parent: HTMLElement, options: WaterRescueGameOptions) {

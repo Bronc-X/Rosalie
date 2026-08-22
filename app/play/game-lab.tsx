@@ -38,7 +38,10 @@ export function GameLab() {
           <span>七盒卡带。</span>
         </div>
         <div className="lab-header-side">
-          <Link className="lab-treehole-link" href="/treehole">去树洞 ↗</Link>
+          <div className="lab-utility-links">
+            <Link className="lab-treehole-link" href="/treehole">树洞</Link>
+            <Link className="lab-treehole-link" href="/schedule">日程板 ↗</Link>
+          </div>
           <span className={`lab-sync-state is-${playerProgress.state}`}>
             {playerProgress.state === 'loading' ? '读取存档' : playerProgress.state === 'saving' ? '保存中' : playerProgress.state === 'offline' ? '本机存档' : '已保存'}
           </span>

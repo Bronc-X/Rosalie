@@ -1,5 +1,8 @@
 import Phaser from 'phaser';
 
+import { createHighDpiGameConfig, logicalPointer, prepareHighDpiScene } from './game-rendering';
+import { addMotifGlyph } from './game-visual-motifs';
+
 export type ImmersiveGameOptions = {
   initialLevel: number;
   muted: boolean;
@@ -7,9 +10,6 @@ export type ImmersiveGameOptions = {
   onLevelChange: (level: number, score: number) => void;
   onStatus: (copy: string) => void;
 };
-
-const GAME_WIDTH = 390;
-const GAME_HEIGHT = 780;
 
 type StatusCard = {
   layer: Phaser.GameObjects.Container;
@@ -123,22 +123,7 @@ function hitStop(scene: Phaser.Scene, reducedMotion: boolean, duration = 48) {
 }
 
 function gameConfig(parent: HTMLElement, scene: Phaser.Scene): Phaser.Types.Core.GameConfig {
-  return {
-    type: Phaser.AUTO,
-    parent,
-    width: GAME_WIDTH,
-    height: GAME_HEIGHT,
-    transparent: true,
-    backgroundColor: '#fff5ef',
-    autoFocus: false,
-    input: { activePointers: 1 },
-    render: { antialias: true, roundPixels: false },
-    scale: {
-      mode: Phaser.Scale.FIT,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-    },
-    scene,
-  };
+  return createHighDpiGameConfig(parent, scene, '#fff5ef');
 }
 
 // ---------------------------------------------------------------------------
@@ -210,6 +195,7 @@ class HoleScene extends Phaser.Scene {
   }
 
   create() {
+    prepareHighDpiScene(this);
     this.sound.mute = this.options.muted;
     this.cameras.main.setBackgroundColor('#fff4ee');
     addBackdrop(this, 'peach');
@@ -228,12 +214,16 @@ class HoleScene extends Phaser.Scene {
       }
       if (this.locked) return;
       this.dragging = true;
-      this.setTarget(pointer.x, pointer.y);
+      const position = logicalPointer(this, pointer);
+      this.setTarget(position.x, position.y);
       this.controller.setAlpha(1);
       this.toneKit.play(310, 0.035, 0.02);
     });
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (this.dragging && !this.locked) this.setTarget(pointer.x, pointer.y);
+      if (this.dragging && !this.locked) {
+        const position = logicalPointer(this, pointer);
+        this.setTarget(position.x, position.y);
+      }
     });
     this.input.on('pointerup', () => {
       this.dragging = false;
@@ -397,12 +387,8 @@ class HoleScene extends Phaser.Scene {
       .setStrokeStyle(blocker ? 4 : 2, 0xffffff, blocker ? 0.72 : 0.86);
     const lowlight = this.add.ellipse(radius * 0.16, radius * 0.25, radius * 1.18, radius * 0.72, blocker ? 0x846d9e : 0xb56f86, blocker ? 0.2 : 0.1);
     const shine = this.add.ellipse(-radius * 0.3, -radius * 0.34, radius * 0.74, radius * 0.34, 0xffffff, 0.56).setRotation(-0.25);
-    const mark = this.add.text(0, 0, blocker ? '✦' : index % 3 === 0 ? '·' : '', {
-      color: blocker ? '#fff7ef' : '#ffffff',
-      fontFamily: 'Georgia, serif',
-      fontSize: `${Math.max(11, radius * 0.68)}px`,
-    }).setOrigin(0.5);
-    return this.add.container(0, 0, [shadow, base, lowlight, shine, mark]);
+    const motif = addMotifGlyph(this, blocker ? 2 : index, radius * (blocker ? 0.82 : 0.9), 0xffffff, blocker ? 0.78 : 0.58);
+    return this.add.container(0, 0, [shadow, base, lowlight, shine, motif]);
   }
 
   private setTarget(x: number, y: number) {
@@ -565,6 +551,7 @@ class SandScene extends Phaser.Scene {
   private grid: Array<Array<SandTile | null>> = [];
   private tileLayer!: Phaser.GameObjects.Container;
   private controller!: Phaser.GameObjects.Image;
+  private controllerScale = 1;
   private levelCopy!: Phaser.GameObjects.Text;
   private moveCopy!: Phaser.GameObjects.Text;
   private scoreCopy!: Phaser.GameObjects.Text;
@@ -585,6 +572,7 @@ class SandScene extends Phaser.Scene {
   }
 
   create() {
+    prepareHighDpiScene(this);
     this.sound.mute = this.options.muted;
     this.cameras.main.setBackgroundColor('#fff5ef');
     addBackdrop(this, 'lilac');
@@ -592,6 +580,7 @@ class SandScene extends Phaser.Scene {
     this.tileLayer = this.add.container(0, 0).setDepth(6);
     this.createHud();
     this.controller = this.add.image(333, 658, 'sand-controller').setDisplaySize(66, 66).setAlpha(0.86).setDepth(35);
+    this.controllerScale = this.controller.scaleX;
     this.status = createStatusCard(this);
     this.startLevel(this.level);
 
@@ -602,7 +591,8 @@ class SandScene extends Phaser.Scene {
         return;
       }
       if (this.locked) return;
-      const cell = this.cellAt(pointer.x, pointer.y);
+      const position = logicalPointer(this, pointer);
+      const cell = this.cellAt(position.x, position.y);
       if (!cell) return;
       this.moveController(cell.row, cell.col);
       this.clearGroupAt(cell.row, cell.col);
@@ -656,7 +646,7 @@ class SandScene extends Phaser.Scene {
     this.levelCopy.setText(`LEVEL ${String(this.level + 1).padStart(2, '0')}`);
     this.instruction.setText('点同色相连的沙糖块');
     this.comboCopy.setText('');
-    this.controller.setPosition(333, 658).setAlpha(0.86).setScale(1);
+    this.controller.setPosition(333, 658).setAlpha(0.86).setScale(this.controllerScale);
     this.options.onStatus(`沙画 · 第 ${this.level + 1} 关`);
     this.refreshHud();
   }
@@ -717,7 +707,8 @@ class SandScene extends Phaser.Scene {
     graphics.fillStyle(0xffffff, 0.42).fillEllipse(-7, -9, 15, 7);
     graphics.fillStyle(0xffffff, 0.2).fillCircle(9, 9, 2.2);
     graphics.fillStyle(0x8e6276, 0.1).fillCircle(-9, 10, 1.4);
-    const view = this.add.container(x, y, [graphics]).setDepth(7);
+    const motif = addMotifGlyph(this, color + 2, 15, 0xffffff, 0.34);
+    const view = this.add.container(x, y, [graphics, motif]).setDepth(7);
     this.tileLayer.add(view);
     if (!this.options.reducedMotion && (row + col) % 5 === 0) {
       this.tweens.add({ targets: view, angle: { from: -0.8, to: 0.8 }, duration: 1_200 + row * 80, yoyo: true, repeat: -1 });
@@ -733,7 +724,7 @@ class SandScene extends Phaser.Scene {
       targets: this.controller,
       x: position.x + 18,
       y: position.y + 20,
-      scale: 0.78,
+      scale: this.controllerScale * 0.82,
       duration: this.options.reducedMotion ? 1 : 120,
       ease: 'Quad.Out',
       yoyo: true,

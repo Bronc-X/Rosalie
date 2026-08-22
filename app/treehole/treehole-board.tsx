@@ -92,7 +92,7 @@ export function TreeholeBoard() {
           <h1>树洞留言板</h1>
           <span>不署名，也不催回复。</span>
         </div>
-        <Link href="/">倒计时 ↗</Link>
+        <Link href="/schedule">日程板 ↗</Link>
       </header>
 
       <section className="treehole-compose" aria-labelledby="treehole-compose-title">

@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 
+import { createHighDpiGameConfig, logicalPointer, prepareHighDpiScene } from './game-rendering';
+
 export type ImmersiveToyGameOptions = {
   initialLevel: number;
   muted: boolean;
@@ -8,8 +10,6 @@ export type ImmersiveToyGameOptions = {
   onStatus: (copy: string) => void;
 };
 
-const GAME_WIDTH = 390;
-const GAME_HEIGHT = 780;
 const SERIF = 'ui-serif, Georgia, "Times New Roman", serif';
 const SANS = 'ui-sans-serif, system-ui, -apple-system, "PingFang SC", sans-serif';
 
@@ -215,6 +215,7 @@ class ParkingScene extends ToyScene {
   }
 
   create() {
+    prepareHighDpiScene(this);
     this.drawBackdrop(ROSE, PEACH);
     this.drawBoard();
     this.createHud();
@@ -334,7 +335,8 @@ class ParkingScene extends ToyScene {
   private beginDrag(car: ParkingCar, pointer: Phaser.Input.Pointer) {
     if (this.locked || car.removed) return;
     this.unlockAudio();
-    this.drag = { car, startX: pointer.x, startY: pointer.y };
+    const position = logicalPointer(this, pointer);
+    this.drag = { car, startX: position.x, startY: position.y };
     car.view.setDepth(20);
     this.tweens.killTweensOf(car.view);
     this.tweens.add({ targets: car.view, scale: 1.035, duration: this.motion(90), ease: 'Quad.Out' });
@@ -345,7 +347,8 @@ class ParkingScene extends ToyScene {
     if (!this.drag || this.locked) return;
     const { car, startX, startY } = this.drag;
     const vector = directionVector(car.direction);
-    const projected = Phaser.Math.Clamp((pointer.x - startX) * vector.x + (pointer.y - startY) * vector.y, 0, 34);
+    const position = logicalPointer(this, pointer);
+    const projected = Phaser.Math.Clamp((position.x - startX) * vector.x + (position.y - startY) * vector.y, 0, 34);
     car.view.setPosition(car.homeX + vector.x * projected, car.homeY + vector.y * projected);
   }
 
@@ -355,8 +358,9 @@ class ParkingScene extends ToyScene {
     this.drag = null;
     if (this.locked || car.removed) return;
     const vector = directionVector(car.direction);
-    const dx = pointer.x - startX;
-    const dy = pointer.y - startY;
+    const position = logicalPointer(this, pointer);
+    const dx = position.x - startX;
+    const dy = position.y - startY;
     const forward = dx * vector.x + dy * vector.y;
     const cross = Math.abs(dx * vector.y - dy * vector.x);
     const isTap = Math.hypot(dx, dy) < 15;
@@ -593,6 +597,7 @@ class ScrewScene extends ToyScene {
   }
 
   create() {
+    prepareHighDpiScene(this);
     this.drawBackdrop(LILAC, PEACH);
     this.createHud();
     this.drawTray();
@@ -851,22 +856,7 @@ class ScrewScene extends ToyScene {
 }
 
 function createGame(parent: HTMLElement, scene: Phaser.Scene, backgroundColor: string) {
-  return new Phaser.Game({
-    type: Phaser.AUTO,
-    parent,
-    width: GAME_WIDTH,
-    height: GAME_HEIGHT,
-    transparent: true,
-    backgroundColor,
-    autoFocus: false,
-    input: { activePointers: 1 },
-    render: { antialias: true, roundPixels: false },
-    scale: {
-      mode: Phaser.Scale.FIT,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-    },
-    scene,
-  });
+  return new Phaser.Game(createHighDpiGameConfig(parent, scene, backgroundColor));
 }
 
 export function createParkingGame(parent: HTMLElement, options: ImmersiveToyGameOptions) {

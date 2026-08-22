@@ -42,6 +42,7 @@
 .lab-header h1 { margin: 0; color: #674951; font-family: var(--font-chinese), serif; font-size: clamp(31px, 6vw, 49px); font-weight: 400; letter-spacing: .13em; }
 .lab-header span { display: block; margin-top: 8px; color: #b18d95; font-size: 11px; letter-spacing: .13em; }
 .lab-header-side { justify-self: end; display: grid; justify-items: end; gap: 2px; }
+.lab-utility-links { display: flex; gap: 10px; }
 .lab-header-side img { width: 62px; height: 62px; object-fit: contain; opacity: .76; filter: drop-shadow(0 10px 14px rgb(117 78 62 / 17%)); transform: rotate(7deg); animation: lab-charm-breathe 3.4s ease-in-out infinite; }
 .lab-treehole-link { color: #a97987; font-size: 9px; letter-spacing: .12em; text-decoration: none; }
 .lab-treehole-link:hover { color: #d0678c; }
