@@ -1,9 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { FormEvent, MouseEvent } from 'react';
 
+import {
+  buildMonthDays,
+  defaultDateTimeForDay,
+  shiftMonth,
+  toBeijingDateKey,
+} from '@/lib/calendar-view.mjs';
+import type { CalendarMonth } from '@/lib/calendar-view.mjs';
 import {
   SCHEDULE_ADDED_BY_MAX_LENGTH,
   SCHEDULE_CONTENT_MAX_LENGTH,
@@ -20,6 +27,7 @@ type Draft = {
 };
 
 const EMPTY_DRAFT: Draft = { scheduledAt: '', content: '', location: '', addedBy: '' };
+const WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
 
 async function fetchEntries() {
   const response = await fetch('/api/schedule', { cache: 'no-store' });
@@ -28,13 +36,30 @@ async function fetchEntries() {
   return data.entries;
 }
 
-function formatDate(value: string) {
+function monthFromDateKey(dateKey: string): CalendarMonth {
+  const [year, month] = dateKey.split('-').map(Number);
+  return { year, month };
+}
+
+function dateFromKey(dateKey: string) {
+  return new Date(`${dateKey}T12:00:00+08:00`);
+}
+
+function formatMonth(view: CalendarMonth) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: 'long',
+  }).format(new Date(Date.UTC(view.year, view.month - 1, 1)));
+}
+
+function formatSelectedDate(dateKey: string) {
   return new Intl.DateTimeFormat('zh-CN', {
     timeZone: 'Asia/Shanghai',
     month: 'long',
     day: 'numeric',
-    weekday: 'short',
-  }).format(new Date(value));
+    weekday: 'long',
+  }).format(dateFromKey(dateKey));
 }
 
 function formatTime(value: string) {
@@ -46,12 +71,41 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
+function monthCode(month: number) {
+  return String(month).padStart(2, '0');
+}
+
 export function ScheduleBoard() {
+  const todayKey = useMemo(() => toBeijingDateKey(new Date()), []);
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
+  const [visibleMonth, setVisibleMonth] = useState<CalendarMonth>(() => monthFromDateKey(todayKey));
+  const [selectedDay, setSelectedDay] = useState(todayKey);
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
+  const [composerOpen, setComposerOpen] = useState(false);
   const [loadState, setLoadState] = useState<'loading' | 'loaded' | 'error'>('loading');
-  const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
-  const [feedback, setFeedback] = useState('四项都会对所有访问者公开。');
+  const [sendState, setSendState] = useState<'idle' | 'sending' | 'error'>('idle');
+  const [feedback, setFeedback] = useState('时间、内容、地点和添加人都会公开。');
+  const [notice, setNotice] = useState('');
+  const addButtonRef = useRef<HTMLButtonElement>(null);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
+
+  const monthDays = useMemo(
+    () => buildMonthDays(visibleMonth.year, visibleMonth.month),
+    [visibleMonth],
+  );
+
+  const entriesByDay = useMemo(() => {
+    const grouped = new Map<string, ScheduleEntry[]>();
+    for (const entry of entries) {
+      const key = toBeijingDateKey(entry.scheduledAt);
+      const dayEntries = grouped.get(key) ?? [];
+      dayEntries.push(entry);
+      grouped.set(key, dayEntries);
+    }
+    return grouped;
+  }, [entries]);
+
+  const selectedEntries = entriesByDay.get(selectedDay) ?? [];
 
   async function loadEntries() {
     setLoadState('loading');
@@ -77,10 +131,57 @@ export function ScheduleBoard() {
     return () => { current = false; };
   }, []);
 
+  useEffect(() => {
+    if (!composerOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(() => firstFieldRef.current?.focus(), 60);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setComposerOpen(false);
+      addButtonRef.current?.focus();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [composerOpen]);
+
+  function selectDay(dateKey: string) {
+    setSelectedDay(dateKey);
+    const nextMonth = monthFromDateKey(dateKey);
+    if (nextMonth.year !== visibleMonth.year || nextMonth.month !== visibleMonth.month) {
+      setVisibleMonth(nextMonth);
+    }
+  }
+
+  function goToToday() {
+    setSelectedDay(todayKey);
+    setVisibleMonth(monthFromDateKey(todayKey));
+  }
+
+  function openComposer() {
+    setDraft({ ...EMPTY_DRAFT, scheduledAt: defaultDateTimeForDay(selectedDay) });
+    setSendState('idle');
+    setFeedback('时间、内容、地点和添加人都会公开。');
+    setComposerOpen(true);
+  }
+
+  function closeComposer() {
+    if (sendState === 'sending') return;
+    setComposerOpen(false);
+    window.setTimeout(() => addButtonRef.current?.focus(), 0);
+  }
+
+  function dismissComposer(event: MouseEvent<HTMLDivElement>) {
+    if (event.target === event.currentTarget) closeComposer();
+  }
+
   function updateDraft(field: keyof Draft, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
     if (sendState !== 'idle') setSendState('idle');
-    setFeedback('四项都会对所有访问者公开。');
+    setFeedback('时间、内容、地点和添加人都会公开。');
   }
 
   async function addEntry(event: FormEvent<HTMLFormElement>) {
@@ -97,10 +198,16 @@ export function ScheduleBoard() {
       });
       const data = await response.json() as { ok?: boolean; entry?: ScheduleEntry; error?: string };
       if (!response.ok || !data.ok || !data.entry) throw new Error(data.error ?? 'send failed');
-      setEntries((current) => sortScheduleEntries([...current, data.entry as ScheduleEntry]));
+      const entry = data.entry;
+      const entryDay = toBeijingDateKey(entry.scheduledAt);
+      setEntries((current) => sortScheduleEntries([...current, entry]));
+      setSelectedDay(entryDay);
+      setVisibleMonth(monthFromDateKey(entryDay));
       setDraft(EMPTY_DRAFT);
-      setSendState('sent');
-      setFeedback('已经公开，所有人刷新后都能看到。');
+      setComposerOpen(false);
+      setSendState('idle');
+      setNotice('日程已公开。');
+      window.setTimeout(() => setNotice(''), 2800);
     } catch (error) {
       setSendState('error');
       setFeedback(error instanceof Error && /最多|不能为空|请选择|添加人/.test(error.message)
@@ -112,82 +219,75 @@ export function ScheduleBoard() {
   return (
     <main className="schedule-page">
       <div className="schedule-aurora" aria-hidden="true" />
+
       <header className="schedule-header liquid-glass">
         <Link href="/play">← 游戏</Link>
         <div>
-          <p>SHARED · BEIJING TIME</p>
-          <h1>日程板</h1>
-          <span>{entries.length} 项公开日程</span>
+          <p>SHARED CALENDAR · BEIJING</p>
+          <h1>日程</h1>
         </div>
         <Link href="/treehole">树洞 ↗</Link>
       </header>
 
-      <div className="schedule-shell">
-        <section className="schedule-compose liquid-glass" aria-labelledby="schedule-compose-title">
-          <div className="schedule-motif-orbit" aria-hidden="true">
-            <i className="motif-star" /><i className="motif-heart" /><i className="motif-moon" />
-            <i className="motif-leaf" /><i className="motif-bow" /><i className="motif-pearl" />
+      <section className="calendar-hero" aria-labelledby="calendar-month-title">
+        <div className="calendar-title-block">
+          <p>{visibleMonth.year} · MONTH {monthCode(visibleMonth.month)}</p>
+          <h2 id="calendar-month-title">{formatMonth(visibleMonth)}</h2>
+          <span>{entries.length === 0 ? '暂无公开安排' : `${entries.length} 项公开安排`}</span>
+        </div>
+
+        <div className="calendar-actions liquid-glass" aria-label="日历操作">
+          <button type="button" aria-label="上个月" onClick={() => setVisibleMonth((current) => shiftMonth(current, -1))}>‹</button>
+          <button type="button" className="calendar-today-button" onClick={goToToday}>今天</button>
+          <button type="button" aria-label="下个月" onClick={() => setVisibleMonth((current) => shiftMonth(current, 1))}>›</button>
+          <span aria-hidden="true" />
+          <button ref={addButtonRef} type="button" className="calendar-add-button" onClick={openComposer}>
+            <b aria-hidden="true">＋</b><em>新增日程</em>
+          </button>
+        </div>
+      </section>
+
+      <div className="calendar-shell">
+        <section className="calendar-panel liquid-glass" aria-label={`${formatMonth(visibleMonth)}月历`}>
+          <div className="calendar-watermark" aria-hidden="true">{monthCode(visibleMonth.month)}</div>
+          <div className="calendar-weekdays" aria-hidden="true">
+            {WEEKDAYS.map((weekday) => <span key={weekday}>周{weekday}</span>)}
           </div>
-          <p className="schedule-eyebrow">ADD ONE THING</p>
-          <h2 id="schedule-compose-title">把事情放进来</h2>
-          <form onSubmit={addEntry}>
-            <label>
-              <span>日程时间 · 北京时间</span>
-              <input
-                type="datetime-local"
-                value={draft.scheduledAt}
-                min="2020-01-01T00:00"
-                max="2100-12-31T23:59"
-                onChange={(event) => updateDraft('scheduledAt', event.target.value)}
-                required
-              />
-            </label>
-            <label>
-              <span>日程内容</span>
-              <input
-                type="text"
-                value={draft.content}
-                maxLength={SCHEDULE_CONTENT_MAX_LENGTH}
-                placeholder="写清楚要做什么"
-                onChange={(event) => updateDraft('content', event.target.value)}
-                required
-              />
-            </label>
-            <label>
-              <span>地点</span>
-              <input
-                type="text"
-                value={draft.location}
-                maxLength={SCHEDULE_LOCATION_MAX_LENGTH}
-                placeholder="线上也算地点"
-                onChange={(event) => updateDraft('location', event.target.value)}
-                required
-              />
-            </label>
-            <label>
-              <span>添加人</span>
-              <input
-                type="text"
-                value={draft.addedBy}
-                maxLength={SCHEDULE_ADDED_BY_MAX_LENGTH}
-                placeholder="所有人会看到这个名字"
-                onChange={(event) => updateDraft('addedBy', event.target.value)}
-                required
-              />
-            </label>
-            <button type="submit" disabled={sendState === 'sending' || Object.values(draft).some((value) => !value.trim())}>
-              <span>{sendState === 'sending' ? '正在添加' : '添加到共享日程'}</span>
-              <b aria-hidden="true">＋</b>
-            </button>
-          </form>
-          <p className={`schedule-feedback is-${sendState}`} aria-live="polite">{feedback}</p>
+
+          <div className="calendar-grid">
+            {monthDays.map((day) => {
+              const dayEntries = entriesByDay.get(day.key) ?? [];
+              const isSelected = day.key === selectedDay;
+              const isToday = day.key === todayKey;
+              return (
+                <button
+                  key={day.key}
+                  type="button"
+                  className={`calendar-day${day.inCurrentMonth ? '' : ' is-outside'}${isSelected ? ' is-selected' : ''}${isToday ? ' is-today' : ''}`}
+                  aria-pressed={isSelected}
+                  aria-label={`${formatSelectedDate(day.key)}，${dayEntries.length} 项日程`}
+                  onClick={() => selectDay(day.key)}
+                >
+                  <span className="calendar-day-number">{day.day}</span>
+                  <span className="calendar-day-events">
+                    {dayEntries.slice(0, 2).map((entry, index) => (
+                      <span key={entry.id} className={`calendar-event-chip tone-${index % 4}`}>
+                        <i aria-hidden="true" />{entry.content}
+                      </span>
+                    ))}
+                    {dayEntries.length > 2 && <small>＋{dayEntries.length - 2}</small>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </section>
 
-        <section className="schedule-timeline" aria-labelledby="schedule-list-title">
-          <div className="schedule-list-heading">
+        <aside className="day-agenda" aria-labelledby="selected-day-title">
+          <div className="day-agenda-heading">
             <div>
-              <p className="schedule-eyebrow">VISIBLE TO EVERYONE</p>
-              <h2 id="schedule-list-title">接下来的事</h2>
+              <p>SELECTED DAY</p>
+              <h2 id="selected-day-title">{formatSelectedDate(selectedDay)}</h2>
             </div>
             <button type="button" onClick={() => void loadEntries()} disabled={loadState === 'loading'}>
               {loadState === 'loading' ? '读取中' : '刷新'}
@@ -195,31 +295,103 @@ export function ScheduleBoard() {
           </div>
 
           {loadState === 'error' ? (
-            <div className="schedule-state" role="status"><i>…</i><p>日程板暂时没接上。</p><button type="button" onClick={() => void loadEntries()}>再试一次</button></div>
+            <div className="agenda-state" role="status">
+              <i>…</i><p>日程板暂时没接上。</p><button type="button" onClick={() => void loadEntries()}>再试一次</button>
+            </div>
           ) : loadState === 'loading' && entries.length === 0 ? (
-            <div className="schedule-state" role="status"><i>○</i><p>正在读取共享日程。</p></div>
-          ) : entries.length === 0 ? (
-            <div className="schedule-state" role="status"><i>＋</i><p>第一项还没被写下。</p></div>
+            <div className="agenda-state" role="status"><i>○</i><p>正在读取共享日程。</p></div>
+          ) : selectedEntries.length === 0 ? (
+            <div className="agenda-state is-empty">
+              <div className="agenda-empty-orbit" aria-hidden="true"><i /><i /><i /></div>
+              <p>这一天还没有安排。</p>
+              <button type="button" onClick={openComposer}>给这天加一项</button>
+            </div>
           ) : (
-            <ol className="schedule-list">
-              {entries.map((entry, index) => (
-                  <li key={entry.id} style={{ '--entry-index': index, '--motif-index': index % 6 } as React.CSSProperties}>
-                    <div className="schedule-date">
-                      <time dateTime={entry.scheduledAt}>{formatDate(entry.scheduledAt)}</time>
-                      <strong>{formatTime(entry.scheduledAt)}</strong>
-                    </div>
-                    <div className="schedule-entry-copy">
-                      <h3>{entry.content}</h3>
-                      <p><span aria-hidden="true">⌖</span>{entry.location}</p>
-                    </div>
-                    <div className="schedule-author"><span>ADDED BY</span><strong>{entry.addedBy}</strong></div>
-                    <i className="schedule-card-motif" aria-hidden="true" />
-                  </li>
+            <ol className="agenda-list">
+              {selectedEntries.map((entry, index) => (
+                <li key={entry.id} className={`tone-${index % 4}`}>
+                  <time dateTime={entry.scheduledAt}>{formatTime(entry.scheduledAt)}</time>
+                  <div>
+                    <h3>{entry.content}</h3>
+                    <p><span aria-hidden="true">⌖</span>{entry.location}</p>
+                    <small>由 {entry.addedBy} 添加</small>
+                  </div>
+                </li>
               ))}
             </ol>
           )}
-        </section>
+        </aside>
       </div>
+
+      {composerOpen && (
+        <div className="schedule-modal-layer" onMouseDown={dismissComposer}>
+          <section className="schedule-dialog liquid-glass" role="dialog" aria-modal="true" aria-labelledby="schedule-dialog-title">
+            <div className="schedule-dialog-handle" aria-hidden="true" />
+            <header>
+              <div>
+                <p>NEW SHARED EVENT</p>
+                <h2 id="schedule-dialog-title">新增日程</h2>
+                <span>{formatSelectedDate(selectedDay)}</span>
+              </div>
+              <button type="button" aria-label="关闭新增日程" onClick={closeComposer}>×</button>
+            </header>
+
+            <form onSubmit={addEntry}>
+              <label>
+                <span>日程时间 · 北京时间</span>
+                <input
+                  ref={firstFieldRef}
+                  type="datetime-local"
+                  value={draft.scheduledAt}
+                  min="2020-01-01T00:00"
+                  max="2100-12-31T23:59"
+                  onChange={(event) => updateDraft('scheduledAt', event.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                <span>日程内容</span>
+                <input
+                  type="text"
+                  value={draft.content}
+                  maxLength={SCHEDULE_CONTENT_MAX_LENGTH}
+                  placeholder="要做什么"
+                  onChange={(event) => updateDraft('content', event.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                <span>地点</span>
+                <input
+                  type="text"
+                  value={draft.location}
+                  maxLength={SCHEDULE_LOCATION_MAX_LENGTH}
+                  placeholder="线上也算地点"
+                  onChange={(event) => updateDraft('location', event.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                <span>添加人</span>
+                <input
+                  type="text"
+                  value={draft.addedBy}
+                  maxLength={SCHEDULE_ADDED_BY_MAX_LENGTH}
+                  placeholder="所有人会看到这个名字"
+                  onChange={(event) => updateDraft('addedBy', event.target.value)}
+                  required
+                />
+              </label>
+              <button type="submit" disabled={sendState === 'sending' || Object.values(draft).some((value) => !value.trim())}>
+                {sendState === 'sending' ? '正在添加' : '添加到共享日程'}<b aria-hidden="true">↗</b>
+              </button>
+            </form>
+            <p className={`schedule-feedback is-${sendState}`} aria-live="polite">{feedback}</p>
+          </section>
+        </div>
+      )}
+
+      <div className={`schedule-toast${notice ? ' is-visible' : ''}`} role="status" aria-live="polite">{notice}</div>
     </main>
   );
 }
