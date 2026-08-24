@@ -4,9 +4,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
+import type { GameId } from '@/lib/player-progress.mjs';
 import { usePlayerProgress } from './use-player-progress';
-
-type GameId = 'hole' | 'sand' | 'parking' | 'screw' | 'water' | 'rescue' | 'arrow';
 
 const GAMES: Array<{ id: GameId; index: string; label: string; note: string; action: string; glyph: string }> = [
   { id: 'hole', index: '01', label: '黑洞降临', note: '吞小，吃大', action: '拖住控制器，把场景吃干净。', glyph: '●' },
@@ -16,6 +15,7 @@ const GAMES: Array<{ id: GameId; index: string; label: string; note: string; act
   { id: 'water', index: '05', label: '倒水挑战', note: '分色，归位', action: '选杯、倾倒，让颜色各回各家。', glyph: '◒' },
   { id: 'rescue', index: '06', label: '营救小猫', note: '抽线，解围', action: '顺着遮挡抽线，把猫放出来。', glyph: '⌁' },
   { id: 'arrow', index: '07', label: '一箭又一箭', note: '瞄准，进洞', action: '按住、拉开、松手。', glyph: '↗' },
+  { id: 'connect', index: '08', label: '四枚护符', note: '找同类，连起来', action: '最多拐两次，把四种图标逐对接走。', glyph: '✦' },
 ];
 
 export function GameLab() {
@@ -35,7 +35,7 @@ export function GameLab() {
         <div>
           <p>TONI × ROSALIE · WAITING ROOM</p>
           <h1>小游戏</h1>
-          <span>七盒卡带。</span>
+          <span>八盒卡带。</span>
         </div>
         <div className="lab-header-side">
           <div className="lab-utility-links">

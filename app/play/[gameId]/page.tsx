@@ -8,7 +8,7 @@ import '../arrow/arrow.css';
 
 const GAME_IDS = ['hole', 'sand', 'parking', 'screw', 'water', 'rescue'] as const;
 
-function isGameId(value: string): value is Exclude<GameId, 'arrow'> {
+function isGameId(value: string): value is Exclude<GameId, 'arrow' | 'connect'> {
   return GAME_IDS.includes(value as typeof GAME_IDS[number]);
 }
 

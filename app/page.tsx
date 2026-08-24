@@ -8,8 +8,8 @@ import Link from 'next/link';
 import { COUNTDOWN_START, getCountdownState, splitDuration } from '@/lib/countdown.mjs';
 import { getDropChoice } from '@/lib/drag-choice.mjs';
 import { INITIAL_INVITATION, respondToInvitation } from '@/lib/invitation.mjs';
+import { LATEST_RELEASE } from '@/lib/site-ui.mjs';
 import { pickTapParticle } from '@/lib/tap-particle.mjs';
-import { WechatShare } from './wechat-share';
 
 type TapParticle = {
   id: number;
@@ -193,8 +193,6 @@ export default function Home() {
       onPointerCancel={cancelCharmDrag}
       onPointerLeave={() => cursorRef.current?.removeAttribute('data-visible')}
     >
-      <WechatShare />
-
       <span className="custom-cursor" ref={cursorRef} aria-hidden="true">
         <i className="cursor-hotspot" />
         <img src="/soft-pull-controller.webp" alt="" />
@@ -217,6 +215,15 @@ export default function Home() {
       <header className="intro">
         <p className="eyebrow">19 — 29 · AUGUST · 2026</p>
         <p className="whisper">从来都是负距离，这次离得太遥远</p>
+        <div className="release-note" role="note" aria-label={`${LATEST_RELEASE.date} 发布信息`}>
+          <span className="release-stamp">
+            <b>RELEASE</b>
+            <time dateTime={LATEST_RELEASE.date}>{LATEST_RELEASE.label}</time>
+          </span>
+          <i aria-hidden="true" />
+          <p>{LATEST_RELEASE.items.join(' · ')}</p>
+          <span className="release-signal" aria-hidden="true" />
+        </div>
       </header>
 
       <section className="meeting-scene" aria-label="Toni 和 Rosalie 的十日倒计时">
@@ -318,7 +325,7 @@ export default function Home() {
           <img src="/soft-pull-controller.webp" alt="" />
         </span>
         <span className="game-entry-copy">
-          <small>WAITING ROOM · 3 GAMES</small>
+          <small>WAITING ROOM · 8 GAMES</small>
           <strong>进去玩点没用的</strong>
           <em>首页不负责这些。</em>
         </span>

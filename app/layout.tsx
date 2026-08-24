@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, ZCOOL_XiaoWei } from 'next/font/google';
 
 import './globals.css';
+import './site-chrome.css';
+import { SiteChrome } from './site-chrome';
+import { WechatShare } from './wechat-share';
 
 const displayFont = Cormorant_Garamond({
   subsets: ['latin'],
@@ -45,14 +48,24 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  colorScheme: 'light',
-  themeColor: '#fffaf7',
+  colorScheme: 'light dark',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fffaf7' },
+    { media: '(prefers-color-scheme: dark)', color: '#0d090b' },
+  ],
 };
+
+const themeBoot = `(() => { try { const saved = localStorage.getItem('rosalie-theme'); const dark = saved === 'dark' || (saved !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches); document.documentElement.dataset.theme = dark ? 'dark' : 'light'; document.documentElement.style.colorScheme = dark ? 'dark' : 'light'; } catch { document.documentElement.dataset.theme = 'light'; } })();`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="zh-CN">
-      <body className={`${displayFont.variable} ${chineseFont.variable}`}>{children}</body>
+    <html lang="zh-CN" suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: themeBoot }} /></head>
+      <body className={`${displayFont.variable} ${chineseFont.variable}`}>
+        <WechatShare />
+        {children}
+        <SiteChrome />
+      </body>
     </html>
   );
 }

@@ -1,4 +1,4 @@
-export type GameId = 'hole' | 'sand' | 'parking' | 'screw' | 'water' | 'rescue' | 'arrow';
+export type GameId = 'hole' | 'sand' | 'parking' | 'screw' | 'water' | 'rescue' | 'arrow' | 'connect';
 export type GameProgress = { gameId: GameId; level: number; bestScore: number };
 export const GAME_IDS: GameId[];
 export function normalizeProgressUpdate(input: unknown): { ok: true; value: GameProgress } | { ok: false; error: string };

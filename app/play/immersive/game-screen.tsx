@@ -4,12 +4,11 @@
 import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 
-import type { GameId } from '@/lib/player-progress.mjs';
-
 import { usePlayerProgress } from '../use-player-progress';
 import { ImmersiveGameHost } from './game-host';
+import type { ImmersiveGameId } from './game-host';
 
-const GAME_LABELS: Record<GameId, string> = {
+const GAME_LABELS: Record<ImmersiveGameId, string> = {
   hole: '黑洞降临',
   sand: '沙画消消',
   parking: '挪了下车',
@@ -19,7 +18,7 @@ const GAME_LABELS: Record<GameId, string> = {
   arrow: '一箭又一箭',
 };
 
-export function ImmersiveGameScreen({ gameId }: { gameId: GameId }) {
+export function ImmersiveGameScreen({ gameId }: { gameId: ImmersiveGameId }) {
   const playerProgress = usePlayerProgress();
   const [muted, setMuted] = useState(false);
   const [restartKey, setRestartKey] = useState(0);

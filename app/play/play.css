@@ -52,7 +52,7 @@
 .lab-sync-state.is-loading::before, .lab-sync-state.is-saving::before { background: #e0a16e; animation: lab-sync-pulse .8s ease-in-out infinite; }
 .lab-sync-state.is-offline::before { background: #b9939e; }
 
-.game-switcher { width: min(920px, 100%); margin: 0 auto 16px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
+.game-switcher { width: min(980px, 100%); margin: 0 auto 16px; display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px; }
 .game-switcher button { position: relative; min-height: 82px; padding: 11px 8px 10px; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 6px; align-items: center; border: 1px solid rgb(204 145 166 / 24%); border-radius: 19px; background: rgb(255 255 255 / 39%); color: #a17b85; text-align: left; box-shadow: inset 0 1px rgb(255 255 255 / 72%); transition: border-color .25s ease, background .25s ease, transform .25s ease, box-shadow .25s ease; -webkit-tap-highlight-color: transparent; }
 .game-switcher button small { grid-row: 1 / 3; align-self: stretch; padding-top: 2px; color: #d394aa; font-family: var(--font-display), serif; font-size: 12px; letter-spacing: .05em; }
 .game-switcher button strong { color: #765861; font-size: 11px; font-weight: 400; letter-spacing: .05em; white-space: nowrap; }
@@ -87,6 +87,7 @@
 .portal-screw .arrow-portal-orbit > span { border-radius: 50%; background: linear-gradient(145deg, #a6c8b7, #d19870); }
 .portal-water .arrow-portal-orbit > span { background: linear-gradient(145deg, #9dbedd, #b398d5); }
 .portal-rescue .arrow-portal-orbit > span { background: linear-gradient(145deg, #eeb57a, #dd8ca8); }
+.portal-connect .arrow-portal-orbit > span { background: linear-gradient(145deg, #8f1f3d, #ef9a83 52%, #d7a34e); }
 .game-save-loading { min-height: 466px; display: grid; place-content: center; justify-items: center; gap: 15px; color: #a17b86; font-size: 10px; letter-spacing: .16em; }
 .game-save-loading i { width: 34px; aspect-ratio: 1; border: 2px solid rgb(207 126 156 / 20%); border-top-color: #d77e9e; border-radius: 50%; animation: lab-spin .8s linear infinite; }
 

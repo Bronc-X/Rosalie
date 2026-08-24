@@ -22,6 +22,10 @@
   --lavender-haze: #b8a7e5;
   --apricot-haze: #ffe7d3;
   --rainbow-veil: rgb(255 251 249 / 62%);
+  --release-ink: #72535d;
+  --release-muted: #b58091;
+  --release-line: rgb(196 127 152 / 27%);
+  --release-glass: linear-gradient(145deg, rgb(255 255 255 / 68%), rgb(255 239 246 / 48%));
 }
 
 * { box-sizing: border-box; }
@@ -136,6 +140,32 @@ button, input, textarea, select { font: inherit; }
   letter-spacing: .22em;
   color: #b99a9f;
 }
+
+.release-note {
+  position: relative;
+  width: min(520px, calc(100vw - 28px));
+  min-height: 42px;
+  margin: 14px auto 0;
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: auto 1px minmax(0, 1fr) 7px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--release-line);
+  border-radius: 999px;
+  background: var(--release-glass);
+  box-shadow: 0 14px 34px rgb(122 76 94 / 9%), inset 0 1px rgb(255 255 255 / 75%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(18px) saturate(135%);
+  animation: intro-arrive .9s .16s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.release-stamp { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.release-stamp b { color: var(--release-ink); font-family: var(--font-display), serif; font-size: 9px; font-weight: 600; letter-spacing: .18em; }
+.release-stamp time { color: var(--release-muted); font-family: var(--font-display), serif; font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.release-note > i { width: 1px; height: 16px; background: var(--release-line); }
+.release-note p { min-width: 0; margin: 0; overflow: hidden; color: var(--release-ink); font-size: 10px; letter-spacing: .09em; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.release-signal { width: 7px; aspect-ratio: 1; border: 1px solid rgb(255 255 255 / 70%); border-radius: 50%; background: #df789f; box-shadow: 0 0 0 4px rgb(223 120 159 / 9%), 0 0 12px rgb(223 120 159 / 28%); }
 
 .meeting-scene {
   position: relative;
@@ -900,6 +930,11 @@ button, input, textarea, select { font: inherit; }
   .game-entry-charm { width: 60px; height: 58px; }
   .game-entry-charm img { width: 59px; height: 56px; }
   .game-entry-copy strong { font-size: 15px; }
+  .release-note { min-height: 40px; margin-top: 12px; padding: 7px 10px; gap: 8px; }
+  .release-stamp { gap: 4px; }
+  .release-stamp b { font-size: 8px; }
+  .release-stamp time { font-size: 11px; }
+  .release-note p { font-size: 9px; letter-spacing: .06em; }
   .mini-game { margin-top: 64px; }
   .game-heading h2 { font-size: 20px; }
   .game-stage { height: 252px; border-radius: 28px 28px 46px 46px; }

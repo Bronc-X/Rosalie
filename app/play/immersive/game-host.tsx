@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react';
 
 import type { GameId } from '@/lib/player-progress.mjs';
 
+export type ImmersiveGameId = Exclude<GameId, 'connect'>;
+
 export type ImmersiveGameOptions = {
   initialLevel: number;
   muted: boolean;
@@ -13,9 +15,9 @@ export type ImmersiveGameOptions = {
 };
 
 type GameCreator = (parent: HTMLElement, options: ImmersiveGameOptions) => import('phaser').Game;
-type GameHostProps = ImmersiveGameOptions & { gameId: GameId; restartKey: number };
+type GameHostProps = ImmersiveGameOptions & { gameId: ImmersiveGameId; restartKey: number };
 
-async function loadCreator(gameId: GameId): Promise<GameCreator> {
+async function loadCreator(gameId: ImmersiveGameId): Promise<GameCreator> {
   if (gameId === 'arrow') return (await import('../arrow/create-arrow-game')).createArrowGame;
   if (gameId === 'hole') return (await import('./create-hole-sand-games')).createHoleGame;
   if (gameId === 'sand') return (await import('./create-hole-sand-games')).createSandGame;

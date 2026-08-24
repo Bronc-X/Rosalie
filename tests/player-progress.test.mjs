@@ -14,6 +14,15 @@ test('progress updates accept only known games and safe integer values', () => {
     value: { gameId: 'arrow', level: 2, bestScore: 7 },
   });
 
+  assert.deepEqual(progress.normalizeProgressUpdate({
+    gameId: 'connect',
+    level: 1,
+    bestScore: 12,
+  }), {
+    ok: true,
+    value: { gameId: 'connect', level: 1, bestScore: 12 },
+  });
+
   assert.equal(progress.normalizeProgressUpdate({ gameId: 'unknown', level: 1, bestScore: 0 }).ok, false);
   assert.equal(progress.normalizeProgressUpdate({ gameId: 'arrow', level: -1, bestScore: 0 }).ok, false);
   assert.equal(progress.normalizeProgressUpdate({ gameId: 'arrow', level: 1.5, bestScore: 0 }).ok, false);
