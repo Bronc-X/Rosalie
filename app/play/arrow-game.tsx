@@ -66,21 +66,20 @@ export function ArrowGame() {
   }
 
   const copy = game.status === 'won'
-    ? '完成。'
+    ? '完成'
     : game.status === 'lost'
-      ? '未通过，点击重试。'
+      ? '未通过，点击重试'
       : flight?.judge === 'hit'
-        ? '命中。'
+        ? '命中'
         : flight
-          ? '未命中。'
-          : '虚线对准小洞时点击。';
+          ? '未命中'
+          : '对准后点击';
 
   return (
     <section className={`arrow-game arrow-${game.status} ${flight ? `arrow-flight-${flight.judge}` : ''}`} aria-labelledby="arrow-game-title">
       <div className="lab-game-heading">
-        <p>ONE TAP · TINY HOLE</p>
         <h2 id="arrow-game-title">箭有箭的去处</h2>
-        <span>虚线对准小洞时点击。</span>
+        <span>点击发射</span>
       </div>
 
       <div
@@ -108,7 +107,7 @@ export function ArrowGame() {
 
         <span className="arrow-aim-guide" aria-hidden="true" />
         <div className="arrow-launcher" aria-hidden="true">
-          <img src="/soft-pull-cursor.png" alt="" width={76} height={76} />
+          <img src="/soft-pull-cursor.webp" alt="" width={76} height={76} />
           <span>戳屏幕</span>
         </div>
 
@@ -120,7 +119,7 @@ export function ArrowGame() {
             aria-hidden="true"
           >
             <i className="arrow-projectile">
-              <img src="/soft-pull-cursor.png" alt="" />
+              <img src="/soft-pull-cursor.webp" alt="" />
               <b />
             </i>
           </span>

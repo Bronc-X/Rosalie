@@ -1,19 +1,19 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 
-import { TREEHOLE_MAX_LENGTH } from '@/lib/treehole.mjs';
+import { TREEHOLE_MAX_LENGTH, TREEHOLE_REPLY_MAX_LENGTH } from '@/lib/treehole.mjs';
 
-type Message = { id: string; text: string; createdAt: string };
+type Reply = { id: string; text: string; createdAt: string };
+type Message = { id: string; text: string; createdAt: string; replies: Reply[] };
 
 async function fetchMessages() {
   const response = await fetch('/api/treehole', { cache: 'no-store' });
   const data = await response.json() as { ok?: boolean; messages?: Message[] };
   if (!response.ok || !data.ok || !Array.isArray(data.messages)) throw new Error('load failed');
-  return data.messages;
+  return data.messages.map((message) => ({ ...message, replies: message.replies ?? [] }));
 }
 
 function formatBeijingTime(value: string) {
@@ -32,7 +32,11 @@ export function TreeholeBoard() {
   const [draft, setDraft] = useState('');
   const [loadState, setLoadState] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
-  const [feedback, setFeedback] = useState('匿名留言。');
+  const [feedback, setFeedback] = useState('');
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyDraft, setReplyDraft] = useState('');
+  const [replyState, setReplyState] = useState<'idle' | 'sending' | 'error'>('idle');
+  const [replyFeedback, setReplyFeedback] = useState('');
 
   async function loadMessages() {
     setLoadState('loading');
@@ -62,7 +66,7 @@ export function TreeholeBoard() {
     event.preventDefault();
     if (!draft.trim() || sendState === 'sending') return;
     setSendState('sending');
-    setFeedback('正在发送。');
+    setFeedback('发送中');
 
     try {
       const response = await fetch('/api/treehole', {
@@ -72,13 +76,49 @@ export function TreeholeBoard() {
       });
       const data = await response.json() as { ok?: boolean; message?: Message; error?: string };
       if (!response.ok || !data.ok || !data.message) throw new Error(data.error ?? 'send failed');
-      setMessages((current) => [data.message as Message, ...current]);
+      setMessages((current) => [{ ...data.message as Message, replies: data.message?.replies ?? [] }, ...current]);
       setDraft('');
       setSendState('sent');
-      setFeedback('已留言。');
+      setFeedback('已发布');
     } catch {
       setSendState('error');
-      setFeedback('发送失败，请重试。');
+      setFeedback('发送失败，请重试');
+    }
+  }
+
+  function openReply(messageId: string) {
+    setReplyingTo(messageId);
+    setReplyDraft('');
+    setReplyState('idle');
+    setReplyFeedback('');
+  }
+
+  async function leaveReply(event: FormEvent<HTMLFormElement>, messageId: string) {
+    event.preventDefault();
+    if (!replyDraft.trim() || replyState === 'sending') return;
+    setReplyState('sending');
+    setReplyFeedback('发送中');
+
+    try {
+      const response = await fetch('/api/treehole/replies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId, reply: replyDraft }),
+      });
+      const data = await response.json() as { ok?: boolean; reply?: Reply; error?: string };
+      if (!response.ok || !data.ok || !data.reply) throw new Error(data.error ?? 'reply failed');
+      setMessages((current) => current.map((message) => (
+        message.id === messageId
+          ? { ...message, replies: [...message.replies, data.reply as Reply] }
+          : message
+      )));
+      setReplyDraft('');
+      setReplyState('idle');
+      setReplyFeedback('');
+      setReplyingTo(null);
+    } catch {
+      setReplyState('error');
+      setReplyFeedback('回复失败，请重试');
     }
   }
 
@@ -86,39 +126,34 @@ export function TreeholeBoard() {
     <main className="treehole-page">
       <div className="treehole-glow" aria-hidden="true" />
       <header className="treehole-header">
-        <Link href="/play">← 回实验室</Link>
-        <div>
-          <p>ANONYMOUS · NO KPI</p>
-          <h1>树洞留言板</h1>
-          <span>不署名，也不催回复。</span>
-        </div>
-        <Link href="/schedule">日程板 ↗</Link>
+        <h1>留言</h1>
       </header>
 
       <section className="treehole-compose" aria-labelledby="treehole-compose-title">
         <div className="tree-rings" aria-hidden="true">
           <i /><i /><i /><i />
-          <img src="/soft-pull-controller.webp" alt="" />
+          <img src="/soft-pull-controller.webp" alt="" width="75" height="75" />
         </div>
         <div className="treehole-form-wrap">
-          <p>DROP A SECRET</p>
-          <h2 id="treehole-compose-title">把一句话丢进去</h2>
+          <h2 id="treehole-compose-title">写留言</h2>
           <form onSubmit={leaveMessage}>
             <textarea
               value={draft}
               maxLength={TREEHOLE_MAX_LENGTH}
-              placeholder="写点什么。"
+              placeholder="写下留言"
               onChange={(event) => {
                 setDraft(event.target.value);
-                if (sendState !== 'idle') setSendState('idle');
+                if (sendState !== 'idle') {
+                  setSendState('idle');
+                  setFeedback('');
+                }
               }}
               aria-describedby="treehole-feedback"
             />
             <div className="treehole-form-bottom">
               <span>{Array.from(draft).length} / {TREEHOLE_MAX_LENGTH}</span>
               <button type="submit" disabled={!draft.trim() || sendState === 'sending'}>
-                {sendState === 'sending' ? '正在掉落' : '扔进树洞'}
-                <i aria-hidden="true">↘</i>
+                {sendState === 'sending' ? '发送中' : '发布'}
               </button>
             </div>
           </form>
@@ -128,30 +163,69 @@ export function TreeholeBoard() {
 
       <section className="treehole-messages" aria-labelledby="treehole-messages-title">
         <div className="treehole-list-heading">
-          <p>INSIDE THE TREE</p>
-          <h2 id="treehole-messages-title">最近掉进去的</h2>
+          <h2 id="treehole-messages-title">全部留言</h2>
           <button type="button" onClick={() => void loadMessages()} disabled={loadState === 'loading'}>
-            {loadState === 'loading' ? '加载中' : '刷新'}
+            {loadState === 'loading' ? '读取中' : '刷新'}
           </button>
         </div>
 
         {loadState === 'error' ? (
           <div className="treehole-empty" role="status">
-            <span>…</span>
-            <p>树洞暂时没接上。</p>
-            <button type="button" onClick={() => void loadMessages()}>再试一次</button>
+            <p>暂时无法读取留言</p>
+            <button type="button" onClick={() => void loadMessages()}>重试</button>
           </div>
         ) : loadState === 'loading' && messages.length === 0 ? (
-          <div className="treehole-empty" role="status"><span>○</span><p>加载中。</p></div>
+          <div className="treehole-empty" role="status"><p>读取中</p></div>
         ) : messages.length === 0 ? (
-          <div className="treehole-empty" role="status"><span>○</span><p>暂无留言。</p></div>
+          <div className="treehole-empty" role="status"><p>还没有留言</p></div>
         ) : (
           <ol className="message-list">
-            {messages.map((message, index) => (
-              <li key={message.id} style={{ '--message-index': index } as React.CSSProperties}>
-                <span className="message-number">{String(index + 1).padStart(2, '0')}</span>
-                <p>{message.text}</p>
-                <time dateTime={message.createdAt}>{formatBeijingTime(message.createdAt)}</time>
+            {messages.map((message) => (
+              <li className="message-card" key={message.id}>
+                <div className="message-meta">
+                  <time dateTime={message.createdAt}>{formatBeijingTime(message.createdAt)}</time>
+                </div>
+                <p className="message-text">{message.text}</p>
+
+                {message.replies.length > 0 && (
+                  <ol className="reply-list" aria-label="回复">
+                    {message.replies.map((reply) => (
+                      <li key={reply.id}>
+                        <p>{reply.text}</p>
+                        <time dateTime={reply.createdAt}>{formatBeijingTime(reply.createdAt)}</time>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+
+                {replyingTo === message.id ? (
+                  <form className="reply-form" onSubmit={(event) => void leaveReply(event, message.id)}>
+                    <label htmlFor={`reply-${message.id}`}>回复这条留言</label>
+                    <textarea
+                      id={`reply-${message.id}`}
+                      value={replyDraft}
+                      maxLength={TREEHOLE_REPLY_MAX_LENGTH}
+                      autoFocus
+                      placeholder="写回复"
+                      onChange={(event) => {
+                        setReplyDraft(event.target.value);
+                        if (replyState === 'error') setReplyState('idle');
+                      }}
+                    />
+                    <div className="reply-form-actions">
+                      <span>{Array.from(replyDraft).length} / {TREEHOLE_REPLY_MAX_LENGTH}</span>
+                      <button type="button" className="reply-cancel" onClick={() => setReplyingTo(null)}>取消</button>
+                      <button type="submit" disabled={!replyDraft.trim() || replyState === 'sending'}>
+                        {replyState === 'sending' ? '发送中' : '发送回复'}
+                      </button>
+                    </div>
+                    {replyFeedback && <p className="reply-feedback" role="status">{replyFeedback}</p>}
+                  </form>
+                ) : (
+                  <button className="reply-trigger" type="button" onClick={() => openReply(message.id)}>
+                    回复{message.replies.length > 0 ? ` ${message.replies.length}` : ''}
+                  </button>
+                )}
               </li>
             ))}
           </ol>

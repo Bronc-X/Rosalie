@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, MouseEvent } from 'react';
 
@@ -84,7 +83,7 @@ export function ScheduleBoard() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [loadState, setLoadState] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'error'>('idle');
-  const [feedback, setFeedback] = useState('时间、内容、地点和添加人都会公开。');
+  const [feedback, setFeedback] = useState('');
   const [notice, setNotice] = useState('');
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
@@ -164,7 +163,7 @@ export function ScheduleBoard() {
   function openComposer() {
     setDraft({ ...EMPTY_DRAFT, scheduledAt: defaultDateTimeForDay(selectedDay) });
     setSendState('idle');
-    setFeedback('时间、内容、地点和添加人都会公开。');
+    setFeedback('所有人可见');
     setComposerOpen(true);
   }
 
@@ -181,14 +180,14 @@ export function ScheduleBoard() {
   function updateDraft(field: keyof Draft, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
     if (sendState !== 'idle') setSendState('idle');
-    setFeedback('时间、内容、地点和添加人都会公开。');
+    setFeedback('所有人可见');
   }
 
   async function addEntry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (sendState === 'sending' || Object.values(draft).some((value) => !value.trim())) return;
     setSendState('sending');
-    setFeedback('正在写进共享日程。');
+    setFeedback('添加中');
 
     try {
       const response = await fetch('/api/schedule', {
@@ -206,13 +205,13 @@ export function ScheduleBoard() {
       setDraft(EMPTY_DRAFT);
       setComposerOpen(false);
       setSendState('idle');
-      setNotice('日程已公开。');
+      setNotice('已添加');
       window.setTimeout(() => setNotice(''), 2800);
     } catch (error) {
       setSendState('error');
       setFeedback(error instanceof Error && /最多|不能为空|请选择|添加人/.test(error.message)
         ? error.message
-        : '没写进去，请再试一次。');
+        : '添加失败，请重试');
     }
   }
 
@@ -221,19 +220,15 @@ export function ScheduleBoard() {
       <div className="schedule-aurora" aria-hidden="true" />
 
       <header className="schedule-header liquid-glass">
-        <Link href="/play">← 游戏</Link>
         <div>
-          <p>SHARED CALENDAR · BEIJING</p>
-          <h1>日程</h1>
+          <h1>日历</h1>
         </div>
-        <Link href="/treehole">树洞 ↗</Link>
       </header>
 
       <section className="calendar-hero" aria-labelledby="calendar-month-title">
         <div className="calendar-title-block">
-          <p>{visibleMonth.year} · MONTH {monthCode(visibleMonth.month)}</p>
           <h2 id="calendar-month-title">{formatMonth(visibleMonth)}</h2>
-          <span>{entries.length === 0 ? '暂无公开安排' : `${entries.length} 项公开安排`}</span>
+          <span>{entries.length === 0 ? '暂无日程' : `${entries.length} 项日程`}</span>
         </div>
 
         <div className="calendar-actions liquid-glass" aria-label="日历操作">
@@ -286,7 +281,6 @@ export function ScheduleBoard() {
         <aside className="day-agenda" aria-labelledby="selected-day-title">
           <div className="day-agenda-heading">
             <div>
-              <p>SELECTED DAY</p>
               <h2 id="selected-day-title">{formatSelectedDate(selectedDay)}</h2>
             </div>
             <button type="button" onClick={() => void loadEntries()} disabled={loadState === 'loading'}>
@@ -296,15 +290,15 @@ export function ScheduleBoard() {
 
           {loadState === 'error' ? (
             <div className="agenda-state" role="status">
-              <i>…</i><p>日程板暂时没接上。</p><button type="button" onClick={() => void loadEntries()}>再试一次</button>
+              <i aria-hidden="true" /><p>暂时无法读取日程</p><button type="button" onClick={() => void loadEntries()}>重试</button>
             </div>
           ) : loadState === 'loading' && entries.length === 0 ? (
-            <div className="agenda-state" role="status"><i>○</i><p>正在读取共享日程。</p></div>
+            <div className="agenda-state" role="status"><i aria-hidden="true" /><p>读取中</p></div>
           ) : selectedEntries.length === 0 ? (
             <div className="agenda-state is-empty">
               <div className="agenda-empty-orbit" aria-hidden="true"><i /><i /><i /></div>
-              <p>这一天还没有安排。</p>
-              <button type="button" onClick={openComposer}>给这天加一项</button>
+              <p>当天没有日程</p>
+              <button type="button" onClick={openComposer}>新增日程</button>
             </div>
           ) : (
             <ol className="agenda-list">
@@ -313,7 +307,7 @@ export function ScheduleBoard() {
                   <time dateTime={entry.scheduledAt}>{formatTime(entry.scheduledAt)}</time>
                   <div>
                     <h3>{entry.content}</h3>
-                    <p><span aria-hidden="true">⌖</span>{entry.location}</p>
+                    <p>{entry.location}</p>
                     <small>由 {entry.addedBy} 添加</small>
                   </div>
                 </li>
@@ -329,7 +323,6 @@ export function ScheduleBoard() {
             <div className="schedule-dialog-handle" aria-hidden="true" />
             <header>
               <div>
-                <p>NEW SHARED EVENT</p>
                 <h2 id="schedule-dialog-title">新增日程</h2>
                 <span>{formatSelectedDate(selectedDay)}</span>
               </div>
@@ -338,7 +331,7 @@ export function ScheduleBoard() {
 
             <form onSubmit={addEntry}>
               <label>
-                <span>日程时间 · 北京时间</span>
+                <span>时间（北京时间）</span>
                 <input
                   ref={firstFieldRef}
                   type="datetime-local"
@@ -350,12 +343,12 @@ export function ScheduleBoard() {
                 />
               </label>
               <label>
-                <span>日程内容</span>
+                <span>内容</span>
                 <input
                   type="text"
                   value={draft.content}
                   maxLength={SCHEDULE_CONTENT_MAX_LENGTH}
-                  placeholder="要做什么"
+                  placeholder="写下日程"
                   onChange={(event) => updateDraft('content', event.target.value)}
                   required
                 />
@@ -366,7 +359,7 @@ export function ScheduleBoard() {
                   type="text"
                   value={draft.location}
                   maxLength={SCHEDULE_LOCATION_MAX_LENGTH}
-                  placeholder="线上也算地点"
+                  placeholder="输入地点"
                   onChange={(event) => updateDraft('location', event.target.value)}
                   required
                 />
@@ -377,13 +370,13 @@ export function ScheduleBoard() {
                   type="text"
                   value={draft.addedBy}
                   maxLength={SCHEDULE_ADDED_BY_MAX_LENGTH}
-                  placeholder="所有人会看到这个名字"
+                  placeholder="输入名字"
                   onChange={(event) => updateDraft('addedBy', event.target.value)}
                   required
                 />
               </label>
               <button type="submit" disabled={sendState === 'sending' || Object.values(draft).some((value) => !value.trim())}>
-                {sendState === 'sending' ? '正在添加' : '添加到共享日程'}<b aria-hidden="true">↗</b>
+                {sendState === 'sending' ? '添加中' : '添加日程'}
               </button>
             </form>
             <p className={`schedule-feedback is-${sendState}`} aria-live="polite">{feedback}</p>

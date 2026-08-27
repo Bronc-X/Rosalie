@@ -2,7 +2,6 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import {
@@ -36,8 +35,8 @@ function MatchIcon({ type }: { type: LinkIconType }) {
   const source = type === 'pull'
     ? '/soft-pull-controller.webp'
     : type === 'rosette'
-      ? '/match-rosette.png'
-      : '/match-charm.png';
+      ? '/match-rosette.webp'
+      : '/match-charm.webp';
 
   return <img src={source} alt="" width={112} height={112} draggable={false} />;
 }
@@ -150,11 +149,10 @@ export function LinkMatchGame() {
     <main className="link-game-page">
       <div className="link-game-glow" aria-hidden="true" />
       <header className="link-game-header">
-        <Link href="/play" aria-label="返回小游戏">←</Link>
         <div>
-          <small>FOUR CHARMS · LEVEL {String(level).padStart(2, '0')}</small>
+          <small>第 {level} 关</small>
           <h1>连一下</h1>
-          <p>同类 · 最多拐两次</p>
+          <p>同类，最多拐两次</p>
         </div>
         <button type="button" onClick={restart} aria-label="重新开始">↻</button>
       </header>
@@ -191,18 +189,17 @@ export function LinkMatchGame() {
               <div className="link-win-icons" aria-hidden="true">
                 <MatchIcon type="rosette" /><MatchIcon type="charm" />
               </div>
-              <small>BOARD CLEARED</small>
               <h2>全接走了</h2>
-              <p>{moves} 步 · {score} 分</p>
-              <button type="button" onClick={restart}>再来一盘 <b>↗</b></button>
+              <p>{moves} 步，{score} 分</p>
+              <button type="button" onClick={restart}>再来一盘</button>
             </div>
           )}
         </div>
 
         <div className="link-game-controls">
-          <button type="button" onClick={showHint}><i aria-hidden="true">✦</i><span>提示</span></button>
+          <button type="button" onClick={showHint}><span>提示</span></button>
           <p>{playerProgress.state === 'saving' ? '保存中' : playerProgress.state === 'offline' ? '本机存档' : '自动存档'}</p>
-          <button type="button" onClick={shuffleBoard}><i aria-hidden="true">↝</i><span>洗牌</span></button>
+          <button type="button" onClick={shuffleBoard}><span>洗牌</span></button>
         </div>
       </section>
     </main>

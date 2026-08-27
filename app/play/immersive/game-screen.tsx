@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 
 import { usePlayerProgress } from '../use-player-progress';
@@ -23,7 +22,7 @@ export function ImmersiveGameScreen({ gameId }: { gameId: ImmersiveGameId }) {
   const [muted, setMuted] = useState(false);
   const [restartKey, setRestartKey] = useState(0);
   const [level, setLevel] = useState<number | null>(null);
-  const [status, setStatus] = useState(GAME_LABELS[gameId]);
+  const [status, setStatus] = useState('');
   const reducedMotion = useMemo(() => typeof window !== 'undefined'
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches, []);
 
@@ -39,7 +38,7 @@ export function ImmersiveGameScreen({ gameId }: { gameId: ImmersiveGameId }) {
     return (
       <main className="arrow-screen arrow-screen-loading immersive-screen">
         <img src="/soft-pull-controller.webp" alt="" />
-        <p>正在接回上次进度</p>
+        <p>读取进度</p>
       </main>
     );
   }
@@ -47,10 +46,9 @@ export function ImmersiveGameScreen({ gameId }: { gameId: ImmersiveGameId }) {
   return (
     <main className={`arrow-screen immersive-screen immersive-${gameId}`}>
       <div className="arrow-screen-controls">
-        <Link href="/play" aria-label="返回小游戏">←</Link>
         <div>
-          <small>{GAME_LABELS[gameId]} · LEVEL {String(visibleLevel + 1).padStart(2, '0')}</small>
-          <strong>{status}</strong>
+          <strong>{GAME_LABELS[gameId]}</strong>
+          {status && <small>{status}</small>}
         </div>
         <button type="button" onClick={() => setMuted((current) => !current)} aria-label={muted ? '打开声音' : '关闭声音'}>
           {muted ? '静' : '声'}

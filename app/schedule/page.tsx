@@ -4,8 +4,8 @@ import { ScheduleBoard } from './schedule-board';
 import './schedule.css';
 
 export const metadata: Metadata = {
-  title: '共享日程板',
-  description: '所有已解锁访客共同维护的日程。',
+  title: '日历',
+  description: '共享日程。',
   robots: { index: false, follow: false },
 };
 

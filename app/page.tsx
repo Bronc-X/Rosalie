@@ -5,9 +5,19 @@ import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import Link from 'next/link';
 
+import {
+  CONTROLLER_CHOICES,
+  CONTROLLER_PALETTES,
+  CONTROLLER_PALETTE_STORAGE_KEY,
+  CONTROLLER_STORAGE_KEY,
+  controllerAsset,
+  controllerPaletteFilter,
+  resolveControllerChoice,
+  resolveControllerPalette,
+} from '@/lib/controller-choice.mjs';
+import type { ControllerChoiceId, ControllerPaletteId } from '@/lib/controller-choice.mjs';
 import { COUNTDOWN_START, getCountdownState, splitDuration } from '@/lib/countdown.mjs';
-import { getDropChoice } from '@/lib/drag-choice.mjs';
-import { INITIAL_INVITATION, respondToInvitation } from '@/lib/invitation.mjs';
+import { INTERVIEW_MODEL_LABEL } from '@/lib/interview-model.mjs';
 import { LATEST_RELEASE } from '@/lib/site-ui.mjs';
 import { pickTapParticle } from '@/lib/tap-particle.mjs';
 
@@ -17,13 +27,6 @@ type TapParticle = {
   x: number;
   y: number;
   rotation: number;
-};
-
-type CharmDrag = {
-  pointerId: number;
-  startX: number;
-  startY: number;
-  moved: boolean;
 };
 
 function BlossomShape({ className = '' }: { className?: string }) {
@@ -38,24 +41,24 @@ function BlossomShape({ className = '' }: { className?: string }) {
 export default function Home() {
   const [now, setNow] = useState(COUNTDOWN_START);
   const [tapParticles, setTapParticles] = useState<TapParticle[]>([]);
-  const [invitation, setInvitation] = useState({ ...INITIAL_INVITATION });
-  const [mobileCharmBurst, setMobileCharmBurst] = useState(0);
-  const [isCharmDragging, setIsCharmDragging] = useState(false);
-  const [dragOverChoice, setDragOverChoice] = useState<'yes' | 'no' | null>(null);
+  const [controllerChoice, setControllerChoice] = useState<ControllerChoiceId>('pull');
+  const [controllerPalette, setControllerPalette] = useState<ControllerPaletteId>('original');
   const nextTapParticleId = useRef(0);
   const cursorRef = useRef<HTMLSpanElement>(null);
-  const mobileCharmRef = useRef<HTMLButtonElement>(null);
-  const charmDragRef = useRef<CharmDrag | null>(null);
-  const suppressCharmClickRef = useRef(false);
   const state = getCountdownState(now);
   const time = splitDuration(state.remainingMs);
   const isReunited = state.phase === 'reunited';
-  const hasSaidYes = invitation.choice === 'yes';
+  const controllerSource = controllerAsset(controllerChoice);
+  const controllerTone = controllerPaletteFilter(controllerPalette);
+  const selectedController = CONTROLLER_CHOICES.find((choice) => choice.id === controllerChoice) ?? CONTROLLER_CHOICES[0];
   const sceneStyle = {
-    '--toni-position': `${7 + state.progress * 33}%`,
-    '--rosalie-position': `${5 + state.progress * 33}%`,
+    '--toni-position': `${7 + state.progress * 23}%`,
+    '--rosalie-position': `${5 + state.progress * 24}%`,
+    '--toni-mobile-position': `${7 + state.progress * 20}%`,
+    '--rosalie-mobile-position': `${5 + state.progress * 22}%`,
     '--progress': state.progress,
     '--thread-width': `${52 - state.progress * 43}%`,
+    '--controller-tone': controllerTone,
   } as CSSProperties;
 
   useEffect(() => {
@@ -67,9 +70,23 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    let storedChoice: string | null = null;
+    let storedPalette: string | null = null;
+    try {
+      storedChoice = window.localStorage.getItem(CONTROLLER_STORAGE_KEY);
+      storedPalette = window.localStorage.getItem(CONTROLLER_PALETTE_STORAGE_KEY);
+    } catch { /* Use the default style. */ }
+    const timer = window.setTimeout(() => {
+      setControllerChoice(resolveControllerChoice(storedChoice));
+      setControllerPalette(resolveControllerPalette(storedPalette));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   function plantTapParticle(event: ReactPointerEvent<HTMLElement>) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    if ((event.target as HTMLElement).closest('.invitation, .mobile-charm-stage, .game-entry')) return;
+    if ((event.target as HTMLElement).closest('.home-utility-bar')) return;
 
     const id = nextTapParticleId.current++;
     setTapParticles((current) => [
@@ -84,10 +101,6 @@ export default function Home() {
     ]);
   }
 
-  function choose(answer: 'yes' | 'no') {
-    setInvitation((current) => respondToInvitation(current, answer));
-  }
-
   function moveCursor(event: ReactPointerEvent<HTMLElement>) {
     if (event.pointerType !== 'mouse' || !cursorRef.current) return;
     cursorRef.current.style.setProperty('--cursor-x', `${event.clientX}px`);
@@ -95,107 +108,29 @@ export default function Home() {
     cursorRef.current.dataset.visible = 'true';
   }
 
-  function getChoiceAt(x: number, y: number) {
-    const yesButton = document.querySelector<HTMLButtonElement>('.yes-choice');
-    const noButton = document.querySelector<HTMLButtonElement>('.no-choice');
-    if (!yesButton || !noButton) return null;
-
-    return getDropChoice(
-      { x, y },
-      { yes: yesButton.getBoundingClientRect(), no: noButton.getBoundingClientRect() },
-    );
+  function selectController(id: ControllerChoiceId) {
+    setControllerChoice(id);
+    try { window.localStorage.setItem(CONTROLLER_STORAGE_KEY, id); } catch { /* The current selection still applies. */ }
+    window.dispatchEvent(new CustomEvent('rosalie-controller-change', { detail: { id, palette: controllerPalette } }));
   }
 
-  function resetCharmPosition() {
-    mobileCharmRef.current?.style.setProperty('--drag-x', '0px');
-    mobileCharmRef.current?.style.setProperty('--drag-y', '0px');
-    mobileCharmRef.current?.removeAttribute('data-dragging');
-    setIsCharmDragging(false);
-    setDragOverChoice(null);
+  function selectControllerPalette(id: ControllerPaletteId) {
+    setControllerPalette(id);
+    try { window.localStorage.setItem(CONTROLLER_PALETTE_STORAGE_KEY, id); } catch { /* The current selection still applies. */ }
+    window.dispatchEvent(new CustomEvent('rosalie-controller-change', { detail: { id: controllerChoice, palette: id } }));
   }
-
-  function startCharmDrag(event: ReactPointerEvent<HTMLButtonElement>) {
-    if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
-
-    event.currentTarget.dataset.dragging = 'true';
-    charmDragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      moved: false,
-    };
-    suppressCharmClickRef.current = false;
-    setIsCharmDragging(true);
-  }
-
-  function moveCharmDrag(event: ReactPointerEvent<HTMLElement>) {
-    const drag = charmDragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-
-    const x = event.clientX - drag.startX;
-    const y = event.clientY - drag.startY;
-    if (Math.hypot(x, y) > 6) drag.moved = true;
-
-    mobileCharmRef.current?.style.setProperty('--drag-x', `${x}px`);
-    mobileCharmRef.current?.style.setProperty('--drag-y', `${y}px`);
-    const nextChoice = getChoiceAt(event.clientX, event.clientY);
-    setDragOverChoice((current) => current === nextChoice ? current : nextChoice);
-  }
-
-  function finishCharmDrag(event: ReactPointerEvent<HTMLElement>) {
-    const drag = charmDragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-
-    const choice = drag.moved ? getChoiceAt(event.clientX, event.clientY) : null;
-    suppressCharmClickRef.current = drag.moved;
-    charmDragRef.current = null;
-    resetCharmPosition();
-
-    if (choice) {
-      setMobileCharmBurst((current) => current + 1);
-      choose(choice);
-    }
-  }
-
-  function cancelCharmDrag(event: ReactPointerEvent<HTMLElement>) {
-    if (charmDragRef.current?.pointerId !== event.pointerId) return;
-    suppressCharmClickRef.current = true;
-    charmDragRef.current = null;
-    resetCharmPosition();
-  }
-
-  function tapMobileCharm() {
-    if (suppressCharmClickRef.current) {
-      suppressCharmClickRef.current = false;
-      return;
-    }
-    setMobileCharmBurst((current) => current + 1);
-  }
-
-  const noLabel = invitation.noCount === 0
-    ? '否'
-    : invitation.noCount === 1
-      ? '重新提交'
-      : invitation.noCount === 2
-        ? '继续申诉'
-        : '我有异议';
 
   return (
     <main
-      className={`reunion ${isReunited ? 'is-reunited' : ''} ${hasSaidYes ? 'has-said-yes' : ''} ${isCharmDragging ? 'is-dragging-charm' : ''} ${dragOverChoice ? `is-over-${dragOverChoice}` : ''}`}
+      className={`reunion ${isReunited ? 'is-reunited' : ''}`}
       style={sceneStyle}
       onPointerDown={plantTapParticle}
-      onPointerMove={(event) => {
-        moveCursor(event);
-        moveCharmDrag(event);
-      }}
-      onPointerUp={finishCharmDrag}
-      onPointerCancel={cancelCharmDrag}
+      onPointerMove={moveCursor}
       onPointerLeave={() => cursorRef.current?.removeAttribute('data-visible')}
     >
       <span className="custom-cursor" ref={cursorRef} aria-hidden="true">
         <i className="cursor-hotspot" />
-        <img src="/soft-pull-controller.webp" alt="" />
+        <img src={controllerSource} alt="" />
       </span>
 
       <div className="aurora aurora-pink" aria-hidden="true" />
@@ -208,37 +143,91 @@ export default function Home() {
       </div>
       <div className="falling-charms" aria-hidden="true">
         {Array.from({ length: 6 }, (_, index) => (
-          <img src="/soft-pull-controller.webp" alt="" key={index} />
+          <img src={controllerSource} alt="" key={index} />
         ))}
       </div>
 
       <header className="intro">
-        <p className="eyebrow">19 — 29 · AUGUST · 2026</p>
-        <p className="whisper">从来都是负距离，这次离得太遥远</p>
+        <p className="whisper">从来都是负距离</p>
+        <p className="home-date">2026.08.19 - 08.29</p>
         <div className="release-note" role="note" aria-label={`${LATEST_RELEASE.date} 发布信息`}>
-          <span className="release-stamp">
-            <b>RELEASE</b>
-            <time dateTime={LATEST_RELEASE.date}>{LATEST_RELEASE.label}</time>
-          </span>
-          <i aria-hidden="true" />
-          <p>{LATEST_RELEASE.items.join(' · ')}</p>
-          <span className="release-signal" aria-hidden="true" />
+          <time dateTime={LATEST_RELEASE.date}>{LATEST_RELEASE.label} 更新</time>
+          <p>{LATEST_RELEASE.items.join('，')}</p>
         </div>
       </header>
+
+      <nav className="home-utility-bar" aria-label="首页工具">
+        <details className="controller-drawer">
+          <summary>
+            <img src={controllerSource} alt="" />
+            <span>控制器</span>
+            <i aria-hidden="true" />
+          </summary>
+          <div className="controller-popover">
+            <div className="controller-options" role="radiogroup" aria-label="控制器样式">
+              {CONTROLLER_CHOICES.map((choice) => (
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={controllerChoice === choice.id}
+                  className={`controller-choice ${controllerChoice === choice.id ? 'is-selected' : ''}`}
+                  key={choice.id}
+                  onClick={() => selectController(choice.id)}
+                >
+                  <img
+                    src={choice.asset}
+                    alt=""
+                    style={{ '--preview-tone': controllerChoice === choice.id ? controllerTone : 'none' } as CSSProperties}
+                  />
+                  <span>{choice.label}</span>
+                </button>
+              ))}
+            </div>
+            <fieldset className="controller-palette">
+              <legend>配色</legend>
+              <div role="radiogroup" aria-label={`${selectedController.label}配色`}>
+                {CONTROLLER_PALETTES.map((palette) => (
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={controllerPalette === palette.id}
+                    className={`palette-choice ${controllerPalette === palette.id ? 'is-selected' : ''}`}
+                    key={palette.id}
+                    onClick={() => selectControllerPalette(palette.id)}
+                  >
+                    <i style={{ background: `linear-gradient(135deg, ${palette.colors[0]}, ${palette.colors[1]})` }} aria-hidden="true" />
+                    <span>{palette.label}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+        </details>
+
+        <Link
+          className="home-utility-link utility-interview"
+          href="/interview"
+          aria-label={`${INTERVIEW_MODEL_LABEL} 面试官 Agent`}
+          title={`${INTERVIEW_MODEL_LABEL} 面试官 Agent`}
+        >
+          <span className="utility-interview-mark" aria-hidden="true"><i /><i /></span>
+          <strong>{INTERVIEW_MODEL_LABEL.replace('GPT-', '')} 面试</strong>
+        </Link>
+
+        <Link className="home-utility-link utility-game" href="/play" aria-label="进入小游戏">
+          <img src={controllerSource} alt="" aria-hidden="true" />
+          <strong>游戏</strong>
+        </Link>
+      </nav>
 
       <section className="meeting-scene" aria-label="Toni 和 Rosalie 的十日倒计时">
         <div className="glow-arc" aria-hidden="true" />
         <div className="closing-thread" aria-hidden="true">
           <span className="thread-traveller traveller-toni" />
-          <span className="thread-heart">♥</span>
+          <span className="thread-center" />
           <span className="thread-traveller traveller-rosalie" />
         </div>
         <span className="center-pull-ring" aria-hidden="true" />
-        <p className="closing-whisper" aria-hidden="true">
-          <i className="pull-arrow pull-arrow-left">→</i>
-          <span>倒计时中</span>
-          <i className="pull-arrow pull-arrow-right">←</i>
-        </p>
         <div className="orbit-dot orbit-dot-one" aria-hidden="true" />
         <div className="orbit-dot orbit-dot-two" aria-hidden="true" />
 
@@ -250,8 +239,6 @@ export default function Home() {
             <span className="face"><i /><i /><b /></span>
           </div>
         </article>
-
-        <span className="meeting-heart" aria-hidden="true">♥</span>
 
         <article className="person person-rosalie">
           <h2>Rosalie</h2>
@@ -265,21 +252,14 @@ export default function Home() {
           </div>
         </article>
 
-        {hasSaidYes ? (
-          <div className="departure-burst" aria-hidden="true">
-            {Array.from({ length: 12 }, (_, index) => (
-              <BlossomShape className="departure-blossom" key={index} />
-            ))}
-          </div>
-        ) : null}
       </section>
 
       <section className="countdown" aria-atomic="true">
         <p className="reunion-copy" aria-live="polite">
-          {isReunited ? '系统提示：人员已归队。' : (
+          {isReunited ? '已归队' : (
             <span className="countdown-copy-content">
               <span><span className="work-emphasis">干</span>活倒计时</span>
-              <img className="countdown-charm" src="/soft-pull-controller.webp" alt="" aria-hidden="true" />
+              <img className="countdown-charm" src={controllerSource} alt="" aria-hidden="true" />
             </span>
           )}
         </p>
@@ -293,84 +273,11 @@ export default function Home() {
             <span className="time-unit" key={label}>
               <strong>{Number(value).toString().padStart(2, '0')}</strong>
               <small>{label}</small>
-              {index < 3 ? <i aria-hidden="true">·</i> : null}
+              {index < 3 ? <i aria-hidden="true" /> : null}
             </span>
           ))}
         </div>
-        <p className="tap-hint">戳屏幕看看</p>
-        <div className="mobile-charm-stage">
-          <button
-            className="mobile-charm"
-            type="button"
-            ref={mobileCharmRef}
-            aria-label="拖拽它去选择下面的选项，轻点会掉落彩蛋"
-            onClick={tapMobileCharm}
-            onPointerDown={startCharmDrag}
-          >
-            <img src="/soft-pull-controller.webp" alt="" />
-            <span>{isCharmDragging ? '拖到按钮上松手' : '拖拽它去选择'}</span>
-          </button>
-          {mobileCharmBurst > 0 ? (
-            <div className="mobile-charm-burst" key={mobileCharmBurst} aria-hidden="true">
-              {Array.from({ length: 6 }, (_, index) => (
-                <img src="/soft-pull-controller.webp" alt="" key={index} />
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      <Link className="game-entry" href="/play" aria-label="进入小游戏页面">
-        <span className="game-entry-charm" aria-hidden="true">
-          <img src="/soft-pull-controller.webp" alt="" />
-        </span>
-        <span className="game-entry-copy">
-          <small>WAITING ROOM · 8 GAMES</small>
-          <strong>进去玩点没用的</strong>
-          <em>首页不负责这些。</em>
-        </span>
-        <i aria-hidden="true">↗</i>
-      </Link>
-
-      <section
-        className={`invitation no-step-${Math.min(invitation.noCount, 4)}`}
-        aria-labelledby="invitation-title"
-        key={`invitation-${invitation.noCount}-${invitation.choice}`}
-      >
-        <BlossomShape className="invitation-seal" />
-        <p className="invitation-kicker">PENDING APPROVAL</p>
-        <h2 id="invitation-title">{invitation.message}</h2>
-
-        {hasSaidYes ? (
-          <div className="yes-result" aria-live="polite">
-            <div className="departure-route" aria-hidden="true"><i /><span>♥</span><i /></div>
-            <p>本次申请无需审批，到点自动执行。</p>
-          </div>
-        ) : (
-          <>
-            <div className="choice-row">
-              <div className="yes-wrap">
-                {invitation.noCount > 0 ? (
-                  <span className="yes-arrow" aria-hidden="true">
-                    <em>正确选项在这</em>
-                    <svg viewBox="0 0 58 38">
-                      <path d="M3 4c20 0 33 7 39 23" />
-                      <path d="m35 23 8 5 2-10" />
-                    </svg>
-                  </span>
-                ) : null}
-                <button className="yes-choice" type="button" onClick={() => choose('yes')}>是</button>
-              </div>
-              <button className="no-choice" type="button" onClick={() => choose('no')}>
-                {noLabel}
-                {invitation.noCount >= 2 ? <BlossomShape className="no-button-blossom" /> : null}
-              </button>
-            </div>
-            <p className="invitation-reason" aria-live="polite">
-              {invitation.reason ?? '这是一个没有 KPI 的确认项。'}
-            </p>
-          </>
-        )}
+        <p className="tap-hint">戳屏幕</p>
       </section>
 
       {tapParticles.map((particle) => (
@@ -384,7 +291,7 @@ export default function Home() {
           {particle.kind === 'blossom' ? (
             <BlossomShape className="tap-blossom" />
           ) : (
-            <img className="tap-charm" src="/soft-pull-controller.webp" alt="" />
+            <img className="tap-charm" src={controllerSource} alt="" />
           )}
         </span>
       ))}

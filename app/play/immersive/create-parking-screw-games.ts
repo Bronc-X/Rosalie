@@ -251,7 +251,7 @@ class ParkingScene extends ToyScene {
   }
 
   private createHud() {
-    this.add.text(40, 98, 'CLEAR THE LOT', {
+    this.add.text(40, 98, '清空停车场', {
       color: '#b87c91', fontFamily: SANS, fontSize: '10px', letterSpacing: 3,
     }).setDepth(12);
     this.add.text(40, 116, '挪了下车', {
@@ -287,10 +287,10 @@ class ParkingScene extends ToyScene {
     this.moves = 0;
     this.statusCard.setVisible(false);
     PARKING_LEVELS[this.level].forEach((config) => this.createCar(config));
-    this.levelCopy.setText(`LEVEL ${String(this.level + 1).padStart(2, '0')}`);
+    this.levelCopy.setText(`第 ${this.level + 1} 关`);
     this.refreshRemaining();
     this.hintCopy.setText('点一下\n或顺箭头轻扫');
-    this.options.onStatus(`挪车 · 第 ${this.level + 1} 关`);
+    this.options.onStatus('');
   }
 
   private createCar(config: ParkingCarConfig) {
@@ -489,7 +489,7 @@ class ParkingScene extends ToyScene {
     // Persist before any transition so a refresh during the celebration cannot lose progress.
     this.options.onLevelChange(nextLevel, score);
     this.options.onStatus(this.level === PARKING_LEVELS.length - 1 ? '停车场全清' : `第 ${this.level + 2} 关已解锁`);
-    this.showStatus(this.level === PARKING_LEVELS.length - 1 ? '收工' : '清场', `${score} 分 · 存档完成`);
+    this.showStatus(this.level === PARKING_LEVELS.length - 1 ? '收工' : '清场', `${score} 分`);
     this.tone(740, 0.12, 0.045);
     this.tone(980, 0.13, 0.035, 0.09);
     this.haptic([18, 32, 24]);
@@ -607,7 +607,7 @@ class ScrewScene extends ToyScene {
   }
 
   private createHud() {
-    this.add.text(40, 98, 'LAYER BY LAYER', {
+    this.add.text(40, 98, '逐层拆解', {
       color: '#9a80ae', fontFamily: SANS, fontSize: '10px', letterSpacing: 3,
     }).setDepth(20);
     this.add.text(40, 116, '打个螺丝', {
@@ -621,7 +621,7 @@ class ScrewScene extends ToyScene {
     }).setOrigin(1, 0).setDepth(20);
 
     const hand = this.add.image(112, 696, 'screw-controller').setDisplaySize(68, 68).setDepth(20).setOrigin(0.5, 0.64);
-    this.hintCopy = this.add.text(154, 683, '点螺丝 · 三颗同色自动收走', {
+    this.hintCopy = this.add.text(154, 683, '点螺丝，三颗同色消除', {
       color: '#8d6a7c', fontFamily: SANS, fontSize: '10px', letterSpacing: 1,
     }).setDepth(20);
     if (!this.options.reducedMotion) {
@@ -655,10 +655,10 @@ class ScrewScene extends ToyScene {
     this.moves = 0;
     this.locked = false;
     this.statusCard.setVisible(false);
-    this.levelCopy.setText(`LEVEL ${String(this.level + 1).padStart(2, '0')}`);
+    this.levelCopy.setText(`第 ${this.level + 1} 关`);
     this.renderTray();
     this.renderLayer();
-    this.options.onStatus(`螺丝 · 第 ${this.level + 1} 关`);
+    this.options.onStatus('');
   }
 
   private renderLayer() {
@@ -791,7 +791,7 @@ class ScrewScene extends ToyScene {
       return;
     }
     this.options.onStatus(`第 ${this.currentLayer + 1} 层露出来了`);
-    this.hintCopy.setText('下一层 · 先凑已有颜色');
+    this.hintCopy.setText('下一层，优先已有颜色');
     this.impact(0.0018);
     this.time.delayedCall(this.motion(210), () => {
       this.renderLayer();
@@ -822,8 +822,8 @@ class ScrewScene extends ToyScene {
     this.tone(150, 0.13, 0.035);
     this.haptic([24, 32, 18]);
     this.impact(0.006);
-    this.options.onStatus('槽满了 · 这一层重排');
-    this.showStatus('卡住了', '先凑已有颜色 · 不扣存档');
+    this.options.onStatus('槽满了，重排本层');
+    this.showStatus('卡住了', '优先已有颜色，不扣存档');
     this.time.delayedCall(this.motion(1_000), () => this.loadLevel());
   }
 
@@ -834,7 +834,7 @@ class ScrewScene extends ToyScene {
     // Persist before switching boards; a refresh during the result card stays on the unlocked level.
     this.options.onLevelChange(nextLevel, score);
     this.options.onStatus(this.level === SCREW_LEVELS.length - 1 ? '螺丝全拆完' : `第 ${this.level + 2} 关已解锁`);
-    this.showStatus(this.level === SCREW_LEVELS.length - 1 ? '拆完了' : '板开了', `${score} 分 · 存档完成`);
+    this.showStatus(this.level === SCREW_LEVELS.length - 1 ? '拆完了' : '板开了', `${score} 分`);
     this.tone(760, 0.12, 0.04);
     this.tone(1_050, 0.13, 0.035, 0.085);
     this.haptic([16, 26, 26]);

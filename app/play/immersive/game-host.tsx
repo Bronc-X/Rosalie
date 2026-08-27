@@ -2,9 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import type { GameId } from '@/lib/player-progress.mjs';
-
-export type ImmersiveGameId = Exclude<GameId, 'connect'>;
+export type ImmersiveGameId = 'hole' | 'sand' | 'parking' | 'screw' | 'water' | 'rescue' | 'arrow';
 
 export type ImmersiveGameOptions = {
   initialLevel: number;

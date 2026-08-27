@@ -6,6 +6,7 @@ import { attachPlayerCookie, resolvePlayerSession } from '@/lib/player-session';
 import {
   INSERT_TREEHOLE_MESSAGE_SQL,
   SELECT_TREEHOLE_MESSAGES_SQL,
+  SELECT_TREEHOLE_REPLIES_SQL,
 } from '@/lib/site-schema.mjs';
 import { normalizeTreeholeMessage } from '@/lib/treehole.mjs';
 import {
@@ -23,6 +24,20 @@ type TreeholeRow = {
 };
 
 type TreeholeMessage = {
+  id: string;
+  text: string;
+  createdAt: string;
+  replies: TreeholeReply[];
+};
+
+type TreeholeReplyRow = {
+  id: string;
+  message_id: string;
+  text: string;
+  created_at: string;
+};
+
+type TreeholeReply = {
   id: string;
   text: string;
   createdAt: string;
@@ -47,11 +62,21 @@ export async function GET(request: NextRequest) {
       return attachPlayerCookie(json({ ok: true, messages: await listVercelMessages() }), session);
     }
     const database = await ensureSiteSchema();
-    const result = await database.prepare(SELECT_TREEHOLE_MESSAGES_SQL).bind(24).all<TreeholeRow>();
+    const [result, replyResult] = await Promise.all([
+      database.prepare(SELECT_TREEHOLE_MESSAGES_SQL).bind(24).all<TreeholeRow>(),
+      database.prepare(SELECT_TREEHOLE_REPLIES_SQL).bind(24).all<TreeholeReplyRow>(),
+    ]);
+    const repliesByMessage = new Map<string, TreeholeReply[]>();
+    for (const row of replyResult.results) {
+      const replies = repliesByMessage.get(row.message_id) ?? [];
+      replies.push({ id: row.id, text: row.text, createdAt: row.created_at });
+      repliesByMessage.set(row.message_id, replies);
+    }
     const messages: TreeholeMessage[] = result.results.map((row) => ({
       id: row.id,
       text: row.text,
       createdAt: row.created_at,
+      replies: repliesByMessage.get(row.id) ?? [],
     }));
     return attachPlayerCookie(json({ ok: true, messages }), session);
   } catch {
@@ -83,6 +108,7 @@ export async function POST(request: NextRequest) {
     id: crypto.randomUUID(),
     text: normalized.value,
     createdAt: new Date().toISOString(),
+    replies: [],
   };
 
   try {

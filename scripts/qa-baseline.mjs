@@ -11,6 +11,7 @@ const checks = [
   { label: 'behavior tests', script: 'test', env: {} },
   { label: 'lint', script: 'lint', env: {} },
   { label: 'Vercel production build', script: 'build:vercel', env: { VERCEL: '1' } },
+  { label: 'mobile transfer budgets', script: 'check:performance', env: {} },
 ];
 
 for (const check of checks) {
@@ -30,4 +31,4 @@ for (const check of checks) {
   }
 }
 
-console.log('\n[baseline] PASS — verified behavior, lint, and Vercel build are intact.');
+console.log('\n[baseline] PASS — behavior, lint, Vercel build, and mobile transfer budgets are intact.');

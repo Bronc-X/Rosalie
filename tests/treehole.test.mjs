@@ -23,3 +23,28 @@ test('markup brackets and control characters never reach shared storage', () => 
   });
 });
 
+test('a reply is tied to one message and normalized before storage', () => {
+  assert.equal(typeof treehole.normalizeTreeholeReply, 'function');
+  assert.deepEqual(
+    treehole.normalizeTreeholeReply(
+      '66f2bb53-7689-4f08-87c4-e7abc9a3ef14',
+      '  收到。\n\n\n我会记得。  ',
+    ),
+    {
+      ok: true,
+      value: {
+        messageId: '66f2bb53-7689-4f08-87c4-e7abc9a3ef14',
+        text: '收到。\n\n我会记得。',
+      },
+    },
+  );
+});
+
+test('replies reject unknown messages, blank text and overlong text', () => {
+  assert.equal(treehole.normalizeTreeholeReply('not-a-message', '收到').ok, false);
+  assert.equal(treehole.normalizeTreeholeReply('66f2bb53-7689-4f08-87c4-e7abc9a3ef14', '   ').ok, false);
+  assert.equal(
+    treehole.normalizeTreeholeReply('66f2bb53-7689-4f08-87c4-e7abc9a3ef14', '回'.repeat(121)).ok,
+    false,
+  );
+});

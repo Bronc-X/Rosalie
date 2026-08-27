@@ -1,18 +1,31 @@
 import { get, list, put } from '@vercel/blob';
 
+import { mergeInterviewRecords } from '@/lib/interview.mjs';
+import type { InterviewRecord } from '@/lib/interview.mjs';
 import { mergeProgress } from '@/lib/player-progress.mjs';
 import type { GameProgress } from '@/lib/player-progress.mjs';
 import { sortScheduleEntries } from '@/lib/schedule.mjs';
 import type { ScheduleEntry } from '@/lib/schedule.mjs';
 
-export type SharedMessage = { id: string; text: string; createdAt: string };
+export type SharedReply = { id: string; text: string; createdAt: string };
+export type SharedMessage = { id: string; text: string; createdAt: string; replies: SharedReply[] };
+
+function isReply(value: unknown): value is SharedReply {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<SharedReply>;
+  return typeof candidate.id === 'string'
+    && typeof candidate.text === 'string'
+    && typeof candidate.createdAt === 'string';
+}
 
 function isMessage(value: unknown): value is SharedMessage {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Partial<SharedMessage>;
   return typeof candidate.id === 'string'
     && typeof candidate.text === 'string'
-    && typeof candidate.createdAt === 'string';
+    && typeof candidate.createdAt === 'string'
+    && (candidate.replies === undefined
+      || (Array.isArray(candidate.replies) && candidate.replies.every(isReply)));
 }
 
 function isScheduleEntry(value: unknown): value is ScheduleEntry {
@@ -45,7 +58,7 @@ export async function listVercelMessages() {
   const messages = await Promise.all(result.blobs.map(async (blob) => {
     try {
       const value = await readJson(blob.pathname);
-      return isMessage(value) ? value : null;
+      return isMessage(value) ? { ...value, replies: value.replies ?? [] } : null;
     } catch {
       return null;
     }
@@ -61,6 +74,22 @@ export async function insertVercelMessage(message: SharedMessage) {
     access: 'private',
     contentType: 'application/json; charset=utf-8',
   });
+}
+
+export async function insertVercelReply(messageId: string, reply: SharedReply) {
+  const result = await list({ prefix: 'treehole/', limit: 100 });
+  const blob = result.blobs.find((candidate) => candidate.pathname.endsWith(`-${messageId}.json`));
+  if (!blob) return false;
+
+  const value = await readJson(blob.pathname);
+  if (!isMessage(value)) return false;
+  const message: SharedMessage = { ...value, replies: [...(value.replies ?? []), reply] };
+  await put(blob.pathname, JSON.stringify(message), {
+    access: 'private',
+    contentType: 'application/json; charset=utf-8',
+    allowOverwrite: true,
+  });
+  return true;
 }
 
 export async function listVercelScheduleEntries() {
@@ -103,4 +132,31 @@ export async function writeVercelProgress(playerId: string, incoming: GameProgre
     allowOverwrite: true,
   });
   return next[incoming.gameId];
+}
+
+export async function readVercelInterviewRecords(playerId: string) {
+  try {
+    const value = await readJson(`interview-history/${playerId}.json`);
+    const records = value && typeof value === 'object'
+      ? (value as { records?: unknown }).records
+      : [];
+    return mergeInterviewRecords(records);
+  } catch {
+    return [];
+  }
+}
+
+export async function writeVercelInterviewRecord(playerId: string, incoming: InterviewRecord) {
+  const current = await readVercelInterviewRecords(playerId);
+  const previous = current.find((record) => record.id === incoming.id);
+  const records = mergeInterviewRecords(current, [{
+    ...incoming,
+    createdAt: previous?.createdAt ?? incoming.createdAt,
+  }]);
+  await put(`interview-history/${playerId}.json`, JSON.stringify({ records }), {
+    access: 'private',
+    contentType: 'application/json; charset=utf-8',
+    allowOverwrite: true,
+  });
+  return records;
 }

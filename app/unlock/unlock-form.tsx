@@ -38,10 +38,10 @@ export function UnlockForm({ nextPath }: { nextPath: string }) {
           <span />
           <img src="/soft-pull-controller.webp" alt="" />
         </div>
-        <h1 id="unlock-title">先测健康度</h1>
+        <h1 id="unlock-title">暗号</h1>
 
         <form onSubmit={unlock}>
-          <label htmlFor="site-password">暗号</label>
+          <label htmlFor="site-password">输入暗号</label>
           <div className="unlock-input-wrap">
             <input
               id="site-password"
@@ -61,13 +61,12 @@ export function UnlockForm({ nextPath }: { nextPath: string }) {
             <i aria-hidden="true">••••</i>
           </div>
           <button type="submit" disabled={!password || status === 'loading'}>
-            <span>{status === 'loading' ? '检测中' : '确认'}</span>
-            <b aria-hidden="true">→</b>
+            <span>{status === 'loading' ? '验证中' : '确认'}</span>
           </button>
         </form>
 
         <p id="unlock-feedback" className="unlock-feedback" aria-live="polite">
-          {status === 'error' ? '未通过。' : ''}
+          {status === 'error' ? '暗号不对' : ''}
         </p>
       </section>
     </main>

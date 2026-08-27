@@ -14,9 +14,9 @@ import {
 } from '@/lib/timing-game.mjs';
 
 const JUDGE_COPY = {
-  perfect: '完美。',
-  good: '命中。',
-  miss: '未命中。',
+  perfect: '完美',
+  good: '命中',
+  miss: '未命中',
 } as const;
 
 export function TimingGame() {
@@ -48,17 +48,16 @@ export function TimingGame() {
   }
 
   const resultCopy = game.status === 'won'
-    ? `卡点成功：${game.score} 格。`
+    ? `完成，${game.score} 格`
     : game.status === 'lost'
-      ? `本轮：${game.score} 格。`
-      : '游标进入心区时点击。';
+      ? `本轮 ${game.score} 格`
+      : '游标进入中心时点击';
 
   return (
     <section className={`timing-game timing-${game.status}`} aria-labelledby="timing-game-title">
       <div className="lab-game-heading">
-        <p>TAP TIMING · SEVEN TRIES</p>
         <h2 id="timing-game-title">卡点</h2>
-        <span>游标进入心区时戳控制器，正中一次算两格。</span>
+        <span>正中得两格</span>
       </div>
 
       <div className="timing-stage" style={{ '--timing-position': position } as CSSProperties}>
@@ -69,9 +68,9 @@ export function TimingGame() {
 
         <div className="timing-rail" aria-hidden="true">
           <i className="timing-good-zone" />
-          <i className="timing-perfect-zone">♥</i>
+          <i className="timing-perfect-zone" />
           <span className="timing-runner">
-            <img src="/soft-pull-cursor.png" alt="" width={58} height={58} />
+            <img src="/soft-pull-cursor.webp" alt="" width={58} height={58} />
           </span>
         </div>
 
@@ -86,7 +85,7 @@ export function TimingGame() {
         </p>
 
         <button className="timing-controller" type="button" onClick={pullNow}>
-          <img src="/soft-pull-cursor.png" alt="" width={84} height={84} />
+          <img src="/soft-pull-cursor.webp" alt="" width={84} height={84} />
           <span>{game.status === 'idle' ? '戳它开局' : isPlaying ? '现在拉' : '再卡一次'}</span>
         </button>
       </div>

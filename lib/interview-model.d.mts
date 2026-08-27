@@ -1,0 +1,4 @@
+export const INTERVIEW_MODEL_ID: 'gpt-5.6';
+export const INTERVIEW_MODEL_LABEL: 'GPT-5.6';
+export const INTERVIEW_FALLBACK_MODEL_ID: 'gpt-5.4-mini';
+export const INTERVIEW_PRIMARY_FIRST_TOKEN_TIMEOUT_MS: 8500;

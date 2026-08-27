@@ -5,8 +5,8 @@ import { UnlockForm } from './unlock-form';
 import './unlock.css';
 
 export const metadata: Metadata = {
-  title: '健康度检测',
-  description: '输入密码。',
+  title: '暗号',
+  description: '输入暗号。',
   robots: { index: false, follow: false },
 };
 

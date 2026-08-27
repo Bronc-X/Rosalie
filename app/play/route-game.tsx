@@ -88,17 +88,16 @@ export function RouteGame() {
 
   const trail = route?.points.map((point) => `${point.x},${point.y}`).join(' ') ?? '';
   const statusCopy = route?.status === 'won'
-    ? '路线通过。'
+    ? '通过'
     : route?.status === 'lost'
-      ? '未通过，重新画。'
-      : '按住图标，一笔拖到樱花。';
+      ? '碰到障碍，重来'
+      : '按住控制器，一笔到终点';
 
   return (
     <section className={`route-game route-${route?.status ?? 'idle'}`} aria-labelledby="route-game-title">
       <div className="lab-game-heading">
-        <p>DRAW LOOP · ONE STROKE</p>
         <h2 id="route-game-title">一笔通关</h2>
-        <span>绕开工作，把小东西拖到 Rosalie。</span>
+        <span>绕开障碍，到达终点</span>
       </div>
 
       <div className="route-stage" ref={stageRef}>
@@ -152,7 +151,7 @@ export function RouteGame() {
           }}
           onKeyDown={moveWithKeyboard}
         >
-          <img src="/soft-pull-cursor.png" alt="" width={78} height={78} draggable="false" />
+          <img src="/soft-pull-cursor.webp" alt="" width={78} height={78} draggable="false" />
           <span>{route?.status === 'won' ? '已送达' : route?.status === 'lost' ? '按住重画' : isPlaying ? '别松手' : '从这里拉'}</span>
         </button>
       </div>

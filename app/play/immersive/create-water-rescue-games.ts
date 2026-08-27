@@ -281,10 +281,10 @@ class WaterSortScene extends Phaser.Scene {
     this.moves = 0;
     this.animating = false;
     this.resolved = false;
-    this.levelCopy.setText(`LEVEL ${String(this.level + 1).padStart(2, '0')}`);
+    this.levelCopy.setText(`第 ${this.level + 1} 关`);
     this.moveCopy.setText('0 次倾倒');
     this.instruction.setText('点一支试管，再点要倒进去的试管');
-    this.options.onStatus(`第 ${this.level + 1} 关 · ${WATER_LEVELS[this.level].label}`);
+    this.options.onStatus('');
     this.redrawTubes();
     this.resetController();
   }
@@ -456,8 +456,8 @@ class WaterSortScene extends Phaser.Scene {
     this.toyAudio.tone(980, 0.16, 0.04, 0.1);
     lightHaptic([16, 24, 26], this.options);
     if (!this.options.reducedMotion) this.cameras.main.shake(120, 0.0024);
-    burstGlyphs(this, 195, 330, ['✦', '♥', '·', '✧', '♥', '✦', '·'], this.options);
-    this.showResult(this.level === WATER_LEVELS.length - 1 ? '全倒明白了' : '分好了', `${this.moves} 次 · ${score} 分`);
+    burstGlyphs(this, 195, 330, ['●', '○', '·', '○', '●', '◆', '·'], this.options);
+    this.showResult(this.level === WATER_LEVELS.length - 1 ? '全倒明白了' : '分好了', `${this.moves} 次，${score} 分`);
     this.time.delayedCall(motionDuration(this.options, 1_300), () => {
       this.level = nextLevel;
       this.startLevel();
@@ -535,12 +535,12 @@ const RESCUE_SWATCH: Record<RescueColor, number> = {
 };
 
 const RESCUE_GLYPH: Record<RescueColor, string> = {
-  rose: '♥',
-  peach: '●',
-  gold: '✦',
+  rose: '●',
+  peach: '◐',
+  gold: '◆',
   mint: '⌁',
-  sky: '◆',
-  plum: '✿',
+  sky: '■',
+  plum: '○',
 };
 
 const RESCUE_LEVELS: RescueLevel[] = [
@@ -671,7 +671,7 @@ class RescueScene extends Phaser.Scene {
       const x = 28 + (334 / 7) * index;
       tray.lineStyle(1, PALETTE.rose, 0.12).lineBetween(x, 603, x, 648);
     }
-    this.add.text(195, 678, '三条同色软线会自动收走 · 托盘只有七格', {
+    this.add.text(195, 678, '三条同色自动收走，托盘七格', {
       color: '#a57787', fontFamily: BODY_FONT, fontSize: '10px', letterSpacing: 1.1,
     }).setOrigin(0.5).setDepth(70);
   }
@@ -690,10 +690,10 @@ class RescueScene extends Phaser.Scene {
     this.locked = false;
     this.failed = false;
     this.resolved = false;
-    this.levelCopy.setText(`LEVEL ${String(this.level + 1).padStart(2, '0')}`);
+    this.levelCopy.setText(`第 ${this.level + 1} 关`);
     this.moveCopy.setText('0 条已抽');
-    this.instruction.setText('只抽发亮的线 · 三条同色进托盘');
-    this.options.onStatus(`第 ${this.level + 1} 关 · ${RESCUE_LEVELS[this.level].label}`);
+    this.instruction.setText('抽发亮的线，三条同色消除');
+    this.options.onStatus('');
     this.kitten.setPosition(195, 188).setScale(1).setAlpha(1).setAngle(0).setDepth(6);
     this.cage.setPosition(195, 188).setAlpha(1).setAngle(0);
     this.drawPieces();
@@ -817,7 +817,7 @@ class RescueScene extends Phaser.Scene {
       const targets = removedIndices.map((index) => this.trayViews[index]);
       this.toyAudio.tone(680, 0.1, 0.035);
       this.toyAudio.tone(940, 0.12, 0.028, 0.07);
-      burstGlyphs(this, 195, 622, ['✦', '·', '♥', '✧', '·'], this.options);
+      burstGlyphs(this, 195, 622, ['◆', '·', '●', '○', '·'], this.options);
       this.tweens.add({
         targets,
         y: 594,
@@ -856,11 +856,11 @@ class RescueScene extends Phaser.Scene {
   private failLevel() {
     this.failed = true;
     this.locked = true;
-    this.options.onStatus('托盘满了 · 再理一次');
+    this.options.onStatus('托盘满了，再理一次');
     this.toyAudio.tone(145, 0.18, 0.04);
     if (!this.options.reducedMotion) this.cameras.main.shake(150, 0.004);
     lightHaptic([22, 32, 22], this.options);
-    this.showResult('塞满了', '戳一下 · 重新抽', () => this.startLevel());
+    this.showResult('塞满了', '戳一下重新抽', () => this.startLevel());
   }
 
   private completeLevel() {
@@ -888,11 +888,11 @@ class RescueScene extends Phaser.Scene {
       scale: 1.45,
       duration: motionDuration(this.options, 780),
       ease: 'Bounce.Out',
-      onComplete: () => burstGlyphs(this, 195, 420, ['♥', '✦', '♥', '✧', '♥', '·', '✦'], this.options),
+      onComplete: () => burstGlyphs(this, 195, 420, ['●', '◆', '○', '●', '○', '·', '◆'], this.options),
     });
     this.kitten.setDepth(95);
     this.time.delayedCall(motionDuration(this.options, 620), () => {
-      this.showResult(this.level === RESCUE_LEVELS.length - 1 ? '全救到了' : '跑出来了', `${this.moves} 条 · ${score} 分`);
+      this.showResult(this.level === RESCUE_LEVELS.length - 1 ? '全救到了' : '跑出来了', `${this.moves} 条，${score} 分`);
     });
     this.time.delayedCall(motionDuration(this.options, 1_550), () => {
       this.level = nextLevel;

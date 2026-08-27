@@ -1,21 +1,34 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import Link from 'next/link';
 import { useState } from 'react';
 
+import { ENDLESS_GAME_CATALOG } from '@/lib/endless-games.mjs';
 import type { GameId } from '@/lib/player-progress.mjs';
 import { usePlayerProgress } from './use-player-progress';
 
-const GAMES: Array<{ id: GameId; index: string; label: string; note: string; action: string; glyph: string }> = [
-  { id: 'hole', index: '01', label: '黑洞降临', note: '吞小，吃大', action: '拖住控制器，把场景吃干净。', glyph: '●' },
-  { id: 'sand', index: '02', label: '沙画消消', note: '成团，落沙', action: '点开色团，看沙粒重新落位。', glyph: '✣' },
-  { id: 'parking', index: '03', label: '挪了下车', note: '找路，放行', action: '按顺序放车，清空整座玩具场。', glyph: '▰' },
-  { id: 'screw', index: '04', label: '打个螺丝', note: '拆下，三消', action: '拆掉层板，别把托盘塞满。', glyph: '×' },
-  { id: 'water', index: '05', label: '倒水挑战', note: '分色，归位', action: '选杯、倾倒，让颜色各回各家。', glyph: '◒' },
-  { id: 'rescue', index: '06', label: '营救小猫', note: '抽线，解围', action: '顺着遮挡抽线，把猫放出来。', glyph: '⌁' },
-  { id: 'arrow', index: '07', label: '一箭又一箭', note: '瞄准，进洞', action: '按住、拉开、松手。', glyph: '↗' },
-  { id: 'connect', index: '08', label: '四枚护符', note: '找同类，连起来', action: '最多拐两次，把四种图标逐对接走。', glyph: '✦' },
+type GameCard = { id: GameId; label: string; action: string; glyph: string; endless?: boolean };
+
+const CORE_GAMES: GameCard[] = [
+  { id: 'hole', label: '黑洞降临', action: '拖动控制器，吞下更小的物体', glyph: '●' },
+  { id: 'sand', label: '沙画消消', action: '点开同色方块，让沙粒落下', glyph: '▦' },
+  { id: 'parking', label: '挪了下车', action: '按顺序移动车辆，清空场地', glyph: '▰' },
+  { id: 'screw', label: '打个螺丝', action: '拆掉层板，别塞满托盘', glyph: '×' },
+  { id: 'water', label: '倒水挑战', action: '选杯倾倒，让颜色归位', glyph: '◒' },
+  { id: 'rescue', label: '营救小猫', action: '按遮挡顺序抽线', glyph: '⌁' },
+  { id: 'arrow', label: '一箭又一箭', action: '按住、拉开、松手', glyph: '◉' },
+  { id: 'connect', label: '四枚护符', action: '最多拐两次，配对相同图标', glyph: '◇' },
+];
+
+const GAMES: GameCard[] = [
+  ...CORE_GAMES,
+  ...ENDLESS_GAME_CATALOG.map((game) => ({
+    id: game.id,
+    label: game.label,
+    action: game.instruction,
+    glyph: game.glyph,
+    endless: true,
+  })),
 ];
 
 export function GameLab() {
@@ -23,6 +36,7 @@ export function GameLab() {
   const playerProgress = usePlayerProgress();
   const active = GAMES.find((game) => game.id === activeGame) ?? GAMES[0];
   const activeLevel = (playerProgress.progress[activeGame]?.level ?? 0) + 1;
+  const bestScore = playerProgress.progress[activeGame]?.bestScore ?? 0;
 
   return (
     <main className="play-lab">
@@ -31,21 +45,13 @@ export function GameLab() {
       <div className="lab-dots" aria-hidden="true" />
 
       <header className="lab-header">
-        <Link className="lab-back" href="/">← 返回</Link>
         <div>
-          <p>TONI × ROSALIE · WAITING ROOM</p>
           <h1>小游戏</h1>
-          <span>八盒卡带。</span>
         </div>
         <div className="lab-header-side">
-          <div className="lab-utility-links">
-            <Link className="lab-treehole-link" href="/treehole">树洞</Link>
-            <Link className="lab-treehole-link" href="/schedule">日程板 ↗</Link>
-          </div>
           <span className={`lab-sync-state is-${playerProgress.state}`}>
             {playerProgress.state === 'loading' ? '读取存档' : playerProgress.state === 'saving' ? '保存中' : playerProgress.state === 'offline' ? '本机存档' : '已保存'}
           </span>
-          <img src="/soft-pull-controller.webp" alt="" width={86} height={86} aria-hidden="true" />
         </div>
       </header>
 
@@ -58,9 +64,7 @@ export function GameLab() {
             aria-pressed={activeGame === game.id}
             onClick={() => setActiveGame(game.id)}
           >
-            <small>{game.index}</small>
             <strong>{game.label}</strong>
-            <span>{game.note}</span>
           </button>
         ))}
       </nav>
@@ -69,20 +73,15 @@ export function GameLab() {
         <span className="cartridge-notch" aria-hidden="true" />
         {playerProgress.ready ? (
           <section className={`arrow-portal game-portal portal-${active.id}`}>
-            <p>FULL SCREEN · LEVEL {String(activeLevel).padStart(2, '0')}</p>
+            <p>{active.endless ? `最高 ${bestScore} 分` : `第 ${activeLevel} 关`}</p>
             <div className="arrow-portal-orbit" aria-hidden="true"><i /><i /><span>{active.glyph}</span></div>
             <h2>{active.label}</h2>
             <span>{active.action}</span>
-            <Link href={`/play/${active.id}`}>进入游戏 <b>→</b></Link>
+            <Link href={`/play/${active.id}`}>开始</Link>
           </section>
-        ) : <div className="game-save-loading" role="status"><i /><p>正在接回上次进度</p></div>}
+        ) : <div className="game-save-loading" role="status"><i /><p>读取进度</p></div>}
       </div>
 
-      <footer className="lab-footer">
-        <span>2026 TEST FLIGHT</span>
-        <i>♥</i>
-        <span>NO KPI ATTACHED</span>
-      </footer>
     </main>
   );
 }

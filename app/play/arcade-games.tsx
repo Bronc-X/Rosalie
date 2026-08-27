@@ -21,10 +21,9 @@ type GameProgressProps = {
   onProgress?: (level: number, bestScore?: number) => void;
 };
 
-function GameIntro({ kicker, title, children }: { kicker: string; title: string; children: ReactNode }) {
+function GameIntro({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="lab-game-heading">
-      <p>{kicker}</p>
       <h2>{title}</h2>
       <span>{children}</span>
     </div>
@@ -35,7 +34,7 @@ function ResultSheet({ status, onRestart, children }: { status: GameStatus; onRe
   if (status === 'playing') return null;
   return (
     <div className={`arcade-result arcade-result-${status}`} role="status" aria-live="polite">
-      <i aria-hidden="true">{status === 'won' ? '✓' : '×'}</i>
+      <i aria-hidden="true" />
       <strong>{status === 'won' ? '本关通过' : '卡住了'}</strong>
       <p>{children}</p>
       <button type="button" onClick={onRestart}>{status === 'won' ? '下一关' : '重新来'}</button>
@@ -134,7 +133,7 @@ export function HoleGame({ initialLevel = 0, onProgress }: GameProgressProps = {
 
   return (
     <section className="arcade-game hole-game">
-      <GameIntro kicker="GROW · SWALLOW · CLEAR" title="黑洞降临">按住小图标移动。先吃小的，长大后再吃大的。</GameIntro>
+      <GameIntro title="黑洞降临">拖动黑洞，先小后大</GameIntro>
       <div
         className="arcade-stage hole-stage"
         ref={stageRef}
@@ -159,7 +158,7 @@ export function HoleGame({ initialLevel = 0, onProgress }: GameProgressProps = {
           moveTo(Math.max(5, Math.min(95, hole.x + delta[0])), Math.max(8, Math.min(94, hole.y + delta[1])));
         }}
       >
-        <div className="arcade-hud"><span>LEVEL {level + 1}</span><b>{swallowed} / {objects.length}</b></div>
+        <div className="arcade-hud"><span>第 {level + 1} 关</span><b>{swallowed} / {objects.length}</b></div>
         <div className="hole-floor" aria-hidden="true" />
         {objects.map((object) => (
           <span
@@ -169,9 +168,9 @@ export function HoleGame({ initialLevel = 0, onProgress }: GameProgressProps = {
           ><i /></span>
         ))}
         <span className="player-hole" style={{ left: `${hole.x}%`, top: `${hole.y}%`, '--hole-size': `${hole.size * 2.3}px` } as CSSProperties}>
-          <img src="/soft-pull-cursor.png" alt="拖动控制器" draggable="false" />
+          <img src="/soft-pull-cursor.webp" alt="拖动控制器" draggable="false" />
         </span>
-        <ResultSheet status={status} onRestart={() => reset(level + 1)}>这一层已经被吃干净。</ResultSheet>
+        <ResultSheet status={status} onRestart={() => reset(level + 1)}>场地已清空</ResultSheet>
       </div>
     </section>
   );
@@ -245,9 +244,9 @@ export function SandGame({ initialLevel = 0, onProgress }: GameProgressProps = {
 
   return (
     <section className="arcade-game sand-game">
-      <GameIntro kicker="SOFT PHYSICS · COLOR POP" title="沙画消消">点掉三个以上相连的同色沙团，连续消除会加倍。</GameIntro>
+      <GameIntro title="沙画消消">点击三个以上相连色块</GameIntro>
       <div className="arcade-stage sand-stage">
-        <div className="arcade-hud"><span>LEVEL {level + 1}</span><b>{score} / 420</b></div>
+        <div className="arcade-hud"><span>第 {level + 1} 关</span><b>{score} / 420</b></div>
         <div className="sand-glass">
           <div className="sand-board" style={{ '--sand-rows': board.length, '--sand-columns': board[0].length } as CSSProperties}>
             {board.map((row, rowIndex) => row.map((color, columnIndex) => (
@@ -261,10 +260,10 @@ export function SandGame({ initialLevel = 0, onProgress }: GameProgressProps = {
               ><i /><b /><em /></button>
             ))) }
           </div>
-          <span className="sand-combo">{combo > 1 ? `COMBO ×${combo}` : '轻点沙团'}</span>
+          <span className="sand-combo">{combo > 1 ? `连击 ×${combo}` : '轻点沙团'}</span>
         </div>
         <ResultSheet status={status} onRestart={() => reset(status === 'won' ? level + 1 : level)}>
-          {status === 'won' ? `得分 ${score}，沙面已经清开。` : '已经没有可消除的沙团。'}
+          {status === 'won' ? `得分 ${score}` : '没有可消除的沙团'}
         </ResultSheet>
       </div>
     </section>
@@ -327,9 +326,9 @@ export function ParkingGame({ initialLevel = 0, onProgress }: GameProgressProps 
 
   return (
     <section className="arcade-game parking-game">
-      <GameIntro kicker="TAP · RELEASE · UNBLOCK" title="挪了下车">点击车让它沿箭头方向驶出。被挡住的车不会动。</GameIntro>
+      <GameIntro title="挪了下车">点击车辆，按箭头驶出</GameIntro>
       <div className="arcade-stage parking-stage">
-        <div className="arcade-hud"><span>LEVEL {level + 1}</span><b>{moves} 步</b></div>
+        <div className="arcade-hud"><span>第 {level + 1} 关</span><b>{moves} 步</b></div>
         <div className="parking-board">
           {Array.from({ length: 36 }, (_, index) => <i className="parking-tile" key={index} />)}
           {cars.map((car, index) => (
@@ -347,8 +346,8 @@ export function ParkingGame({ initialLevel = 0, onProgress }: GameProgressProps 
             ><i /><b>{car.direction === 'backward' ? '‹' : '›'}</b></button>
           ))}
         </div>
-        <div className="parking-controller"><img src="/soft-pull-cursor.png" alt="" /><span>点车放行</span></div>
-        <ResultSheet status={status} onRestart={() => reset(level + 1)}>停车场已经清空，共用 {moves} 步。</ResultSheet>
+        <div className="parking-controller"><img src="/soft-pull-cursor.webp" alt="" /><span>点车放行</span></div>
+        <ResultSheet status={status} onRestart={() => reset(level + 1)}>共用 {moves} 步</ResultSheet>
       </div>
     </section>
   );
@@ -399,9 +398,9 @@ export function ScrewGame() {
 
   return (
     <section className="arcade-game screw-game">
-      <GameIntro kicker="UNSCREW · TRIPLE · DROP" title="打个螺丝">拆下螺丝，三个同色会清空。托盘塞满就失败。</GameIntro>
+      <GameIntro title="打个螺丝">三枚同色自动清空</GameIntro>
       <div className="arcade-stage screw-stage">
-        <div className="arcade-hud"><span>LAYER {Math.min(2, unlockedLayer + 1)} / 2</span><b>{screws.filter((screw) => screw.removed).length} / {screws.length}</b></div>
+        <div className="arcade-hud"><span>第 {Math.min(2, unlockedLayer + 1)} / 2 层</span><b>{screws.filter((screw) => screw.removed).length} / {screws.length}</b></div>
         <div className={`metal-plates layer-${unlockedLayer}`} aria-hidden="true"><i /><i /><i /></div>
         {screws.map((screw) => (
           <button
@@ -417,7 +416,7 @@ export function ScrewGame() {
         <div className={`match-tray ${lastClear ? 'is-clearing' : ''}`} aria-label={`托盘已有${tray.length}个螺丝`}>
           {Array.from({ length: 7 }, (_, index) => <i className={tray[index] ? `tray-${tray[index]}` : ''} key={index}>{tray[index] ? '×' : ''}</i>)}
         </div>
-        <ResultSheet status={status} onRestart={reset}>{status === 'won' ? '最后一块金属板已经掉落。' : '托盘没有位置了。'}</ResultSheet>
+        <ResultSheet status={status} onRestart={reset}>{status === 'won' ? '已拆完' : '托盘已满'}</ResultSheet>
       </div>
     </section>
   );
@@ -478,9 +477,9 @@ export function WaterGame({ initialLevel = 0, onProgress }: GameProgressProps = 
 
   return (
     <section className="arcade-game water-game">
-      <GameIntro kicker="SORT · POUR · SETTLE" title="倒水挑战">先点来源杯，再点目标杯。相同颜色才能叠在一起。</GameIntro>
+      <GameIntro title="倒水挑战">先选来源，再选目标</GameIntro>
       <div className="arcade-stage water-stage">
-        <div className="arcade-hud"><span>LEVEL {level + 1}</span><b>{moves} 次倾倒</b></div>
+        <div className="arcade-hud"><span>第 {level + 1} 关</span><b>{moves} 次倾倒</b></div>
         <div className="tube-rack">
           {tubes.map((tube, index) => (
             <button
@@ -496,8 +495,8 @@ export function WaterGame({ initialLevel = 0, onProgress }: GameProgressProps = 
             </button>
           ))}
         </div>
-        <div className="water-controller"><img src="/soft-pull-cursor.png" alt="" /><span>{selected === null ? '选一只杯' : '再选目标杯'}</span></div>
-        <ResultSheet status={status} onRestart={() => reset(level + 1)}>颜色已经各自归位，共倾倒 {moves} 次。</ResultSheet>
+        <div className="water-controller"><img src="/soft-pull-cursor.webp" alt="" /><span>{selected === null ? '选一只杯' : '再选目标杯'}</span></div>
+        <ResultSheet status={status} onRestart={() => reset(level + 1)}>共倾倒 {moves} 次</ResultSheet>
       </div>
     </section>
   );
@@ -549,7 +548,7 @@ export function RescueGame() {
 
   return (
     <section className="arcade-game rescue-game">
-      <GameIntro kicker="UNTANGLE · MATCH · RESCUE" title="营救小猫">从最上层抽走毛线，三个同色线团会自动收好。</GameIntro>
+      <GameIntro title="营救小猫">先抽最上层毛线</GameIntro>
       <div className="arcade-stage rescue-stage">
         <div className="arcade-hud"><span>剩 {yarns.filter((yarn) => !yarn.removed).length} 根</span><b>托盘 {tray.length} / 7</b></div>
         <div className="yarn-field">
@@ -578,7 +577,7 @@ export function RescueGame() {
         <div className="match-tray yarn-tray">
           {Array.from({ length: 7 }, (_, index) => <i className={tray[index] ? `tray-${tray[index]}` : ''} key={index}>{tray[index] ? '●' : ''}</i>)}
         </div>
-        <ResultSheet status={status} onRestart={reset}>{status === 'won' ? '毛线清完，小猫出来了。' : '线团托盘塞满了。'}</ResultSheet>
+        <ResultSheet status={status} onRestart={reset}>{status === 'won' ? '小猫出来了' : '托盘已满'}</ResultSheet>
       </div>
     </section>
   );
@@ -674,17 +673,17 @@ export function PrecisionArrowGame() {
 
   return (
     <section className="arcade-game precision-arrow-game">
-      <GameIntro kicker="ONE TAP · MOVING TARGET" title="一箭又一箭">虚线扫过小洞时戳屏幕。越往后，洞越小也越不老实。</GameIntro>
+      <GameIntro title="一箭又一箭">洞口对准虚线时点击</GameIntro>
       <div className="arcade-stage precision-arrow-stage" ref={stageRef} style={{ '--precision-angle': `${aim}deg` } as CSSProperties}>
         <button className="arrow-fire-surface" type="button" aria-label="放箭" disabled={status !== 'playing' || Boolean(flight)} onClick={fire} />
-        <div className="arcade-hud"><span>LEVEL {level + 1}</span><b>{shots.length} / 6 箭</b></div>
+        <div className="arcade-hud"><span>第 {level + 1} 关</span><b>{shots.length} / 6 箭</b></div>
         <span className="moving-hole" style={{ left: `${targetX}%`, top: `${targetY}%`, '--target-radius': `${target.radius * 4}px` } as CSSProperties}><i /><b /></span>
         <span className="arrow-guide" aria-hidden="true" />
-        <span className="arrow-bow" aria-hidden="true"><img src="/soft-pull-cursor.png" alt="" /><i /></span>
+        <span className="arrow-bow" aria-hidden="true"><img src="/soft-pull-cursor.webp" alt="" /><i /></span>
         {flight ? <span key={flight.id} className={`precision-flight ${flight.hit ? 'is-hit' : 'is-miss'}`} style={{ '--flight-angle': `${flight.angle}deg` } as CSSProperties}><i /><b /></span> : null}
         <div className="shot-record">{Array.from({ length: 6 }, (_, index) => <i className={shots[index] ? `shot-${shots[index]}` : ''} key={index}>↑</i>)}</div>
-        <p className="arrow-instruction">{flight ? (flight.hit ? '进了。' : '擦过去了。') : '戳屏幕放箭'}</p>
-        <ResultSheet status={status} onRestart={() => reset(status === 'won' ? level + 1 : level)}>{status === 'won' ? `第 ${shots.length} 箭进洞。` : '六箭用完，再瞄一次。'}</ResultSheet>
+        <p className="arrow-instruction">{flight ? (flight.hit ? '命中' : '未命中') : '戳屏幕放箭'}</p>
+        <ResultSheet status={status} onRestart={() => reset(status === 'won' ? level + 1 : level)}>{status === 'won' ? `第 ${shots.length} 箭命中` : '六箭用完'}</ResultSheet>
       </div>
     </section>
   );

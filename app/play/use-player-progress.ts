@@ -57,6 +57,11 @@ export function usePlayerProgress() {
   useEffect(() => {
     let current = true;
     const cached = readCache();
+    const warmTimer = window.setTimeout(() => {
+      if (!current) return;
+      setProgress(cached);
+      setState('saved');
+    }, 0);
 
     void fetch('/api/progress', { cache: 'no-store' })
       .then(async (response) => {
@@ -64,6 +69,7 @@ export function usePlayerProgress() {
         if (!response.ok || !data.ok || !data.progress) throw new Error('progress load failed');
         const merged = mergeMaps(data.progress, cached);
         if (!current) return;
+        window.clearTimeout(warmTimer);
         setProgress(merged);
         writeCache(merged);
         setState('saved');
@@ -79,12 +85,16 @@ export function usePlayerProgress() {
       })
       .catch(() => {
         if (current) {
+          window.clearTimeout(warmTimer);
           setProgress(cached);
           setState('offline');
         }
       });
 
-    return () => { current = false; };
+    return () => {
+      current = false;
+      window.clearTimeout(warmTimer);
+    };
   }, []);
 
   const saveProgress = useCallback((gameId: GameId, level: number, bestScore = 0) => {

@@ -163,7 +163,7 @@ class ArrowScene extends Phaser.Scene {
     const textStyle = { color: '#7c5865', fontFamily: 'Georgia, serif' };
     this.levelCopy = this.add.text(43, 104, '', { ...textStyle, fontSize: '13px', letterSpacing: 2 }).setDepth(8);
     this.shotCopy = this.add.text(347, 104, '', { ...textStyle, fontSize: '12px' }).setOrigin(1, 0).setDepth(8);
-    this.instruction = this.add.text(195, 718, '按住图标 · 拉开 · 松手', {
+    this.instruction = this.add.text(195, 718, '按住图标，拉开后松手', {
       color: '#8e6873', fontFamily: 'system-ui, sans-serif', fontSize: '12px', letterSpacing: 2,
     }).setOrigin(0.5).setDepth(8);
     this.statusLayer = this.add.container(195, 390).setDepth(20).setVisible(false);
@@ -178,11 +178,11 @@ class ArrowScene extends Phaser.Scene {
     this.shots = 0;
     this.locked = false;
     this.startedAt = this.time.now;
-    this.levelCopy.setText(`LEVEL ${String(this.level + 1).padStart(2, '0')}`);
-    this.shotCopy.setText('♥ ♥ ♥ ♥ ♥ ♥');
-    this.instruction.setText('按住图标 · 拉开 · 松手');
+    this.levelCopy.setText(`第 ${this.level + 1} 关`);
+    this.shotCopy.setText('○ ○ ○ ○ ○ ○');
+    this.instruction.setText('按住图标，拉开后松手');
     this.statusLayer.setVisible(false);
-    this.options.onStatus(`第 ${this.level + 1} 关`);
+    this.options.onStatus('');
     const radius = ARROW_LEVELS[this.level].radius;
     const [outer, middle, hole] = this.target.list as Phaser.GameObjects.Arc[];
     outer.setRadius(radius + 13);
@@ -227,7 +227,7 @@ class ArrowScene extends Phaser.Scene {
     this.guide.clear();
     this.launcher.setScale(1.08, 0.92);
     this.tweens.add({ targets: this.launcher, scaleX: 1, scaleY: 1, duration: 170, ease: 'Back.Out' });
-    this.shotCopy.setText(`${'× '.repeat(this.shots)}${'♥ '.repeat(6 - this.shots)}`.trim());
+    this.shotCopy.setText(`${'● '.repeat(this.shots)}${'○ '.repeat(6 - this.shots)}`.trim());
     this.instruction.setText('飞着呢');
     this.tone(540, 0.08, 0.045);
     if (!this.options.reducedMotion) this.cameras.main.shake(70, 0.0014);
@@ -245,7 +245,7 @@ class ArrowScene extends Phaser.Scene {
     const score = Math.max(100, 760 - (this.shots - 1) * 95 + this.level * 35);
     const nextLevel = Math.min(this.level + 1, ARROW_LEVELS.length - 1);
     this.options.onLevelChange(nextLevel, score);
-    this.showStatus(this.level === ARROW_LEVELS.length - 1 ? '全通了' : '进了', `第 ${this.shots} 箭 · ${score} 分`);
+    this.showStatus(this.level === ARROW_LEVELS.length - 1 ? '全通了' : '进了', `第 ${this.shots} 箭，${score} 分`);
     this.time.delayedCall(1_250, () => {
       this.arrow?.view.destroy();
       this.arrow = null;
@@ -262,7 +262,7 @@ class ArrowScene extends Phaser.Scene {
     this.tone(170, 0.1, 0.03);
     if (this.shots >= 6) {
       this.locked = true;
-      this.showStatus('差一点', '这关不扣存档 · 再来');
+      this.showStatus('差一点', '不扣存档，再来');
       this.time.delayedCall(1_050, () => this.refreshLevel());
     } else {
       this.instruction.setText('没进。再拉一次');
@@ -271,7 +271,7 @@ class ArrowScene extends Phaser.Scene {
   }
 
   private burst(x: number, y: number) {
-    const glyphs = ['♥', '✦', '·', '♥', '✧'];
+    const glyphs = ['●', '○', '·', '●', '○'];
     glyphs.forEach((glyph, index) => {
       const particle = this.add.text(x, y, glyph, {
         color: index % 2 ? '#efaa72' : '#df789e',

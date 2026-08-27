@@ -50,7 +50,7 @@ body {
 
 .site-quick-actions button {
   min-width: 63px;
-  height: 38px;
+  height: 48px;
   padding: 0 12px;
   display: flex;
   align-items: center;
@@ -68,9 +68,27 @@ body {
 
 .site-quick-actions button:active { transform: scale(.94); }
 .site-quick-actions button:focus-visible { outline: 2px solid var(--site-dock-accent); outline-offset: 3px; }
-.site-quick-actions span { font-family: var(--font-display), serif; font-size: 17px; line-height: 1; }
-.site-quick-actions b { font-family: var(--font-display), var(--font-chinese), serif; font-size: 9px; font-weight: 600; letter-spacing: .08em; }
-.site-wechat-action span { color: var(--site-dock-accent); }
+.site-theme-mark {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  overflow: hidden;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+.site-theme-mark::after {
+  position: absolute;
+  inset: 3px;
+  content: "";
+  border-radius: 50%;
+  background: currentColor;
+  transition: transform .25s ease, opacity .25s ease;
+}
+.site-theme-mark[data-next-theme="dark"]::after { transform: translateX(5px); opacity: .3; }
+.site-theme-mark[data-next-theme="light"]::after { transform: scale(.58); opacity: .9; }
+.site-quick-actions b { font-family: var(--font-display), var(--font-chinese), serif; font-size: 12px; font-weight: 600; letter-spacing: .05em; }
+.site-wechat-action b { color: var(--site-dock-active); font-size: 13px; letter-spacing: .08em; }
 
 .site-dock {
   position: fixed;
@@ -81,7 +99,7 @@ body {
   min-height: 72px;
   padding: 7px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 4px;
   border: 1px solid var(--site-dock-line);
   border-radius: 28px 28px 34px 34px;
@@ -115,7 +133,23 @@ body {
   stroke-linejoin: round;
 }
 
-.site-dock a span { font-size: 10px; letter-spacing: .12em; }
+.site-dock a[href="/interview"] { gap: 2px; }
+.site-dock a[href="/interview"] svg {
+  width: 24px;
+  height: 24px;
+  padding: 3px;
+  overflow: visible;
+  border-radius: 50%;
+  background: rgb(213 111 148 / 9%);
+  box-shadow: 0 0 0 1px rgb(213 111 148 / 12%);
+}
+.site-dock a[href="/interview"].is-active svg {
+  color: var(--site-dock-accent);
+  background: rgb(213 111 148 / 15%);
+  box-shadow: 0 0 0 4px rgb(213 111 148 / 7%), 0 0 18px rgb(213 111 148 / 18%);
+}
+
+.site-dock a span { font-size: 12px; font-weight: 650; letter-spacing: .08em; }
 .site-dock a:hover { color: var(--site-dock-active); }
 .site-dock a:active { transform: scale(.94); }
 .site-dock a:focus-visible { outline: 2px solid var(--site-dock-accent); outline-offset: -1px; }
@@ -146,12 +180,11 @@ body {
   padding: 10px 15px;
   display: flex;
   align-items: center;
-  gap: 8px;
   border-radius: 999px;
   background: var(--site-toast);
   color: var(--site-canvas);
   box-shadow: 0 17px 40px rgb(62 36 46 / 22%);
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: .08em;
   opacity: 0;
   pointer-events: none;
@@ -159,10 +192,9 @@ body {
   transition: opacity .25s ease, transform .25s ease;
   white-space: nowrap;
 }
-.site-share-toast i { color: var(--site-dock-accent); font-style: normal; }
 .site-share-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
-:where(.reunion, .play-lab, .treehole-page, .schedule-page) {
+:where(.reunion, .play-lab, .treehole-page, .schedule-page, .link-game-page) {
   padding-bottom: calc(126px + env(safe-area-inset-bottom)) !important;
 }
 
@@ -175,15 +207,23 @@ html[data-theme="dark"] .reunion {
   background-blend-mode: screen, normal, soft-light;
 }
 html[data-theme="dark"] .reunion::before { opacity: .25; }
-html[data-theme="dark"] :where(.eyebrow, .whisper, .closing-whisper, .reunion-copy, .tap-hint, .invitation-reason, .game-entry-copy em) { color: #c7a4af; }
-html[data-theme="dark"] :where(.person h2, .time-unit strong, .invitation h2, .game-entry-copy strong, .game-heading h2) { color: #f7e8ed; }
+html[data-theme="dark"] :where(.whisper, .home-date, .reunion-copy, .tap-hint) { color: #c7a4af; }
+html[data-theme="dark"] :where(.person h2, .time-unit strong, .game-heading h2) { color: #f7e8ed; }
 html[data-theme="dark"] .work-emphasis { color: #f2b98f; }
-html[data-theme="dark"] .time-unit > i { color: #765261; }
-html[data-theme="dark"] .invitation { border-top-color: rgb(240 143 179 / 23%); background: radial-gradient(ellipse at 50% 0, rgb(118 47 75 / 31%), transparent 70%); }
-html[data-theme="dark"] .game-entry,
+html[data-theme="dark"] .time-unit > i { background: #765261; }
+html[data-theme="dark"] .home-utility-bar,
 html[data-theme="dark"] .mini-game { border-color: rgb(239 145 181 / 17%); background: linear-gradient(145deg, rgb(55 30 40 / 74%), rgb(24 14 18 / 70%)); box-shadow: 0 22px 58px rgb(0 0 0 / 33%), inset 0 1px rgb(255 225 236 / 9%); }
+html[data-theme="dark"] :where(.controller-drawer summary, .home-utility-link) { color: #ead3db; }
+html[data-theme="dark"] :where(.controller-drawer[open] summary, .controller-drawer summary:hover, .home-utility-link:hover) { border-color: rgb(238 126 169 / 25%); background: rgb(91 43 61 / 56%); }
+html[data-theme="dark"] .controller-popover { border-color: rgb(239 145 181 / 20%); background: linear-gradient(145deg, rgb(55 30 40 / 97%), rgb(24 14 18 / 96%)); box-shadow: 0 24px 58px rgb(0 0 0 / 42%), inset 0 1px rgb(255 225 236 / 9%); }
+html[data-theme="dark"] .utility-interview-mark { border-color: rgb(239 145 181 / 23%); background: rgb(75 39 54 / 78%); }
+html[data-theme="dark"] .controller-choice { border-color: rgb(239 145 181 / 15%); color: #c6a4af; background: rgb(54 30 40 / 62%); }
+html[data-theme="dark"] .controller-choice.is-selected { border-color: rgb(238 126 169 / 42%); color: #ffe9f0; background: linear-gradient(145deg, rgb(91 43 61 / 83%), rgb(45 24 33 / 84%)); }
+html[data-theme="dark"] .controller-palette { border-top-color: rgb(239 145 181 / 14%); }
+html[data-theme="dark"] .controller-palette legend { color: #c9a4af; }
+html[data-theme="dark"] .palette-choice { color: #c6a4af; background: rgb(54 30 40 / 42%); }
+html[data-theme="dark"] .palette-choice.is-selected { border-color: rgb(238 126 169 / 34%); color: #ffe9f0; background: rgb(88 42 59 / 72%); box-shadow: inset 0 1px rgb(255 224 235 / 9%); }
 html[data-theme="dark"] .game-stage { border-color: rgb(239 145 181 / 17%); background: linear-gradient(160deg, rgb(43 24 33 / 84%), rgb(19 12 16 / 91%)); }
-html[data-theme="dark"] .no-choice { border-color: rgb(239 145 181 / 22%); background: rgb(48 27 36 / 76%); color: #d5b2bd; box-shadow: inset 0 1px rgb(255 226 236 / 8%); }
 
 html[data-theme="dark"] .play-lab {
   --lab-ink: #f5e6eb;
@@ -192,7 +232,7 @@ html[data-theme="dark"] .play-lab {
   background:
     radial-gradient(ellipse at 50% 16%, rgb(107 49 75 / 28%), transparent 52%),
     linear-gradient(156deg, rgb(9 7 10 / 97%), rgb(23 13 19 / 95%) 50%, rgb(36 18 15 / 94%)),
-    url("/aurora-rainbow-bg.jpg") center / cover fixed;
+    url("/aurora-rainbow-bg.jpg") center / cover scroll;
   background-blend-mode: screen, normal, soft-light;
 }
 html[data-theme="dark"] :where(.lab-header h1, .game-portal h2, .lab-game-heading h2) { color: #f7e8ed; }
@@ -209,7 +249,7 @@ html[data-theme="dark"] .treehole-page {
   background:
     radial-gradient(ellipse at 50% 15%, rgb(103 46 71 / 28%), transparent 58%),
     linear-gradient(158deg, #0b080a, #180e13 49%, #26120f),
-    url("/aurora-rainbow-bg.jpg") center / cover fixed;
+    url("/aurora-rainbow-bg.jpg") center / cover scroll;
   background-blend-mode: screen, normal, soft-light;
 }
 html[data-theme="dark"] :where(.treehole-header > a, .treehole-header span, .treehole-feedback, .treehole-form-bottom > span, .treehole-empty) { color: #c3a0ac; }
@@ -217,6 +257,7 @@ html[data-theme="dark"] .treehole-compose,
 html[data-theme="dark"] .treehole-messages { border-color: rgb(239 145 181 / 18%); background: linear-gradient(150deg, rgb(57 31 42 / 72%), rgb(25 15 20 / 74%)); box-shadow: 0 32px 80px rgb(0 0 0 / 39%), inset 0 1px rgb(255 227 237 / 9%); }
 html[data-theme="dark"] .tree-rings { background: radial-gradient(circle, rgb(120 54 79 / 34%) 0 16%, rgb(50 27 37 / 78%) 17% 32%, rgb(89 40 59 / 31%) 33% 48%, rgb(30 18 24 / 76%) 49% 66%, rgb(66 31 44 / 47%) 67%); }
 html[data-theme="dark"] .treehole-form-wrap textarea { border-color: rgb(237 143 180 / 18%); background: rgb(20 12 16 / 62%); color: #f1e1e6; box-shadow: inset 0 1px rgb(255 226 236 / 8%); }
+html[data-theme="dark"] .reply-form textarea { border-color: rgb(237 143 180 / 18%); background: rgb(20 12 16 / 62%); color: #f1e1e6; box-shadow: inset 0 1px rgb(255 226 236 / 8%); }
 html[data-theme="dark"] .treehole-form-wrap textarea::placeholder { color: #9f7e89; }
 html[data-theme="dark"] .message-list li { border-color: rgb(237 143 180 / 15%); background: linear-gradient(135deg, rgb(61 33 44 / 66%), rgb(28 17 22 / 72%)); box-shadow: inset 0 1px rgb(255 226 236 / 8%); }
 html[data-theme="dark"] .message-list p { color: #ead6dc; }
@@ -230,7 +271,7 @@ html[data-theme="dark"] .schedule-page {
   background:
     radial-gradient(ellipse at 48% 8%, rgb(104 46 70 / 31%) 0 10%, transparent 45%),
     linear-gradient(153deg, #0a080b, #180e14 48%, #26130f),
-    url("/aurora-rainbow-bg.jpg") center / cover fixed;
+    url("/aurora-rainbow-bg.jpg") center / cover scroll;
   background-blend-mode: screen, normal, soft-light;
 }
 html[data-theme="dark"] .liquid-glass { background: linear-gradient(145deg, rgb(61 34 46 / 67%), rgb(25 15 21 / 66%)), radial-gradient(circle at 16% 0%, rgb(255 220 233 / 10%), transparent 36%); box-shadow: 0 28px 72px rgb(0 0 0 / 39%), inset 0 1px rgb(255 226 237 / 10%), inset 0 -1px rgb(231 132 172 / 8%); }
@@ -249,13 +290,14 @@ html[data-theme="dark"] .arrow-screen-controls > div { text-shadow: 0 1px rgb(0 
 
 @media (max-width: 540px) {
   .site-quick-actions { top: max(10px, env(safe-area-inset-top)); right: 10px; }
-  .site-quick-actions button { min-width: 44px; width: 44px; height: 44px; padding: 0; }
+  .site-quick-actions button { min-width: 48px; width: 48px; height: 48px; padding: 0; }
   .site-quick-actions b { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .site-quick-actions .site-wechat-action b { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
   .site-dock { bottom: max(8px, env(safe-area-inset-bottom)); width: calc(100vw - 16px); min-height: 66px; border-radius: 24px 24px 29px 29px; }
-  .site-dock a { min-height: 51px; border-radius: 18px 18px 22px 22px; }
-  .site-dock a svg { width: 20px; height: 20px; }
-  .site-dock a span { font-size: 9px; }
-  .site-share-toast { bottom: calc(max(8px, env(safe-area-inset-bottom)) + 80px); font-size: 9px; }
+  .site-dock a { min-height: 56px; border-radius: 18px 18px 22px 22px; }
+  .site-dock a svg { width: 22px; height: 22px; }
+  .site-dock a span { font-size: 12px; }
+  .site-share-toast { bottom: calc(max(8px, env(safe-area-inset-bottom)) + 80px); font-size: 13px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

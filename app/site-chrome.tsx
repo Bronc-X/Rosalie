@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 
 import {
   getShareMode,
+  isPrimaryNavActive,
   nextTheme,
   PRIMARY_NAV,
   resolveTheme,
@@ -23,6 +24,7 @@ function NavIcon({ label }: { label: string }) {
   const paths: Record<string, React.ReactNode> = {
     首页: <><path d="M4 10.5 12 4l8 6.5" /><path d="M6.5 9.5V20h11V9.5M10 20v-6h4v6" /></>,
     留言: <><path d="M5 5.5h14v10H10l-4.5 3v-3H5z" /><path d="M8.5 9.5h7M8.5 12.5h4.5" /></>,
+    面试: <><rect x="8.5" y="3.5" width="7" height="12" rx="3.5" /><path d="M6 11.5a6 6 0 0 0 12 0M12 17.5V21M9.5 21h5" /></>,
     日历: <><rect x="4.5" y="6" width="15" height="14" rx="3" /><path d="M8 4v4M16 4v4M4.5 10h15M8 14h.01M12 14h.01M16 14h.01" /></>,
     游戏: <><path d="M7 9h10a4 4 0 0 1 3.6 5.7l-1.1 2.2a2 2 0 0 1-3.1.6L14.8 16H9.2l-1.6 1.5a2 2 0 0 1-3.1-.6l-1.1-2.2A4 4 0 0 1 7 9Z" /><path d="M8 11.5v4M6 13.5h4M16.5 12.5h.01M18 14.5h.01" /></>,
   };
@@ -66,7 +68,8 @@ export function SiteChrome() {
     return () => window.clearTimeout(timer);
   }, [shareNotice]);
 
-  if (pathname === '/unlock' || pathname.startsWith('/play/')) return null;
+  if (pathname === '/unlock') return null;
+  const isGameDetail = pathname.startsWith('/play/');
 
   function toggleTheme() {
     const value = nextTheme(theme);
@@ -83,13 +86,13 @@ export function SiteChrome() {
     });
 
     if (mode === 'wechat-menu') {
-      setShareNotice('已准备好卡片 · 点右上角发送给朋友');
+      setShareNotice('点右上角分享');
       return;
     }
 
     if (mode === 'wechat-launch') {
       void copyText(SHARE_PAYLOAD.url);
-      setShareNotice('链接已复制 · 正在打开微信');
+      setShareNotice('链接已复制，正在打开微信');
       window.location.href = 'weixin://';
       return;
     }
@@ -97,7 +100,7 @@ export function SiteChrome() {
     if (mode === 'native-share') {
       try {
         await navigator.share(SHARE_PAYLOAD);
-        setShareNotice('分享面板已打开');
+        setShareNotice('已打开分享');
         return;
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -105,25 +108,24 @@ export function SiteChrome() {
     }
 
     const copied = await copyText(SHARE_PAYLOAD.url);
-    setShareNotice(copied ? '链接已复制 · 打开微信粘贴即可' : '复制失败 · 请从地址栏分享');
+    setShareNotice(copied ? '链接已复制' : '请从地址栏分享');
   }
 
   return (
     <>
-      <div className="site-quick-actions" aria-label="页面显示与分享">
+      {!isGameDetail && <div className="site-quick-actions" aria-label="页面显示与分享">
         <button type="button" onClick={toggleTheme} aria-label={`切换到${theme === 'light' ? '深色' : '浅色'}模式`}>
-          <span aria-hidden="true">{theme === 'light' ? '☾' : '☼'}</span>
-          <b>{theme === 'light' ? 'Dark' : 'Light'}</b>
+          <span className="site-theme-mark" data-next-theme={theme === 'light' ? 'dark' : 'light'} aria-hidden="true" />
+          <b>{theme === 'light' ? '深色' : '浅色'}</b>
         </button>
         <button type="button" className="site-wechat-action" onClick={() => void shareToWechat()}>
-          <span aria-hidden="true">↗</span>
           <b>微信</b>
         </button>
-      </div>
+      </div>}
 
       <nav className="site-dock" aria-label="主要功能">
         {PRIMARY_NAV.map((item) => {
-          const active = item.href === '/' ? pathname === '/' : pathname === item.href;
+          const active = isPrimaryNavActive(pathname, item.href);
           return (
             <Link href={item.href} key={item.href} className={active ? 'is-active' : ''} aria-current={active ? 'page' : undefined}>
               <NavIcon label={item.label} />
@@ -134,7 +136,7 @@ export function SiteChrome() {
       </nav>
 
       <div className={`site-share-toast${shareNotice ? ' is-visible' : ''}`} role="status" aria-live="polite">
-        <i aria-hidden="true">✦</i>{shareNotice}
+        {shareNotice}
       </div>
     </>
   );

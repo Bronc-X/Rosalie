@@ -23,7 +23,7 @@ body:has(.arrow-screen) {
 
 .arrow-game-host {
   position: absolute;
-  inset: 0;
+  inset: 0 0 82px;
   display: grid;
   place-items: center;
   touch-action: none;
@@ -44,7 +44,7 @@ body:has(.arrow-screen) {
   left: 50%;
   width: min(360px, calc(100% - 24px));
   display: grid;
-  grid-template-columns: 42px 1fr 42px 42px;
+  grid-template-columns: 1fr 48px 48px;
   gap: 7px;
   align-items: center;
   transform: translateX(-50%);
@@ -53,8 +53,8 @@ body:has(.arrow-screen) {
 
 .arrow-screen-controls > a,
 .arrow-screen-controls > button {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
   border: 1px solid rgb(255 255 255 / 75%);
@@ -70,26 +70,26 @@ body:has(.arrow-screen) {
 
 .arrow-screen-controls > div {
   min-width: 0;
-  text-align: center;
+  text-align: left;
   text-shadow: 0 1px rgb(255 255 255 / 70%);
 }
 
 .arrow-screen-controls small,
 .arrow-screen-controls strong { display: block; }
-.arrow-screen-controls small { font: 500 8px/1.4 system-ui, sans-serif; letter-spacing: .15em; }
-.arrow-screen-controls strong { margin-top: 2px; overflow: hidden; font: 500 12px/1.25 Georgia, serif; text-overflow: ellipsis; white-space: nowrap; }
+.arrow-screen-controls strong { overflow: hidden; font: 600 15px/1.25 Georgia, serif; text-overflow: ellipsis; white-space: nowrap; }
+.arrow-screen-controls small { margin-top: 3px; font: 600 12px/1.4 system-ui, sans-serif; letter-spacing: .03em; }
 
 .arrow-save-indicator {
   position: fixed;
   z-index: 31;
   right: max(16px, env(safe-area-inset-right));
-  bottom: max(15px, env(safe-area-inset-bottom));
+  bottom: max(94px, calc(env(safe-area-inset-bottom) + 86px));
   display: flex;
   align-items: center;
   gap: 6px;
   color: #99727e;
-  font: 500 9px/1 system-ui, sans-serif;
-  letter-spacing: .14em;
+  font: 600 12px/1 system-ui, sans-serif;
+  letter-spacing: .04em;
   pointer-events: none;
 }
 
@@ -119,7 +119,7 @@ body:has(.arrow-screen) {
   animation: arrow-load-breathe 1.6s ease-in-out infinite;
 }
 
-.arrow-screen-loading p { margin: 0; font: 500 11px/1 system-ui, sans-serif; letter-spacing: .15em; }
+.arrow-screen-loading p { margin: 0; font: 600 14px/1 system-ui, sans-serif; letter-spacing: .04em; }
 
 @keyframes arrow-save-pulse { 50% { opacity: .34; transform: scale(.65); } }
 @keyframes arrow-load-breathe { 50% { opacity: .55; transform: translateY(-6px) rotate(3deg); } }

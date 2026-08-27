@@ -318,7 +318,7 @@ class HoleScene extends Phaser.Scene {
     this.timerCopy = this.add.text(347, 96, '', { ...serif, fontSize: '13px' }).setOrigin(1, 0).setDepth(30);
     this.add.rectangle(195, 122, 302, 5, 0xe7cbd3, 0.42).setOrigin(0.5).setDepth(30);
     this.timeBar = this.add.rectangle(44, 122, 302, 5, 0xd986a3, 0.82).setOrigin(0, 0.5).setDepth(31);
-    this.instruction = this.add.text(195, 719, '按住图标 · 拖着黑洞跑', {
+    this.instruction = this.add.text(195, 719, '按住图标，拖动黑洞', {
       color: '#8d6673',
       fontFamily: 'system-ui, sans-serif',
       fontSize: '12px',
@@ -343,10 +343,10 @@ class HoleScene extends Phaser.Scene {
     this.objects = [];
     hideStatus(this.status);
     this.spawnObjects(config);
-    this.levelCopy.setText(`LEVEL ${String(this.level + 1).padStart(2, '0')}`);
+    this.levelCopy.setText(`第 ${this.level + 1} 关`);
     this.countCopy.setText(`0 / ${config.target}`);
-    this.instruction.setText('按住图标 · 拖着黑洞跑');
-    this.options.onStatus(`黑洞 · 第 ${this.level + 1} 关`);
+    this.instruction.setText('按住图标，拖动黑洞');
+    this.options.onStatus('');
     this.updateTimer();
   }
 
@@ -478,13 +478,13 @@ class HoleScene extends Phaser.Scene {
     const finalScore = this.score + Math.round(this.remaining * 18) + this.level * 180;
     const nextLevel = Math.min(this.level + 1, HOLE_LEVELS.length - 1);
     this.options.onLevelChange(nextLevel, finalScore);
-    this.options.onStatus(`黑洞 · ${finalScore} 分`);
+    this.options.onStatus(`${finalScore} 分`);
     this.toneKit.play(720, 0.12, 0.05, 0, 'triangle');
     this.toneKit.play(960, 0.13, 0.045, 0.09, 'triangle');
     vibrate([16, 28, 25], this.options.reducedMotion);
     if (!this.options.reducedMotion) this.cameras.main.shake(130, 0.004);
     const isLast = this.level === HOLE_LEVELS.length - 1;
-    revealStatus(this, this.status, isLast ? '全吞了' : '胃口升级', isLast ? `${finalScore} 分 · 点一下再来` : `${finalScore} 分 · 下一关`, this.options.reducedMotion);
+    revealStatus(this, this.status, isLast ? '全吞了' : '胃口升级', isLast ? `${finalScore} 分，点一下再来` : `${finalScore} 分，下一关`, this.options.reducedMotion);
     if (isLast) {
       this.awaitingRetry = true;
       return;
@@ -497,9 +497,9 @@ class HoleScene extends Phaser.Scene {
     this.locked = true;
     this.dragging = false;
     this.awaitingRetry = true;
-    this.options.onStatus('黑洞 · 这关再来');
+    this.options.onStatus('本关重试');
     this.toneKit.play(160, 0.14, 0.035, 0, 'square');
-    revealStatus(this, this.status, '没吃饱', '不扣存档 · 点一下重试', this.options.reducedMotion);
+    revealStatus(this, this.status, '没吃饱', '不扣存档，点一下重试', this.options.reducedMotion);
   }
 }
 
@@ -643,11 +643,11 @@ class SandScene extends Phaser.Scene {
     this.grid = Array.from({ length: SAND_ROWS }, () => Array<SandTile | null>(SAND_COLS).fill(null));
     hideStatus(this.status);
     this.populateBoard(false);
-    this.levelCopy.setText(`LEVEL ${String(this.level + 1).padStart(2, '0')}`);
+    this.levelCopy.setText(`第 ${this.level + 1} 关`);
     this.instruction.setText('点同色相连的沙糖块');
     this.comboCopy.setText('');
     this.controller.setPosition(333, 658).setAlpha(0.86).setScale(this.controllerScale);
-    this.options.onStatus(`沙画 · 第 ${this.level + 1} 关`);
+    this.options.onStatus('');
     this.refreshHud();
   }
 
@@ -753,9 +753,9 @@ class SandScene extends Phaser.Scene {
     this.lastClearAt = this.time.now;
     const gained = group.length * group.length * 11 * this.combo;
     this.score += gained;
-    this.comboCopy.setText(this.combo > 1 ? `COMBO ×${this.combo}` : `+${gained}`);
+    this.comboCopy.setText(this.combo > 1 ? `连击 ×${this.combo}` : `+${gained}`);
     this.instruction.setText(group.length >= 6 ? '这一把很大' : '继续接上');
-    this.options.onStatus(this.combo > 1 ? `沙画 · 连击 ×${this.combo}` : `沙画 · +${gained}`);
+    this.options.onStatus(this.combo > 1 ? `连击 ×${this.combo}` : `+${gained}`);
     this.toneKit.play(390 + group.length * 24, 0.075, 0.04, 0, 'triangle');
     hitStop(this, this.options.reducedMotion, group.length >= 6 ? 64 : 42);
     if (this.combo > 1) this.toneKit.play(610 + this.combo * 55, 0.08, 0.03, 0.055, 'sine');
@@ -902,13 +902,13 @@ class SandScene extends Phaser.Scene {
     const finalScore = this.score + this.moves * 35 + this.level * 160;
     const nextLevel = Math.min(this.level + 1, SAND_LEVELS.length - 1);
     this.options.onLevelChange(nextLevel, finalScore);
-    this.options.onStatus(`沙画 · ${finalScore} 分`);
+    this.options.onStatus(`${finalScore} 分`);
     this.toneKit.play(690, 0.12, 0.045, 0, 'triangle');
     this.toneKit.play(920, 0.13, 0.04, 0.085, 'triangle');
     vibrate([14, 24, 22], this.options.reducedMotion);
     if (!this.options.reducedMotion) this.cameras.main.shake(120, 0.003);
     const isLast = this.level === SAND_LEVELS.length - 1;
-    revealStatus(this, this.status, isLast ? '沙都懂了' : '这幅成了', isLast ? `${finalScore} 分 · 点一下再来` : `${finalScore} 分 · 下一幅`, this.options.reducedMotion);
+    revealStatus(this, this.status, isLast ? '沙都懂了' : '这幅成了', isLast ? `${finalScore} 分，点一下再来` : `${finalScore} 分，下一幅`, this.options.reducedMotion);
     if (isLast) {
       this.awaitingRetry = true;
       return;
@@ -921,9 +921,9 @@ class SandScene extends Phaser.Scene {
     this.awaitingRetry = true;
     this.combo = 0;
     this.comboCopy.setText('');
-    this.options.onStatus('沙画 · 这关再来');
+    this.options.onStatus('本关重试');
     this.toneKit.play(160, 0.14, 0.03, 0, 'square');
-    revealStatus(this, this.status, '手数用完', '不扣存档 · 点一下重试', this.options.reducedMotion);
+    revealStatus(this, this.status, '手数用完', '不扣存档，点一下重试', this.options.reducedMotion);
   }
 }
 

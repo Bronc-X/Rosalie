@@ -146,17 +146,16 @@ export function MiniGame() {
   }
 
   const resultCopy = game.status === 'won'
-    ? `本轮抓到 ${game.score} 朵。`
+    ? `抓到 ${game.score} 朵`
     : game.hearts === 0
-      ? '工作混进来了，再试一次。'
-      : `本轮抓到 ${game.score} 朵。`;
+      ? '碰到工作，重来'
+      : `抓到 ${game.score} 朵`;
 
   return (
     <section className={`mini-game game-${game.status} ${game.streak >= 3 ? 'has-game-streak' : ''}`} aria-labelledby="mini-game-title">
       <div className="game-heading">
-        <p className="game-kicker">PULL TEST · 18 SEC</p>
         <h2 id="mini-game-title">接住樱花</h2>
-        <p>接樱花，躲开工作。</p>
+        <p>接花，躲工作</p>
       </div>
 
       <div
@@ -164,12 +163,12 @@ export function MiniGame() {
         ref={stageRef}
         style={{ '--game-time': timeProgress, '--player-x': `${playerX}%` } as CSSProperties}
       >
-        <div className="game-skyline" aria-hidden="true"><i /><span>♥</span><i /></div>
+        <div className="game-skyline" aria-hidden="true"><i /><span /><i /></div>
 
         <div className="game-hud" aria-live="polite">
           <span><b>{game.score}</b> / {GAME_WIN_SCORE} 花</span>
           <span className="game-hearts" aria-label={`还可碰到工作 ${game.hearts} 次`}>
-            {Array.from({ length: 3 }, (_, index) => <i key={index}>{index < game.hearts ? '♥' : '♡'}</i>)}
+            {Array.from({ length: 3 }, (_, index) => <i className={index < game.hearts ? 'is-full' : ''} key={index} />)}
           </span>
           <span><b>{Math.ceil(remainingMs / 1_000)}</b> 秒</span>
         </div>
@@ -220,7 +219,7 @@ export function MiniGame() {
         ) : (
           <div className="game-curtain">
             {game.status === 'idle' ? (
-              <p>限时十八秒。</p>
+              <p>限时 18 秒</p>
             ) : (
               <p className="game-result" aria-live="polite">{resultCopy}</p>
             )}
