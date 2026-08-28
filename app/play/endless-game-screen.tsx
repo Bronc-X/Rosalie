@@ -22,6 +22,7 @@ import {
 } from '@/lib/endless-games.mjs';
 import type { EndlessGameId, EndlessGameInput, EndlessGameState } from '@/lib/endless-games.mjs';
 
+import { GameIcon, GameResetIcon } from './game-icon';
 import { usePlayerProgress } from './use-player-progress';
 
 const LOGICAL_WIDTH = 390;
@@ -250,7 +251,8 @@ export function EndlessGameScreen({ gameId }: { gameId: EndlessGameId }) {
   return (
     <main className={`endless-screen endless-${gameId}`} style={screenStyle}>
       <header className="endless-hud">
-        <div>
+        <GameIcon gameId={gameId} size={26} />
+        <div className="endless-hud-copy">
           <h1>{catalog.label}</h1>
           <p>{catalog.instruction}</p>
         </div>
@@ -276,7 +278,7 @@ export function EndlessGameScreen({ gameId }: { gameId: EndlessGameId }) {
             <img src={controllerSource} alt="" />
             <strong>{score} 分</strong>
             <p>最高 {visibleBest}</p>
-            <button type="button" onClick={restart}>再来一局</button>
+            <button type="button" onClick={restart}><GameResetIcon />再来一局</button>
           </div>
         )}
       </section>

@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { normalizeHomeNote } from '@/lib/home-notes.mjs';
 import { ensureSiteSchema } from '@/lib/site-database';
 import { attachPlayerCookie, resolvePlayerSession } from '@/lib/player-session';
 import {
@@ -10,43 +11,42 @@ import {
   validateJsonMutation,
 } from '@/lib/request-security.mjs';
 import {
-  INSERT_TREEHOLE_MESSAGE_SQL,
-  SELECT_TREEHOLE_MESSAGES_SQL,
-  SELECT_TREEHOLE_REPLIES_SQL,
+  INSERT_HOME_NOTE_SQL,
+  SELECT_HOME_NOTES_SQL,
+  SELECT_HOME_NOTE_REPLIES_SQL,
 } from '@/lib/site-schema.mjs';
-import { normalizeTreeholeMessage } from '@/lib/treehole.mjs';
 import {
-  insertVercelMessage,
-  listVercelMessages,
+  insertVercelHomeNote,
+  listVercelHomeNotes,
   usesVercelBlob,
 } from '@/lib/vercel-blob-storage';
 
 export const runtime = 'nodejs';
 
-type TreeholeRow = {
+type HomeNoteRow = {
   id: string;
   text: string;
   created_at: string;
 };
 
-type TreeholeMessage = {
+type HomeNoteReplyRow = {
   id: string;
-  text: string;
-  createdAt: string;
-  replies: TreeholeReply[];
-};
-
-type TreeholeReplyRow = {
-  id: string;
-  message_id: string;
+  note_id: string;
   text: string;
   created_at: string;
 };
 
-type TreeholeReply = {
+type HomeNoteReply = {
   id: string;
   text: string;
   createdAt: string;
+};
+
+type HomeNote = {
+  id: string;
+  text: string;
+  createdAt: string;
+  replies: HomeNoteReply[];
 };
 
 function json(data: unknown, status = 200, extraHeaders?: Record<string, string>) {
@@ -66,28 +66,28 @@ export async function GET(request: NextRequest) {
 
   try {
     if (usesVercelBlob()) {
-      return attachPlayerCookie(json({ ok: true, messages: await listVercelMessages() }), session);
+      return attachPlayerCookie(json({ ok: true, notes: await listVercelHomeNotes() }), session);
     }
     const database = await ensureSiteSchema();
     const [result, replyResult] = await Promise.all([
-      database.prepare(SELECT_TREEHOLE_MESSAGES_SQL).bind(24).all<TreeholeRow>(),
-      database.prepare(SELECT_TREEHOLE_REPLIES_SQL).bind(24).all<TreeholeReplyRow>(),
+      database.prepare(SELECT_HOME_NOTES_SQL).bind(24).all<HomeNoteRow>(),
+      database.prepare(SELECT_HOME_NOTE_REPLIES_SQL).bind(24).all<HomeNoteReplyRow>(),
     ]);
-    const repliesByMessage = new Map<string, TreeholeReply[]>();
+    const repliesByNote = new Map<string, HomeNoteReply[]>();
     for (const row of replyResult.results) {
-      const replies = repliesByMessage.get(row.message_id) ?? [];
+      const replies = repliesByNote.get(row.note_id) ?? [];
       replies.push({ id: row.id, text: row.text, createdAt: row.created_at });
-      repliesByMessage.set(row.message_id, replies);
+      repliesByNote.set(row.note_id, replies);
     }
-    const messages: TreeholeMessage[] = result.results.map((row) => ({
+    const notes: HomeNote[] = result.results.map((row) => ({
       id: row.id,
       text: row.text,
       createdAt: row.created_at,
-      replies: repliesByMessage.get(row.id) ?? [],
+      replies: repliesByNote.get(row.id) ?? [],
     }));
-    return attachPlayerCookie(json({ ok: true, messages }), session);
+    return attachPlayerCookie(json({ ok: true, notes }), session);
   } catch {
-    return json({ ok: false, error: 'TREEHOLE_UNAVAILABLE' }, 503);
+    return json({ ok: false, error: 'HOME_NOTES_UNAVAILABLE' }, 503);
   }
 }
 
@@ -97,24 +97,22 @@ export async function POST(request: NextRequest) {
   const mutation = validateJsonMutation(request);
   if (!mutation.ok) return json({ ok: false, error: mutation.error }, mutation.status);
   const rate = takeRateLimit({
-    scope: 'treehole-message',
+    scope: 'home-note',
     key: getRequestClientKey(request.headers, session.playerId),
-    limit: 20,
+    limit: 16,
     windowMs: 10 * 60_000,
   });
   if (!rate.allowed) {
     return json({ ok: false, error: 'RATE_LIMITED' }, 429, { 'Retry-After': String(rate.retryAfter) });
   }
 
-  const parsed = await readBoundedJson(request, 4_096, 'MESSAGE_TOO_LARGE');
+  const parsed = await readBoundedJson(request, 4_096, 'NOTE_TOO_LARGE');
   if (!parsed.ok) return json({ ok: false, error: parsed.error }, parsed.status);
-  const body = parsed.value as { message?: unknown };
-  const rawMessage = body?.message;
-
-  const normalized = normalizeTreeholeMessage(rawMessage);
+  const body = parsed.value as { note?: unknown };
+  const normalized = normalizeHomeNote(body?.note);
   if (!normalized.ok) return json({ ok: false, error: normalized.error }, 400);
 
-  const message: TreeholeMessage = {
+  const note: HomeNote = {
     id: crypto.randomUUID(),
     text: normalized.value,
     createdAt: new Date().toISOString(),
@@ -123,16 +121,16 @@ export async function POST(request: NextRequest) {
 
   try {
     if (usesVercelBlob()) {
-      await insertVercelMessage(message);
-      return attachPlayerCookie(json({ ok: true, message }, 201), session);
+      await insertVercelHomeNote(note);
+      return attachPlayerCookie(json({ ok: true, note }, 201), session);
     }
     const database = await ensureSiteSchema();
     await database
-      .prepare(INSERT_TREEHOLE_MESSAGE_SQL)
-      .bind(message.id, session.playerId, message.text, message.createdAt)
+      .prepare(INSERT_HOME_NOTE_SQL)
+      .bind(note.id, session.playerId, note.text, note.createdAt)
       .run();
-    return attachPlayerCookie(json({ ok: true, message }, 201), session);
+    return attachPlayerCookie(json({ ok: true, note }, 201), session);
   } catch {
-    return json({ ok: false, error: 'TREEHOLE_UNAVAILABLE' }, 503);
+    return json({ ok: false, error: 'HOME_NOTES_UNAVAILABLE' }, 503);
   }
 }

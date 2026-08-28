@@ -18,6 +18,12 @@ import {
 } from '@/lib/interview-model.mjs';
 import { attachPlayerCookie, resolvePlayerSession } from '@/lib/player-session';
 import {
+  getRequestClientKey,
+  readBoundedJson,
+  takeRateLimit,
+  validateJsonMutation,
+} from '@/lib/request-security.mjs';
+import {
   readVercelInterviewRecords,
   usesVercelBlob,
   writeVercelInterviewRecord,
@@ -26,10 +32,6 @@ import {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
-
-const RATE_WINDOW_MS = 60_000;
-const RATE_LIMIT = 14;
-const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
 function json(data: unknown, status = 200, extraHeaders?: Record<string, string>) {
   return NextResponse.json(data, {
@@ -40,19 +42,6 @@ function json(data: unknown, status = 200, extraHeaders?: Record<string, string>
       ...extraHeaders,
     },
   });
-}
-
-function takeRateLimit(key: string, now = Date.now()) {
-  const current = rateBuckets.get(key);
-  if (!current || current.resetAt <= now) {
-    rateBuckets.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return { allowed: true, retryAfter: 0 };
-  }
-  if (current.count >= RATE_LIMIT) {
-    return { allowed: false, retryAfter: Math.max(1, Math.ceil((current.resetAt - now) / 1_000)) };
-  }
-  current.count += 1;
-  return { allowed: true, retryAfter: 0 };
 }
 
 function providerConfig() {
@@ -172,6 +161,7 @@ async function requestProviderContent({
       }),
       signal: abortController.signal,
       cache: 'no-store',
+      redirect: 'error',
     });
     if (!response.ok) throw new Error('INTERVIEW_UNAVAILABLE');
 
@@ -210,18 +200,14 @@ export async function POST(request: NextRequest) {
     attachPlayerCookie(json(data, status, extraHeaders), session)
   );
 
-  const origin = request.headers.get('origin');
-  if (origin && origin !== request.nextUrl.origin) {
-    return respond({ ok: false, error: 'ORIGIN_REJECTED' }, 403);
-  }
-  if (Number(request.headers.get('content-length') ?? 0) > 40_000) {
-    return respond({ ok: false, error: 'REQUEST_TOO_LARGE' }, 413);
-  }
-
-  const clientKey = request.headers.get('x-forwarded-for')?.split(',', 1)[0]?.trim()
-    || request.headers.get('x-real-ip')?.trim()
-    || session.playerId;
-  const rate = takeRateLimit(clientKey);
+  const mutation = validateJsonMutation(request);
+  if (!mutation.ok) return respond({ ok: false, error: mutation.error }, mutation.status);
+  const rate = takeRateLimit({
+    scope: 'interview',
+    key: getRequestClientKey(request.headers, session.playerId),
+    limit: 14,
+    windowMs: 60_000,
+  });
   if (!rate.allowed) {
     return respond(
       { ok: false, error: 'RATE_LIMITED' },
@@ -230,14 +216,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return respond({ ok: false, error: 'INVALID_REQUEST' }, 400);
-  }
-
-  const normalized = normalizeInterviewJobRequest(body);
+  const parsed = await readBoundedJson(request, 40_000);
+  if (!parsed.ok) return respond({ ok: false, error: parsed.error }, parsed.status);
+  const normalized = normalizeInterviewJobRequest(parsed.value);
   if (!normalized.ok) return respond({ ok: false, error: normalized.error }, 400);
   const provider = providerConfig();
   if (!provider) return respond({ ok: false, error: 'INTERVIEW_UNAVAILABLE' }, 503);

@@ -4,7 +4,7 @@ body:has(.arrow-screen) {
   min-height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  background: #f4eaf4;
+  background: var(--stage-canvas);
 }
 
 .arrow-screen {
@@ -12,18 +12,31 @@ body:has(.arrow-screen) {
   inset: 0;
   min-height: 100dvh;
   overflow: hidden;
-  color: #77525f;
+  color: var(--stage-ink);
   background:
-    radial-gradient(circle at 18% 12%, rgb(248 195 217 / 58%), transparent 29%),
-    radial-gradient(circle at 88% 30%, rgb(255 207 166 / 57%), transparent 32%),
-    linear-gradient(160deg, #efeaff 0%, #fff6f1 48%, #fce5ee 100%);
+    radial-gradient(circle at 12% 4%, rgb(190 174 235 / 24%), transparent 31%),
+    radial-gradient(circle at 94% 32%, rgb(246 183 137 / 20%), transparent 34%),
+    linear-gradient(165deg, color-mix(in srgb, var(--stage-canvas) 91%, #eeecff), var(--stage-canvas) 52%, color-mix(in srgb, var(--stage-canvas) 91%, #ffe7db));
+  font-family: var(--font-ui);
   touch-action: none;
   user-select: none;
 }
 
+.arrow-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: .07;
+  pointer-events: none;
+  background-image: radial-gradient(circle, var(--stage-accent) 0 1px, transparent 1.3px);
+  background-size: 28px 28px;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 14%, #000 84%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 14%, #000 84%, transparent);
+}
+
 .arrow-game-host {
   position: absolute;
-  inset: 0 0 82px;
+  inset: max(82px, calc(env(safe-area-inset-top) + 76px)) 8px calc(91px + env(safe-area-inset-bottom));
   display: grid;
   place-items: center;
   touch-action: none;
@@ -32,9 +45,18 @@ body:has(.arrow-screen) {
 
 .arrow-game-host canvas {
   display: block;
+  width: auto;
   max-width: 100%;
+  height: auto;
   max-height: 100%;
-  filter: drop-shadow(0 28px 42px rgb(112 72 102 / 14%));
+  aspect-ratio: 390 / 780;
+  border: 1px solid var(--stage-line);
+  border-radius: var(--radius-sheet);
+  background: #fff7f1;
+  box-shadow: var(--stage-shadow), inset 0 1px rgb(255 255 255 / 80%);
+  image-rendering: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .arrow-screen-controls {
@@ -42,89 +64,150 @@ body:has(.arrow-screen) {
   z-index: 30;
   top: max(13px, env(safe-area-inset-top));
   left: 50%;
-  width: min(360px, calc(100% - 24px));
+  width: min(620px, calc(100% - 24px));
+  min-height: 58px;
+  padding: 4px;
   display: grid;
-  grid-template-columns: 1fr 48px 48px;
-  gap: 7px;
+  grid-template-columns: minmax(0, 1fr) 50px 50px;
+  gap: 6px;
   align-items: center;
+  border: 1px solid var(--stage-line);
+  border-radius: var(--radius-panel);
+  background: var(--stage-surface);
+  box-shadow: 0 16px 40px rgb(77 44 58 / 10%), inset 0 1px var(--stage-highlight);
   transform: translateX(-50%);
-  pointer-events: none;
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  backdrop-filter: blur(22px) saturate(145%);
 }
 
-.arrow-screen-controls > a,
 .arrow-screen-controls > button {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
+  padding: 0;
   display: grid;
   place-items: center;
-  border: 1px solid rgb(255 255 255 / 75%);
-  border-radius: 50%;
-  color: #8d6572;
-  background: rgb(255 250 248 / 72%);
-  box-shadow: 0 12px 28px rgb(121 83 104 / 11%), inset 0 1px #fff;
-  font: 600 15px/1 system-ui, sans-serif;
-  text-decoration: none;
-  backdrop-filter: blur(14px);
-  pointer-events: auto;
+  border: 0;
+  border-radius: 18px;
+  color: var(--stage-muted);
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.arrow-screen-controls > button:active {
+  color: var(--stage-accent);
+  background: color-mix(in srgb, var(--stage-accent) 9%, transparent);
+  transform: scale(.94);
+}
+
+.arrow-screen-controls > button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--stage-accent) 36%, transparent);
+  outline-offset: 0;
 }
 
 .arrow-screen-controls > div {
   min-width: 0;
+  padding: 0 12px;
   text-align: left;
-  text-shadow: 0 1px rgb(255 255 255 / 70%);
 }
 
 .arrow-screen-controls small,
 .arrow-screen-controls strong { display: block; }
-.arrow-screen-controls strong { overflow: hidden; font: 600 15px/1.25 Georgia, serif; text-overflow: ellipsis; white-space: nowrap; }
-.arrow-screen-controls small { margin-top: 3px; font: 600 12px/1.4 system-ui, sans-serif; letter-spacing: .03em; }
+.arrow-screen-controls strong {
+  overflow: hidden;
+  color: var(--stage-ink);
+  font: 700 16px/1.25 var(--font-ui);
+  letter-spacing: -.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.arrow-screen-controls small {
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--stage-muted);
+  font: 550 12px/1.35 var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .arrow-save-indicator {
   position: fixed;
   z-index: 31;
-  right: max(16px, env(safe-area-inset-right));
-  bottom: max(94px, calc(env(safe-area-inset-bottom) + 86px));
+  left: 50%;
+  bottom: max(82px, calc(env(safe-area-inset-bottom) + 77px));
+  min-height: 26px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: #99727e;
-  font: 600 12px/1 system-ui, sans-serif;
-  letter-spacing: .04em;
+  gap: 7px;
+  border: 1px solid var(--stage-line);
+  border-radius: 999px;
+  color: var(--stage-muted);
+  background: var(--stage-surface);
+  box-shadow: inset 0 1px var(--stage-highlight);
+  font: 650 11px/1 var(--font-ui);
+  transform: translateX(-50%);
   pointer-events: none;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 .arrow-save-indicator i {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #8bc8ad;
-  box-shadow: 0 0 0 4px rgb(139 200 173 / 13%);
+  background: #72a98e;
+  box-shadow: 0 0 0 4px rgb(114 169 142 / 12%);
 }
-
-.arrow-save-indicator.is-saving i { background: #e6aa71; animation: arrow-save-pulse .8s ease-in-out infinite; }
-.arrow-save-indicator.is-offline i { background: #c598a5; }
+.arrow-save-indicator.is-saving i { background: #c78a52; animation: arrow-save-pulse .8s ease-in-out infinite; }
+.arrow-save-indicator.is-offline i { background: #a58b94; }
 
 .arrow-screen-loading {
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 4px;
+  gap: 6px;
 }
-
 .arrow-screen-loading img {
-  width: 112px;
-  height: 112px;
+  width: 96px;
+  height: 96px;
   object-fit: contain;
   filter: drop-shadow(0 18px 26px rgb(121 83 104 / 13%));
   animation: arrow-load-breathe 1.6s ease-in-out infinite;
 }
+.arrow-screen-loading p { margin: 0; color: var(--stage-muted); font: 650 14px/1 var(--font-ui); }
 
-.arrow-screen-loading p { margin: 0; font: 600 14px/1 system-ui, sans-serif; letter-spacing: .04em; }
+html[data-theme="dark"] .arrow-screen {
+  background:
+    radial-gradient(circle at 12% 4%, rgb(91 64 126 / 24%), transparent 31%),
+    radial-gradient(circle at 94% 32%, rgb(128 66 54 / 18%), transparent 34%),
+    linear-gradient(165deg, #0a0709, #120b0f 52%, #180d0c);
+}
+html[data-theme="dark"] .arrow-game-host canvas {
+  border-color: rgb(239 151 186 / 20%);
+  box-shadow: 0 26px 60px rgb(0 0 0 / 35%);
+}
 
 @keyframes arrow-save-pulse { 50% { opacity: .34; transform: scale(.65); } }
-@keyframes arrow-load-breathe { 50% { opacity: .55; transform: translateY(-6px) rotate(3deg); } }
+@keyframes arrow-load-breathe { 50% { opacity: .6; transform: translateY(-5px); } }
+
+@media (max-width: 430px) {
+  .arrow-game-host { inset-inline: 5px; }
+  .arrow-screen-controls { width: calc(100% - 16px); }
+  .arrow-screen-controls > div { padding-inline: 9px; }
+  .arrow-screen-controls strong { font-size: 15px; }
+  .arrow-game-host canvas { border-radius: 24px; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .arrow-screen-controls,
+  .arrow-save-indicator { background: var(--stage-surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .arrow-screen-loading img,
   .arrow-save-indicator.is-saving i { animation: none; }
+  .arrow-screen-controls > button { transition: none; }
 }

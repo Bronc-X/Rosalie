@@ -9,6 +9,13 @@ import type { ScheduleEntry } from '@/lib/schedule.mjs';
 
 export type SharedReply = { id: string; text: string; createdAt: string };
 export type SharedMessage = { id: string; text: string; createdAt: string; replies: SharedReply[] };
+export type SharedHomeNoteReply = { id: string; text: string; createdAt: string };
+export type SharedHomeNote = {
+  id: string;
+  text: string;
+  createdAt: string;
+  replies: SharedHomeNoteReply[];
+};
 
 function isReply(value: unknown): value is SharedReply {
   if (!value || typeof value !== 'object') return false;
@@ -26,6 +33,24 @@ function isMessage(value: unknown): value is SharedMessage {
     && typeof candidate.createdAt === 'string'
     && (candidate.replies === undefined
       || (Array.isArray(candidate.replies) && candidate.replies.every(isReply)));
+}
+
+function isHomeNoteReply(value: unknown): value is SharedHomeNoteReply {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<SharedHomeNoteReply>;
+  return typeof candidate.id === 'string'
+    && typeof candidate.text === 'string'
+    && typeof candidate.createdAt === 'string';
+}
+
+function isHomeNote(value: unknown): value is SharedHomeNote {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<SharedHomeNote>;
+  return typeof candidate.id === 'string'
+    && typeof candidate.text === 'string'
+    && typeof candidate.createdAt === 'string'
+    && (candidate.replies === undefined
+      || (Array.isArray(candidate.replies) && candidate.replies.every(isHomeNoteReply)));
 }
 
 function isScheduleEntry(value: unknown): value is ScheduleEntry {
@@ -85,6 +110,45 @@ export async function insertVercelReply(messageId: string, reply: SharedReply) {
   if (!isMessage(value)) return false;
   const message: SharedMessage = { ...value, replies: [...(value.replies ?? []), reply] };
   await put(blob.pathname, JSON.stringify(message), {
+    access: 'private',
+    contentType: 'application/json; charset=utf-8',
+    allowOverwrite: true,
+  });
+  return true;
+}
+
+export async function listVercelHomeNotes() {
+  const result = await list({ prefix: 'home-notes/', limit: 24 });
+  const notes = await Promise.all(result.blobs.map(async (blob) => {
+    try {
+      const value = await readJson(blob.pathname);
+      return isHomeNote(value) ? { ...value, replies: value.replies ?? [] } : null;
+    } catch {
+      return null;
+    }
+  }));
+  return notes
+    .filter((note): note is SharedHomeNote => note !== null)
+    .sort((first, second) => second.createdAt.localeCompare(first.createdAt));
+}
+
+export async function insertVercelHomeNote(note: SharedHomeNote) {
+  const reverseTimestamp = String(9_999_999_999_999 - Date.parse(note.createdAt)).padStart(13, '0');
+  await put(`home-notes/${reverseTimestamp}-${note.id}.json`, JSON.stringify(note), {
+    access: 'private',
+    contentType: 'application/json; charset=utf-8',
+  });
+}
+
+export async function insertVercelHomeNoteReply(noteId: string, reply: SharedHomeNoteReply) {
+  const result = await list({ prefix: 'home-notes/', limit: 100 });
+  const blob = result.blobs.find((candidate) => candidate.pathname.endsWith(`-${noteId}.json`));
+  if (!blob) return false;
+
+  const value = await readJson(blob.pathname);
+  if (!isHomeNote(value)) return false;
+  const note: SharedHomeNote = { ...value, replies: [...(value.replies ?? []), reply] };
+  await put(blob.pathname, JSON.stringify(note), {
     access: 'private',
     contentType: 'application/json; charset=utf-8',
     allowOverwrite: true,

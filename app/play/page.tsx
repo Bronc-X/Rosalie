@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { GameLab } from './game-lab';
+import './game-icon.css';
 import './play.css';
 
 export const metadata: Metadata = {

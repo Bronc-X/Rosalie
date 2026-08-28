@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 import path from 'node:path';
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   webpack(config, { webpack }) {
     if (process.env.VERCEL === '1') {
       config.plugins.push(new webpack.NormalModuleReplacementPlugin(
@@ -15,16 +16,22 @@ const nextConfig: NextConfig = {
     const securityHeaders = {
       source: '/:path*',
       headers: [
-        { key: 'Content-Security-Policy', value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'" },
+        {
+          key: 'Content-Security-Policy',
+          value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://res.wx.qq.com; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
+        },
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         { key: 'X-Content-Type-Options', value: 'nosniff' },
         { key: 'X-Frame-Options', value: 'DENY' },
+        { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
+        { key: 'X-DNS-Prefetch-Control', value: 'off' },
         { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
         { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
       ],
     };
     const cachedAssets = [
       '/aurora-rainbow-bg.jpg',
+      '/aurora-rainbow-original.webp',
       '/soft-pull-controller.webp',
       '/soft-pull-cursor.webp',
       '/match-rosette.webp',

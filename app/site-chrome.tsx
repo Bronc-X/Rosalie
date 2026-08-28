@@ -3,6 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import {
+  CalendarDots,
+  ChatCircleText,
+  GameController,
+  House,
+  MicrophoneStage,
+  MoonStars,
+  SunDim,
+  WechatLogo,
+} from '@phosphor-icons/react';
 
 import {
   getShareMode,
@@ -21,15 +31,12 @@ const SHARE_PAYLOAD = {
 };
 
 function NavIcon({ label }: { label: string }) {
-  const paths: Record<string, React.ReactNode> = {
-    首页: <><path d="M4 10.5 12 4l8 6.5" /><path d="M6.5 9.5V20h11V9.5M10 20v-6h4v6" /></>,
-    留言: <><path d="M5 5.5h14v10H10l-4.5 3v-3H5z" /><path d="M8.5 9.5h7M8.5 12.5h4.5" /></>,
-    面试: <><rect x="8.5" y="3.5" width="7" height="12" rx="3.5" /><path d="M6 11.5a6 6 0 0 0 12 0M12 17.5V21M9.5 21h5" /></>,
-    日历: <><rect x="4.5" y="6" width="15" height="14" rx="3" /><path d="M8 4v4M16 4v4M4.5 10h15M8 14h.01M12 14h.01M16 14h.01" /></>,
-    游戏: <><path d="M7 9h10a4 4 0 0 1 3.6 5.7l-1.1 2.2a2 2 0 0 1-3.1.6L14.8 16H9.2l-1.6 1.5a2 2 0 0 1-3.1-.6l-1.1-2.2A4 4 0 0 1 7 9Z" /><path d="M8 11.5v4M6 13.5h4M16.5 12.5h.01M18 14.5h.01" /></>,
-  };
-
-  return <svg viewBox="0 0 24 24" aria-hidden="true">{paths[label]}</svg>;
+  const props = { 'aria-hidden': true, size: 23, weight: 'regular' as const };
+  if (label === '首页') return <House {...props} />;
+  if (label === '留言') return <ChatCircleText {...props} />;
+  if (label === '面试') return <MicrophoneStage {...props} />;
+  if (label === '日历') return <CalendarDots {...props} />;
+  return <GameController {...props} />;
 }
 
 async function copyText(value: string) {
@@ -70,6 +77,7 @@ export function SiteChrome() {
 
   if (pathname === '/unlock') return null;
   const isGameDetail = pathname.startsWith('/play/');
+  const activeIndex = PRIMARY_NAV.findIndex((item) => isPrimaryNavActive(pathname, item.href));
 
   function toggleTheme() {
     const value = nextTheme(theme);
@@ -115,15 +123,17 @@ export function SiteChrome() {
     <>
       {!isGameDetail && <div className="site-quick-actions" aria-label="页面显示与分享">
         <button type="button" onClick={toggleTheme} aria-label={`切换到${theme === 'light' ? '深色' : '浅色'}模式`}>
-          <span className="site-theme-mark" data-next-theme={theme === 'light' ? 'dark' : 'light'} aria-hidden="true" />
+          {theme === 'light' ? <MoonStars aria-hidden="true" /> : <SunDim aria-hidden="true" />}
           <b>{theme === 'light' ? '深色' : '浅色'}</b>
         </button>
-        <button type="button" className="site-wechat-action" onClick={() => void shareToWechat()}>
+        <button type="button" className="site-wechat-action" aria-label="微信分享" onClick={() => void shareToWechat()}>
+          <WechatLogo aria-hidden="true" />
           <b>微信</b>
         </button>
       </div>}
 
-      <nav className="site-dock" aria-label="主要功能">
+      <nav className="site-dock" data-active-index={Math.max(0, activeIndex)} aria-label="主要功能">
+        <span className="site-dock-indicator" aria-hidden="true" />
         {PRIMARY_NAV.map((item) => {
           const active = isPrimaryNavActive(pathname, item.href);
           return (

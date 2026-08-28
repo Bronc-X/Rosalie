@@ -254,7 +254,7 @@ test('the API proxy keeps provider credentials and endpoint selection on the ser
   assert.match(source, /process\.env\.INTERVIEW_AI_BASE_URL/);
   assert.doesNotMatch(source, /NEXT_PUBLIC_INTERVIEW/);
   assert.doesNotMatch(source, /body\.(?:baseUrl|apiKey|model)/);
-  assert.match(source, /ORIGIN_REJECTED/);
+  assert.match(source, /validateJsonMutation/);
   assert.match(source, /RATE_LIMITED/);
 });
 

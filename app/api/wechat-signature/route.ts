@@ -34,6 +34,7 @@ export async function GET(request: Request) {
     if (!ticketCache || ticketCache.expiresAt <= Date.now()) {
       const tokenResponse = await fetch(
         `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${encodeURIComponent(appId)}&secret=${encodeURIComponent(appSecret)}`,
+        { cache: 'no-store', redirect: 'error' },
       );
       const tokenData = (await tokenResponse.json()) as {
         access_token?: string;
@@ -46,6 +47,7 @@ export async function GET(request: Request) {
 
       const ticketResponse = await fetch(
         `https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${encodeURIComponent(tokenData.access_token)}&type=jsapi`,
+        { cache: 'no-store', redirect: 'error' },
       );
       const ticketData = (await ticketResponse.json()) as {
         ticket?: string;

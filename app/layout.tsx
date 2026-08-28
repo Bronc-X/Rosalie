@@ -3,6 +3,7 @@ import { Cormorant_Garamond, ZCOOL_XiaoWei } from 'next/font/google';
 
 import './globals.css';
 import './site-chrome.css';
+import './pocket-stage.css';
 import { SiteChrome } from './site-chrome';
 import { WechatShare } from './wechat-share';
 

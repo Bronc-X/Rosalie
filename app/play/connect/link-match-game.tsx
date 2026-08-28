@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useMemo, useState } from 'react';
+import { ArrowCounterClockwise, Lightbulb, Shuffle } from '@phosphor-icons/react';
 
 import {
   createLinkBoard,
@@ -154,7 +155,9 @@ export function LinkMatchGame() {
           <h1>连一下</h1>
           <p>同类，最多拐两次</p>
         </div>
-        <button type="button" onClick={restart} aria-label="重新开始">↻</button>
+        <button type="button" onClick={restart} aria-label="重新开始">
+          <ArrowCounterClockwise size={23} weight="bold" />
+        </button>
       </header>
 
       <section className="link-game-card" aria-label="四枚护符连连看">
@@ -197,9 +200,9 @@ export function LinkMatchGame() {
         </div>
 
         <div className="link-game-controls">
-          <button type="button" onClick={showHint}><span>提示</span></button>
+          <button type="button" onClick={showHint}><Lightbulb size={21} weight="duotone" /><span>提示</span></button>
           <p>{playerProgress.state === 'saving' ? '保存中' : playerProgress.state === 'offline' ? '本机存档' : '自动存档'}</p>
-          <button type="button" onClick={shuffleBoard}><span>洗牌</span></button>
+          <button type="button" onClick={shuffleBoard}><Shuffle size={21} weight="duotone" /><span>洗牌</span></button>
         </div>
       </section>
     </main>

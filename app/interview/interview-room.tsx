@@ -1,6 +1,16 @@
 'use client';
 
 import Link from 'next/link';
+import {
+  ArrowClockwise,
+  ArrowUp,
+  CaretRight,
+  CheckCircle,
+  ClockCounterClockwise,
+  Microphone,
+  Plus,
+  X,
+} from '@phosphor-icons/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 
@@ -22,6 +32,7 @@ import type {
   InterviewRecord,
   InterviewRoleId,
 } from '@/lib/interview.mjs';
+import { gsap, useGSAP } from '@/lib/gsap-client';
 
 const LEGACY_STORAGE_KEY = 'rosalie-interview-session-v1';
 const HISTORY_STORAGE_KEY = 'rosalie-interview-history-v1';
@@ -222,12 +233,31 @@ export function InterviewRoom() {
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const pageRef = useRef<HTMLElement>(null);
 
   const questionCount = useMemo(
     () => messages.filter((message) => message.role === 'assistant').length,
     [messages],
   );
   const hasCandidateAnswer = messages.some((message) => message.role === 'user');
+
+  useGSAP(() => {
+    if (!restored || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    gsap.fromTo(
+      '[data-interview-stage]',
+      { autoAlpha: 0, y: 14, scale: .992 },
+      { autoAlpha: 1, y: 0, scale: 1, duration: .52, ease: 'power3.out', clearProps: 'all' },
+    );
+  }, { scope: pageRef, dependencies: [restored, stage], revertOnUpdate: true });
+
+  useGSAP(() => {
+    if (!historyOpen || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    gsap.fromTo(
+      '.interview-history-sheet',
+      { autoAlpha: 0, y: 28, scale: .985 },
+      { autoAlpha: 1, y: 0, scale: 1, duration: .42, ease: 'power3.out', clearProps: 'all' },
+    );
+  }, { scope: pageRef, dependencies: [historyOpen], revertOnUpdate: true });
 
   useEffect(() => {
     let active = true;
@@ -548,7 +578,7 @@ export function InterviewRoom() {
   }
 
   return (
-    <main className="interview-page">
+    <main className="interview-page" ref={pageRef}>
       <div className="interview-ambient" aria-hidden="true"><i /><i /><i /></div>
 
       <header className="interview-header">
@@ -559,12 +589,18 @@ export function InterviewRoom() {
           aria-label={`面试记录，共 ${records.length} 场`}
           onClick={() => setHistoryOpen(true)}
           disabled={requestState === 'waiting'}
-        >记录 <b>{records.length}</b></button>
+        ><ClockCounterClockwise aria-hidden="true" />记录 <b>{records.length}</b></button>
       </header>
 
       {stage === 'setup' && (
-        <section className="interview-setup" aria-labelledby="interview-setup-title">
-          <h2 id="interview-setup-title">面试设置</h2>
+        <section className="interview-setup" data-interview-stage aria-labelledby="interview-setup-title">
+          <div className="interview-setup-intro">
+            <InterviewerMark />
+            <div>
+              <span>GPT-5.6 面试官</span>
+              <h2 id="interview-setup-title">面试设置</h2>
+            </div>
+          </div>
 
           <form className="interview-setup-form" onSubmit={startInterview}>
             <label className="interview-company-field">
@@ -614,7 +650,9 @@ export function InterviewRoom() {
             </fieldset>
 
             <button className="interview-primary-button" type="submit" disabled={requestState === 'waiting' || !profile.company.trim()}>
-              {requestState === 'waiting' ? <><span className="interview-button-dots" aria-hidden="true"><i /><i /><i /></span>正在连接</> : '开始面试'}
+              {requestState === 'waiting'
+                ? <><span className="interview-button-dots" aria-hidden="true"><i /><i /><i /></span>正在连接</>
+                : <>开始面试<ArrowUp aria-hidden="true" /></>}
             </button>
             {requestState === 'waiting' && <ProgressWorkspace events={progressEvents} draft={liveDraft} elapsed={elapsed} />}
             {error && <p className="interview-error" role="alert">{error}</p>}
@@ -624,10 +662,11 @@ export function InterviewRoom() {
       )}
 
       {stage === 'interview' && (
-        <section className="interview-session" aria-label="模拟面试对话">
+        <section className="interview-session" data-interview-stage aria-label="模拟面试对话">
           <div className="interview-session-meta">
-            <div><b>{roleLabel(profile.role)}</b><span>{profile.company}</span></div>
-            <p>{experienceLabel(profile.experience)} {questionCount}/{MAX_QUESTIONS}</p>
+            <div className="interview-session-meta-copy"><span>{profile.company}</span><b>{roleLabel(profile.role)}</b></div>
+            <div className="interview-session-state"><span>{experienceLabel(profile.experience)}</span><strong>{questionCount}/{MAX_QUESTIONS}</strong></div>
+            <div className="interview-session-progress" aria-hidden="true"><i style={{ width: `${Math.min(100, (questionCount / MAX_QUESTIONS) * 100)}%` }} /></div>
           </div>
 
           <ol className="interview-transcript" aria-live="polite">
@@ -668,11 +707,11 @@ export function InterviewRoom() {
                   onPointerUp={stopVoice}
                   onPointerCancel={stopVoice}
                   onContextMenu={(event) => event.preventDefault()}
-                ><i aria-hidden="true" />{voiceState === 'listening' ? '松开结束' : voiceState === 'processing' ? '识别中' : '按住说话'}</button>
+                ><Microphone aria-hidden="true" />{voiceState === 'listening' ? '松开结束' : voiceState === 'processing' ? '识别中' : '按住说话'}</button>
               )}
               <span>{voiceHint || `${answer.length}/${INTERVIEW_MESSAGE_MAX_LENGTH}`}</span>
               <button className="interview-send-button" type="submit" disabled={!answer.trim() || requestState === 'waiting'}>
-                {questionCount >= MAX_QUESTIONS ? '提交并复盘' : '发送回答'}
+                <span>{questionCount >= MAX_QUESTIONS ? '提交复盘' : '发送'}</span><ArrowUp aria-hidden="true" />
               </button>
             </div>
           </form>
@@ -680,17 +719,19 @@ export function InterviewRoom() {
           {error && <div className="interview-inline-error" role="alert"><span>{error}</span><button type="button" onClick={() => setError('')}>关闭</button></div>}
 
           <div className="interview-session-actions">
-            <button type="button" onClick={() => void finishInterview()} disabled={!hasCandidateAnswer || requestState === 'waiting'}>结束并复盘</button>
-            <button type="button" onClick={resetInterview} disabled={requestState === 'waiting'}>重新开始</button>
+            <button type="button" onClick={() => void finishInterview()} disabled={!hasCandidateAnswer || requestState === 'waiting'}><CheckCircle aria-hidden="true" />结束并复盘</button>
+            <button type="button" onClick={resetInterview} disabled={requestState === 'waiting'}><ArrowClockwise aria-hidden="true" />重新开始</button>
           </div>
           <div ref={transcriptEndRef} />
         </section>
       )}
 
       {stage === 'review' && (
-        <section className="interview-review" aria-labelledby="interview-review-title">
-          <div className="interview-review-seal" aria-hidden="true"><InterviewerMark /></div>
-          <h2 id="interview-review-title">面试复盘</h2>
+        <section className="interview-review" data-interview-stage aria-labelledby="interview-review-title">
+          <div className="interview-review-heading">
+            <div className="interview-review-seal" aria-hidden="true"><InterviewerMark /></div>
+            <div><span>本场结束</span><h2 id="interview-review-title">面试复盘</h2></div>
+          </div>
           <div className="interview-review-meta">
             <span>{profile.company}</span><i />
             <span>{roleLabel(profile.role)}</span><i />
@@ -710,8 +751,8 @@ export function InterviewRoom() {
         <div className="interview-history-backdrop" role="presentation" onClick={(event) => event.target === event.currentTarget && setHistoryOpen(false)}>
           <section className="interview-history-sheet" role="dialog" aria-modal="true" aria-labelledby="interview-history-title">
             <header>
-              <div><h2 id="interview-history-title">面试记录</h2></div>
-              <button type="button" aria-label="关闭面试记录" onClick={() => setHistoryOpen(false)}>×</button>
+              <div><span>{records.length} 场</span><h2 id="interview-history-title">面试记录</h2></div>
+              <button type="button" aria-label="关闭面试记录" onClick={() => setHistoryOpen(false)}><X aria-hidden="true" /></button>
             </header>
             {records.length ? (
               <ol>
@@ -721,12 +762,13 @@ export function InterviewRoom() {
                       <time>{new Date(record.updatedAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</time>
                       <b>{record.profile.company}</b>
                       <span>{roleLabel(record.profile.role)}，{record.messages.filter((message) => message.role === 'user').length} 个回答，{record.stage === 'review' ? '已复盘' : '进行中'}</span>
+                      <CaretRight aria-hidden="true" />
                     </button>
                   </li>
                 ))}
               </ol>
             ) : <p className="interview-history-empty">暂无记录</p>}
-            <button className="interview-history-new" type="button" onClick={() => { resetInterview(); setHistoryOpen(false); }}>新面试</button>
+            <button className="interview-history-new" type="button" onClick={() => { resetInterview(); setHistoryOpen(false); }}><Plus aria-hidden="true" />新面试</button>
           </section>
         </div>
       )}

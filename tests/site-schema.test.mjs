@@ -5,7 +5,7 @@ const schema = await import('../lib/site-schema.mjs').catch(() => ({}));
 
 test('the durable store contains indexed message and reply tables plus player-scoped progress', () => {
   assert.ok(Array.isArray(schema.SCHEMA_STATEMENTS));
-  assert.equal(schema.SCHEMA_STATEMENTS.length, 5);
+  assert.equal(schema.SCHEMA_STATEMENTS.length, 9);
   assert.match(schema.SCHEMA_STATEMENTS[0], /PRIMARY KEY \(player_id, game_id\)/i);
   assert.match(schema.SCHEMA_STATEMENTS[1], /player_id TEXT NOT NULL/i);
   assert.match(schema.SCHEMA_STATEMENTS[2], /created_at DESC, id DESC/i);
@@ -30,4 +30,15 @@ test('treehole replies are loaded in one ordered query for the visible messages'
   assert.match(schema.SELECT_TREEHOLE_REPLIES_SQL, /JOIN[\s\S]+LIMIT \?/i);
   assert.match(schema.SELECT_TREEHOLE_REPLIES_SQL, /ORDER BY r\.created_at ASC, r\.id ASC/i);
   assert.equal(typeof schema.INSERT_TREEHOLE_REPLY_SQL, 'string');
+});
+
+test('homepage notes and replies have their own durable indexed store', () => {
+  assert.match(schema.CREATE_HOME_NOTES_TABLE_SQL, /CREATE TABLE IF NOT EXISTS home_notes/i);
+  assert.match(schema.CREATE_HOME_NOTE_REPLIES_TABLE_SQL, /FOREIGN KEY \(note_id\) REFERENCES home_notes\(id\)/i);
+  assert.match(schema.CREATE_HOME_NOTES_INDEX_SQL, /created_at DESC, id DESC/i);
+  assert.match(schema.CREATE_HOME_NOTE_REPLIES_INDEX_SQL, /note_id, created_at ASC, id ASC/i);
+  assert.match(schema.SELECT_HOME_NOTE_REPLIES_SQL, /JOIN[\s\S]+LIMIT \?/i);
+  assert.match(schema.SELECT_HOME_NOTE_REPLIES_SQL, /ORDER BY r\.created_at ASC, r\.id ASC/i);
+  assert.ok(schema.SCHEMA_STATEMENTS.includes(schema.CREATE_HOME_NOTES_TABLE_SQL));
+  assert.ok(schema.SCHEMA_STATEMENTS.includes(schema.CREATE_HOME_NOTE_REPLIES_TABLE_SQL));
 });

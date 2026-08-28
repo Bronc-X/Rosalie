@@ -11,13 +11,35 @@ import {
   matchesAccessPassword,
   readPlayerId,
 } from '@/lib/access.mjs';
+import {
+  getRequestClientKey,
+  readBoundedJson,
+  takeRateLimit,
+  validateJsonMutation,
+} from '@/lib/request-security.mjs';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
-  const contentLength = Number(request.headers.get('content-length') ?? 0);
-  if (contentLength > 1_024) {
-    return NextResponse.json({ ok: false, error: 'INVALID_REQUEST' }, { status: 413 });
+  const mutation = validateJsonMutation(request);
+  if (!mutation.ok) {
+    return NextResponse.json({ ok: false, error: mutation.error }, {
+      status: mutation.status,
+      headers: { 'Cache-Control': 'no-store' },
+    });
+  }
+
+  const rate = takeRateLimit({
+    scope: 'access',
+    key: getRequestClientKey(request.headers),
+    limit: 8,
+    windowMs: 10 * 60_000,
+  });
+  if (!rate.allowed) {
+    return NextResponse.json({ ok: false, error: 'RATE_LIMITED' }, {
+      status: 429,
+      headers: { 'Cache-Control': 'no-store', 'Retry-After': String(rate.retryAfter) },
+    });
   }
 
   const expectedHash = process.env.SITE_PASSWORD_HASH;
@@ -29,13 +51,15 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  let password = '';
-  try {
-    const body = await request.json() as { password?: unknown };
-    password = typeof body.password === 'string' ? body.password : '';
-  } catch {
-    return NextResponse.json({ ok: false, error: 'INVALID_REQUEST' }, { status: 400 });
+  const parsed = await readBoundedJson(request, 1_024, 'INVALID_REQUEST');
+  if (!parsed.ok) {
+    return NextResponse.json({ ok: false, error: parsed.error }, {
+      status: parsed.status,
+      headers: { 'Cache-Control': 'no-store' },
+    });
   }
+  const body = parsed.value as { password?: unknown };
+  const password = typeof body?.password === 'string' ? body.password : '';
 
   if (!(await matchesAccessPassword(password, expectedHash))) {
     return NextResponse.json({ ok: false, error: 'WRONG_PASSWORD' }, {

@@ -1,0 +1,31 @@
+.game-icon {
+  --icon-tone: var(--stage-accent);
+  width: 50px;
+  height: 50px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--icon-tone) 18%, transparent);
+  border-radius: var(--radius-control);
+  color: var(--icon-tone);
+  background: color-mix(in srgb, var(--icon-tone) 10%, var(--stage-surface-solid));
+  box-shadow: inset 0 1px var(--stage-highlight), 0 9px 22px color-mix(in srgb, var(--icon-tone) 9%, transparent);
+}
+
+.game-icon-ink { --icon-tone: #725763; }
+.game-icon-rose { --icon-tone: #c7567d; }
+.game-icon-wine { --icon-tone: #8f294a; }
+.game-icon-apricot { --icon-tone: #c4844e; }
+.game-icon-lilac { --icon-tone: #7868b5; }
+.game-icon-sage { --icon-tone: #588b75; }
+.game-icon-blue { --icon-tone: #567cae; }
+.game-icon-gold { --icon-tone: #a77a2d; }
+
+html[data-theme="dark"] .game-icon-ink { --icon-tone: #d4b3bf; }
+html[data-theme="dark"] .game-icon-rose { --icon-tone: #ef82aa; }
+html[data-theme="dark"] .game-icon-wine { --icon-tone: #ff9bb9; }
+html[data-theme="dark"] .game-icon-apricot { --icon-tone: #e4ac78; }
+html[data-theme="dark"] .game-icon-lilac { --icon-tone: #b8a6ef; }
+html[data-theme="dark"] .game-icon-sage { --icon-tone: #8fc5ae; }
+html[data-theme="dark"] .game-icon-blue { --icon-tone: #8daee1; }
+html[data-theme="dark"] .game-icon-gold { --icon-tone: #dab461; }

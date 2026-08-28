@@ -2,6 +2,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import { ArrowCounterClockwise, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react';
 
 import { usePlayerProgress } from '../use-player-progress';
 import { ImmersiveGameHost } from './game-host';
@@ -50,10 +51,17 @@ export function ImmersiveGameScreen({ gameId }: { gameId: ImmersiveGameId }) {
           <strong>{GAME_LABELS[gameId]}</strong>
           {status && <small>{status}</small>}
         </div>
-        <button type="button" onClick={() => setMuted((current) => !current)} aria-label={muted ? '打开声音' : '关闭声音'}>
-          {muted ? '静' : '声'}
+        <button
+          type="button"
+          onClick={() => setMuted((current) => !current)}
+          aria-label={muted ? '打开声音' : '关闭声音'}
+          aria-pressed={muted}
+        >
+          {muted ? <SpeakerSlash size={23} weight="duotone" /> : <SpeakerHigh size={23} weight="duotone" />}
         </button>
-        <button type="button" onClick={() => setRestartKey((current) => current + 1)} aria-label="重新开始本关">↻</button>
+        <button type="button" onClick={() => setRestartKey((current) => current + 1)} aria-label="重新开始本关">
+          <ArrowCounterClockwise size={23} weight="bold" />
+        </button>
       </div>
 
       <ImmersiveGameHost

@@ -2,6 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, MouseEvent } from 'react';
+import {
+  ArrowClockwise,
+  CalendarPlus,
+  CaretLeft,
+  CaretRight,
+  Plus,
+  WarningCircle,
+  X,
+} from '@phosphor-icons/react';
 
 import {
   buildMonthDays,
@@ -17,6 +26,7 @@ import {
   sortScheduleEntries,
 } from '@/lib/schedule.mjs';
 import type { ScheduleEntry } from '@/lib/schedule.mjs';
+import { gsap, useGSAP } from '@/lib/gsap-client';
 
 type Draft = {
   scheduledAt: string;
@@ -85,8 +95,10 @@ export function ScheduleBoard() {
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'error'>('idle');
   const [feedback, setFeedback] = useState('');
   const [notice, setNotice] = useState('');
+  const pageRef = useRef<HTMLElement>(null);
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const firstFieldRef = useRef<HTMLInputElement>(null);
+  const monthDirectionRef = useRef(1);
 
   const monthDays = useMemo(
     () => buildMonthDays(visibleMonth.year, visibleMonth.month),
@@ -105,6 +117,41 @@ export function ScheduleBoard() {
   }, [entries]);
 
   const selectedEntries = entriesByDay.get(selectedDay) ?? [];
+
+  useGSAP(() => {
+    const motion = gsap.matchMedia();
+    motion.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.timeline({ defaults: { duration: .48, ease: 'power3.out' } })
+        .from('.schedule-header', { autoAlpha: 0, y: -10 })
+        .from('.calendar-title-block', { autoAlpha: 0, y: 12 }, .08)
+        .from('.calendar-actions', { autoAlpha: 0, y: 12 }, .13)
+        .from('.calendar-panel', { autoAlpha: 0, y: 16 }, .2)
+        .from('.day-agenda', { autoAlpha: 0, y: 16 }, .26);
+    });
+    return () => motion.revert();
+  }, { scope: pageRef });
+
+  useGSAP(() => {
+    const motion = gsap.matchMedia();
+    motion.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.fromTo(
+        '.calendar-grid',
+        { autoAlpha: 0, x: 14 * monthDirectionRef.current },
+        { autoAlpha: 1, x: 0, duration: .34, ease: 'power3.out', clearProps: 'transform' },
+      );
+    });
+    return () => motion.revert();
+  }, { scope: pageRef, dependencies: [visibleMonth.year, visibleMonth.month] });
+
+  useGSAP(() => {
+    if (!composerOpen) return undefined;
+    const motion = gsap.matchMedia();
+    motion.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.fromTo('.schedule-modal-layer', { autoAlpha: 0 }, { autoAlpha: 1, duration: .2, ease: 'power2.out' });
+      gsap.fromTo('.schedule-dialog', { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duration: .36, ease: 'power3.out' });
+    });
+    return () => motion.revert();
+  }, { scope: pageRef, dependencies: [composerOpen] });
 
   async function loadEntries() {
     setLoadState('loading');
@@ -151,13 +198,21 @@ export function ScheduleBoard() {
     setSelectedDay(dateKey);
     const nextMonth = monthFromDateKey(dateKey);
     if (nextMonth.year !== visibleMonth.year || nextMonth.month !== visibleMonth.month) {
+      monthDirectionRef.current = dateKey > `${visibleMonth.year}-${String(visibleMonth.month).padStart(2, '0')}` ? 1 : -1;
       setVisibleMonth(nextMonth);
     }
   }
 
   function goToToday() {
+    const todayMonth = monthFromDateKey(todayKey);
+    monthDirectionRef.current = todayMonth.year * 12 + todayMonth.month >= visibleMonth.year * 12 + visibleMonth.month ? 1 : -1;
     setSelectedDay(todayKey);
-    setVisibleMonth(monthFromDateKey(todayKey));
+    setVisibleMonth(todayMonth);
+  }
+
+  function moveMonth(offset: number) {
+    monthDirectionRef.current = offset;
+    setVisibleMonth((current) => shiftMonth(current, offset));
   }
 
   function openComposer() {
@@ -216,10 +271,10 @@ export function ScheduleBoard() {
   }
 
   return (
-    <main className="schedule-page">
+    <main ref={pageRef} className="schedule-page">
       <div className="schedule-aurora" aria-hidden="true" />
 
-      <header className="schedule-header liquid-glass">
+      <header className="schedule-header">
         <div>
           <h1>日历</h1>
         </div>
@@ -232,18 +287,18 @@ export function ScheduleBoard() {
         </div>
 
         <div className="calendar-actions liquid-glass" aria-label="日历操作">
-          <button type="button" aria-label="上个月" onClick={() => setVisibleMonth((current) => shiftMonth(current, -1))}>‹</button>
+          <button type="button" aria-label="上个月" onClick={() => moveMonth(-1)}><CaretLeft aria-hidden="true" /></button>
           <button type="button" className="calendar-today-button" onClick={goToToday}>今天</button>
-          <button type="button" aria-label="下个月" onClick={() => setVisibleMonth((current) => shiftMonth(current, 1))}>›</button>
+          <button type="button" aria-label="下个月" onClick={() => moveMonth(1)}><CaretRight aria-hidden="true" /></button>
           <span aria-hidden="true" />
           <button ref={addButtonRef} type="button" className="calendar-add-button" onClick={openComposer}>
-            <b aria-hidden="true">＋</b><em>新增日程</em>
+            <Plus aria-hidden="true" /><em>新增日程</em>
           </button>
         </div>
       </section>
 
       <div className="calendar-shell">
-        <section className="calendar-panel liquid-glass" aria-label={`${formatMonth(visibleMonth)}月历`}>
+        <section className="calendar-panel" aria-label={`${formatMonth(visibleMonth)}月历`}>
           <div className="calendar-watermark" aria-hidden="true">{monthCode(visibleMonth.month)}</div>
           <div className="calendar-weekdays" aria-hidden="true">
             {WEEKDAYS.map((weekday) => <span key={weekday}>周{weekday}</span>)}
@@ -284,19 +339,20 @@ export function ScheduleBoard() {
               <h2 id="selected-day-title">{formatSelectedDate(selectedDay)}</h2>
             </div>
             <button type="button" onClick={() => void loadEntries()} disabled={loadState === 'loading'}>
-              {loadState === 'loading' ? '读取中' : '刷新'}
+              {loadState === 'loading' ? null : <ArrowClockwise aria-hidden="true" />}
+              <span>{loadState === 'loading' ? '读取中' : '刷新'}</span>
             </button>
           </div>
 
           {loadState === 'error' ? (
             <div className="agenda-state" role="status">
-              <i aria-hidden="true" /><p>暂时无法读取日程</p><button type="button" onClick={() => void loadEntries()}>重试</button>
+              <WarningCircle className="agenda-state-icon" aria-hidden="true" /><p>暂时无法读取日程</p><button type="button" onClick={() => void loadEntries()}>重试</button>
             </div>
           ) : loadState === 'loading' && entries.length === 0 ? (
             <div className="agenda-state" role="status"><i aria-hidden="true" /><p>读取中</p></div>
           ) : selectedEntries.length === 0 ? (
             <div className="agenda-state is-empty">
-              <div className="agenda-empty-orbit" aria-hidden="true"><i /><i /><i /></div>
+              <CalendarPlus className="agenda-empty-icon" aria-hidden="true" />
               <p>当天没有日程</p>
               <button type="button" onClick={openComposer}>新增日程</button>
             </div>
@@ -326,7 +382,7 @@ export function ScheduleBoard() {
                 <h2 id="schedule-dialog-title">新增日程</h2>
                 <span>{formatSelectedDate(selectedDay)}</span>
               </div>
-              <button type="button" aria-label="关闭新增日程" onClick={closeComposer}>×</button>
+              <button type="button" aria-label="关闭新增日程" onClick={closeComposer}><X aria-hidden="true" /></button>
             </header>
 
             <form onSubmit={addEntry}>

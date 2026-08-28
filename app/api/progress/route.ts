@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { ensureSiteSchema } from '@/lib/site-database';
 import { normalizeProgressUpdate } from '@/lib/player-progress.mjs';
 import { attachPlayerCookie, resolvePlayerSession } from '@/lib/player-session';
+import { readBoundedJson, validateJsonMutation } from '@/lib/request-security.mjs';
 import { SELECT_PROGRESS_SQL, UPSERT_PROGRESS_SQL } from '@/lib/site-schema.mjs';
 import {
   readVercelProgress,
@@ -55,19 +56,11 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const session = await resolvePlayerSession(request);
   if (!session.ok) return json({ ok: false, error: session.error }, session.error === 'LOCKED' ? 401 : 503);
-  const origin = request.headers.get('origin');
-  if (origin && origin !== request.nextUrl.origin) return json({ ok: false, error: 'ORIGIN_REJECTED' }, 403);
-  if (Number(request.headers.get('content-length') ?? 0) > 2_048) {
-    return json({ ok: false, error: 'PROGRESS_TOO_LARGE' }, 413);
-  }
-
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return json({ ok: false, error: 'INVALID_REQUEST' }, 400);
-  }
-  const normalized = normalizeProgressUpdate(body);
+  const mutation = validateJsonMutation(request);
+  if (!mutation.ok) return json({ ok: false, error: mutation.error }, mutation.status);
+  const parsed = await readBoundedJson(request, 2_048, 'PROGRESS_TOO_LARGE');
+  if (!parsed.ok) return json({ ok: false, error: parsed.error }, parsed.status);
+  const normalized = normalizeProgressUpdate(parsed.value);
   if (!normalized.ok) return json({ ok: false, error: normalized.error }, 400);
 
   const updatedAt = new Date().toISOString();
