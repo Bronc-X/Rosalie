@@ -4,8 +4,10 @@ import test from 'node:test';
 
 test('food cards use one local cached fallback instead of foreign map thumbnails', async () => {
   const source = await readFile(new URL('../app/food/food-atlas.tsx', import.meta.url), 'utf8');
+  const config = await readFile(new URL('../next.config.ts', import.meta.url), 'utf8');
 
   assert.doesNotMatch(source, /tile\.openstreetmap\.de/);
   assert.match(source, /\/food\/shantou-qilou-food-v1\.webp/);
   assert.match(source, /restaurant\.coordinates \? \(/);
+  assert.match(config, /\/food\/shantou-qilou-food-v1\.webp/);
 });

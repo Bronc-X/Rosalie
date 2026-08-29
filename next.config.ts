@@ -35,6 +35,7 @@ const nextConfig: NextConfig = {
       '/soft-pull-cursor.webp',
       '/match-rosette.webp',
       '/match-charm.webp',
+      '/food/shantou-qilou-food-v1.webp',
     ].map((source) => ({
       source,
       headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
