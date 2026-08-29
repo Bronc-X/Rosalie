@@ -102,8 +102,8 @@
 
 .atlas-shell { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(390px, .92fr); align-items: start; min-height: 100vh; }
 .map-column { position: sticky; top: 4.45rem; align-self: start; padding: clamp(1rem, 3vw, 2.5rem); }
-.map-frame { position: relative; overflow: hidden; min-height: 28rem; border: 1px solid var(--ink); background: #d4d5ca; box-shadow: 9px 11px 0 rgba(23,37,31,.12); }
-.leaflet-map { width: 100%; height: 48vh; min-height: 28rem; }
+.map-frame { position: relative; overflow: hidden; min-height: 28rem; border: 1px solid var(--ink); background: #d4d5ca url('/food/shantou-qilou-food-v1.webp') center / cover no-repeat; box-shadow: 9px 11px 0 rgba(23,37,31,.12); }
+.leaflet-map { width: 100%; height: 48vh; min-height: 28rem; background: transparent; }
 .map-state { position: absolute; z-index: 1000; inset: 0; display: grid; place-content: center; gap: .45rem; padding: 2rem; color: var(--ink); background: #d8d7cb; text-align: center; font-size: .72rem; }
 .map-state::before { content: ''; width: 1.5rem; height: 1.5rem; margin: 0 auto .35rem; border: 2px solid rgba(23,37,31,.25); border-top-color: var(--cinnabar); border-radius: 50%; animation: map-spin .8s linear infinite; }
 .map-state.is-error { color: var(--paper); background: var(--ink); }

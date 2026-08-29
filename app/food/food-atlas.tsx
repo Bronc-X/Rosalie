@@ -10,8 +10,6 @@ type FoodLogs = Record<string, FoodLog>;
 
 const emptyLog: FoodLog = { rating: 0, comment: '', visited: false };
 const storageKey = 'shantou-food-log-v1';
-const mapThumbnailZoom = 15;
-
 function mapSearchUrl(restaurant: Restaurant) {
   return `https://uri.amap.com/search?keyword=${encodeURIComponent(`${restaurant.name} ${restaurant.address}`)}&city=汕头&view=map&src=shantou-food-atlas`;
 }
@@ -19,21 +17,6 @@ function mapSearchUrl(restaurant: Restaurant) {
 function statusLabel(restaurant: Restaurant) {
   if (restaurant.status === 'avoid') return '莫去';
   return restaurant.coordinates ? '寻得到' : '门牌未定';
-}
-
-function mapThumbnail([latitude, longitude]: [number, number]) {
-  const scale = 2 ** mapThumbnailZoom;
-  const tilePointX = ((longitude + 180) / 360) * scale;
-  const latitudeRadians = latitude * Math.PI / 180;
-  const tilePointY = (1 - Math.asinh(Math.tan(latitudeRadians)) / Math.PI) / 2 * scale;
-  const tileX = Math.floor(tilePointX);
-  const tileY = Math.floor(tilePointY);
-
-  return {
-    src: `https://tile.openstreetmap.de/${mapThumbnailZoom}/${tileX}/${tileY}.png`,
-    markerLeft: `${(tilePointX - tileX) * 100}%`,
-    markerTop: `${(tilePointY - tileY) * 100}%`,
-  };
 }
 
 export default function FoodAtlas() {
@@ -223,7 +206,7 @@ export default function FoodAtlas() {
       </section>
 
       <figure className="city-strip">
-        <img src="/food/shantou-qilou-food-v1.png" alt="雨后骑楼下摆着功夫茶、肠粉和铜锅的鮀城食路意象" />
+        <img src="/food/shantou-qilou-food-v1.webp" alt="雨后骑楼下摆着功夫茶、肠粉和铜锅的鮀城食路意象" />
         <figcaption>
           <p>雨歇了，坐落食杯茶</p>
           <h2>鼎滚肉熟，慢慢食。</h2>
@@ -309,22 +292,26 @@ export default function FoodAtlas() {
           <div className="restaurant-grid">
             {filteredRestaurants.map((restaurant) => {
               const log = logs[restaurant.id];
-              const thumbnail = restaurant.coordinates ? mapThumbnail(restaurant.coordinates) : null;
+              const itemNumber = Number(restaurant.id.replace('food-', ''));
+              const markerPosition = {
+                left: `${20 + (itemNumber * 17) % 61}%`,
+                top: `${24 + (itemNumber * 13) % 49}%`,
+              };
               return (
                 <article className={`restaurant-card ${selected.id === restaurant.id ? 'selected' : ''} ${restaurant.status === 'avoid' ? 'avoid-card' : ''}`} key={restaurant.id}>
                   <button className="restaurant-main" onClick={() => focusRestaurant(restaurant)}>
                     <div className={`restaurant-visual category-${restaurant.category.length}`}>
                       {restaurant.image ? (
                         <img src={restaurant.image} alt="" />
-                      ) : thumbnail ? (
+                      ) : restaurant.coordinates ? (
                         <>
-                          <img className="map-thumbnail-image" src={thumbnail.src} alt={`${restaurant.name}附近的开源地图缩略图`} loading="lazy" />
-                          <span className="map-thumbnail-pin" style={{ left: thumbnail.markerLeft, top: thumbnail.markerTop }} aria-hidden="true" />
+                          <img className="map-thumbnail-image" src="/food/shantou-qilou-food-v1.webp" alt="" loading="lazy" style={{ objectPosition: `${markerPosition.left} ${markerPosition.top}` }} />
+                          <span className="map-thumbnail-pin" style={markerPosition} aria-hidden="true" />
                           <b className="thumbnail-label">地图点位</b>
                         </>
                       ) : (
                         <>
-                          <img className="pending-thumbnail-image" src="/food/shantou-qilou-food-v1.png" alt="" loading="lazy" />
+                          <img className="pending-thumbnail-image" src="/food/shantou-qilou-food-v1.webp" alt="" loading="lazy" />
                           <b className="thumbnail-label is-pending">门牌待补</b>
                         </>
                       )}
