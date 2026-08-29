@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type * as Leaflet from 'leaflet';
+import { FoodPlaceholder } from './food-placeholder';
 import { categories, restaurants, type Restaurant } from './restaurants';
 
 type FoodLog = { rating: number; comment: string; visited: boolean };
@@ -293,26 +294,19 @@ export default function FoodAtlas() {
             {filteredRestaurants.map((restaurant) => {
               const log = logs[restaurant.id];
               const itemNumber = Number(restaurant.id.replace('food-', ''));
-              const markerPosition = {
-                left: `${20 + (itemNumber * 17) % 61}%`,
-                top: `${24 + (itemNumber * 13) % 49}%`,
-              };
               return (
                 <article className={`restaurant-card ${selected.id === restaurant.id ? 'selected' : ''} ${restaurant.status === 'avoid' ? 'avoid-card' : ''}`} key={restaurant.id}>
                   <button className="restaurant-main" onClick={() => focusRestaurant(restaurant)}>
                     <div className={`restaurant-visual category-${restaurant.category.length}`}>
                       {restaurant.image ? (
-                        <img src={restaurant.image} alt="" />
-                      ) : restaurant.coordinates ? (
                         <>
-                          <img className="map-thumbnail-image" src="/food/shantou-qilou-food-v1.webp" alt="" loading="lazy" style={{ objectPosition: `${markerPosition.left} ${markerPosition.top}` }} />
-                          <span className="map-thumbnail-pin" style={markerPosition} aria-hidden="true" />
-                          <b className="thumbnail-label">地图点位</b>
+                          <img src={restaurant.image} alt={`${restaurant.name}的已确认真实照片`} loading="lazy" />
+                          <b className="thumbnail-label is-photo">实拍</b>
                         </>
                       ) : (
                         <>
-                          <img className="pending-thumbnail-image" src="/food/shantou-qilou-food-v1.webp" alt="" loading="lazy" />
-                          <b className="thumbnail-label is-pending">门牌待补</b>
+                          <FoodPlaceholder category={restaurant.category} name={restaurant.name} index={itemNumber} />
+                          <b className="thumbnail-label is-placeholder">风格图</b>
                         </>
                       )}
                       <i>{restaurant.id.replace('food-', '')}</i>
