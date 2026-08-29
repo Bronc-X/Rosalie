@@ -1,4 +1,5 @@
 export type RestaurantStatus = 'verified' | 'pending' | 'avoid';
+export type RestaurantImageKind = 'real' | 'generated';
 
 export type Restaurant = {
   id: string;
@@ -8,9 +9,12 @@ export type Restaurant = {
   coordinates?: [number, number];
   status: RestaurantStatus;
   tip?: string;
-  image?: string;
+  image: string;
+  imageKind: RestaurantImageKind;
   featuredDish?: string;
 };
+
+type RestaurantSeed = Omit<Restaurant, 'id' | 'image' | 'imageKind'> & { image?: string };
 
 const item = (
   name: string,
@@ -21,9 +25,9 @@ const item = (
   status: RestaurantStatus = coordinates ? 'verified' : 'pending',
   image?: string,
   featuredDish?: string,
-): Omit<Restaurant, 'id'> => ({ name, category, address, coordinates, tip, status, image, featuredDish });
+): RestaurantSeed => ({ name, category, address, coordinates, tip, status, image, featuredDish });
 
-const entries: Array<Omit<Restaurant, 'id'>> = [
+const entries: RestaurantSeed[] = [
   item('纪德来甜汤', '甜品小食', '地址待现场确认', undefined, '十年陈老药桔牛奶冰，酸甜口；老杉排芝麻茶牛奶冰强推', 'pending', '/food/jidelai.jpg', '老杉排芝麻茶牛奶冰'),
   item('金二顺潮汕生腌', '生腌', '金平区玫瑰一街102号', [23.371834, 116.710949], '血蚶、车白脆中带韧；生食请按身体情况选择', 'verified', '/food/jinershun.jpg', '潮汕生腌'),
   item('三姐妹肠粉', '肠粉', '金平区永平路28号', [23.352958, 116.671607], '酱油汁薄皮有韧劲，萝卜干爽口', 'verified', '/food/sisters.jpg', '牛肉肠粉'),
@@ -90,9 +94,17 @@ const entries: Array<Omit<Restaurant, 'id'>> = [
   item('兴财餐室', '截图补充', '濠江区达濠街道计委楼下铺间', [23.28271, 116.721477], '补充截图中的店招'),
 ];
 
-export const restaurants: Restaurant[] = entries.map((entry, index) => ({
-  ...entry,
-  id: `food-${String(index + 1).padStart(2, '0')}`,
-}));
+const generatedPhotoNumbers = new Set([11, 15, 16, 19, 22, 26, 27, 29, 31, 33, 34, 53]);
+
+export const restaurants: Restaurant[] = entries.map((entry, index) => {
+  const number = index + 1;
+  const id = `food-${String(number).padStart(2, '0')}`;
+  return {
+    ...entry,
+    id,
+    image: entry.image ?? `/food/restaurants/${id}.webp`,
+    imageKind: generatedPhotoNumbers.has(number) ? 'generated' : 'real',
+  };
+});
 
 export const categories = ['全部', ...Array.from(new Set(restaurants.map((restaurant) => restaurant.category)))];

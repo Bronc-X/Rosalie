@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
       headers: [
         {
           key: 'Content-Security-Policy',
-          value: `default-src 'self'; script-src 'self' 'unsafe-inline'${developmentEval} https://res.wx.qq.com; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`,
+          value: `default-src 'self'; script-src 'self' 'unsafe-inline'${developmentEval} https://res.wx.qq.com; connect-src 'self'; img-src 'self' data: blob: https://a.tile.openstreetmap.fr; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`,
         },
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -36,6 +36,7 @@ const nextConfig: NextConfig = {
       '/match-rosette.webp',
       '/match-charm.webp',
       '/food/shantou-qilou-food-v1.webp',
+      '/food/restaurants/:path*',
     ].map((source) => ({
       source,
       headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],

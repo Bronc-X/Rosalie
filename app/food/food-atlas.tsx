@@ -3,7 +3,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type * as Leaflet from 'leaflet';
-import { FoodPlaceholder } from './food-placeholder';
 import { categories, restaurants, type Restaurant } from './restaurants';
 
 type FoodLog = { rating: number; comment: string; visited: boolean };
@@ -157,12 +156,16 @@ export default function FoodAtlas() {
     });
 
     const points = filteredRestaurants.flatMap((restaurant) => restaurant.coordinates ? [restaurant.coordinates] : []);
-    if (points.length > 1) {
-      map.fitBounds(points, { padding: [42, 42], maxZoom: 14 });
-    } else if (points.length === 1) {
-      map.flyTo(points[0], 15, { duration: .5 });
+    const isUnfiltered = category === '全部' && !query.trim();
+    const initialViewPoints = isUnfiltered
+      ? points.filter(([latitude]) => latitude > 23.33)
+      : points;
+    if (initialViewPoints.length > 1) {
+      map.fitBounds(initialViewPoints, { padding: [42, 42], maxZoom: 14 });
+    } else if (initialViewPoints.length === 1) {
+      map.flyTo(initialViewPoints[0], 15, { duration: .5 });
     }
-  }, [filteredRestaurants, mapReady]);
+  }, [category, filteredRestaurants, mapReady, query]);
 
   function focusRestaurant(restaurant: Restaurant) {
     setSelectedId(restaurant.id);
@@ -221,7 +224,7 @@ export default function FoodAtlas() {
           <span>点相片，地图带路</span>
         </div>
         <div className="feature-grid">
-          {restaurants.filter((restaurant) => restaurant.image).map((restaurant) => (
+          {restaurants.filter((restaurant) => restaurant.featuredDish).map((restaurant) => (
             <button className="feature-card" key={restaurant.id} onClick={() => focusRestaurant(restaurant)}>
               <img src={restaurant.image} alt={`${restaurant.name} · ${restaurant.featuredDish}`} />
               <span className="feature-number">{restaurant.id.replace('food-', '')}</span>
@@ -293,22 +296,18 @@ export default function FoodAtlas() {
           <div className="restaurant-grid">
             {filteredRestaurants.map((restaurant) => {
               const log = logs[restaurant.id];
-              const itemNumber = Number(restaurant.id.replace('food-', ''));
               return (
                 <article className={`restaurant-card ${selected.id === restaurant.id ? 'selected' : ''} ${restaurant.status === 'avoid' ? 'avoid-card' : ''}`} key={restaurant.id}>
                   <button className="restaurant-main" onClick={() => focusRestaurant(restaurant)}>
                     <div className={`restaurant-visual category-${restaurant.category.length}`}>
-                      {restaurant.image ? (
-                        <>
-                          <img src={restaurant.image} alt={`${restaurant.name}的已确认真实照片`} loading="lazy" />
-                          <b className="thumbnail-label is-photo">实拍</b>
-                        </>
-                      ) : (
-                        <>
-                          <FoodPlaceholder category={restaurant.category} name={restaurant.name} index={itemNumber} />
-                          <b className="thumbnail-label is-placeholder">风格图</b>
-                        </>
-                      )}
+                      <img
+                        src={restaurant.image}
+                        alt={restaurant.imageKind === 'generated' ? `${restaurant.name}的菜品生成图` : `${restaurant.name}的真实照片`}
+                        loading="lazy"
+                      />
+                      {restaurant.imageKind === 'generated'
+                        ? <b className="thumbnail-label is-generated">生成图</b>
+                        : <b className="thumbnail-label is-photo">实拍</b>}
                       <i>{restaurant.id.replace('food-', '')}</i>
                     </div>
                     <div className="restaurant-copy">
