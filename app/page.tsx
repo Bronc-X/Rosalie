@@ -94,7 +94,13 @@ export default function Home() {
     motion.add('(prefers-reduced-motion: no-preference)', () => {
       const entrance = gsap.timeline({ defaults: { ease: 'power3.out' } });
       entrance
-        .from('.home-hidden-trigger', { autoAlpha: 0, y: -12, scale: .94, duration: .52, ease: 'power4.out' })
+        .fromTo('.home-hidden-trigger', { autoAlpha: 0, y: -12 }, {
+          autoAlpha: 1,
+          y: 0,
+          duration: .52,
+          ease: 'power4.out',
+          clearProps: 'opacity,visibility,transform',
+        })
         .from('.intro > *', { autoAlpha: 0, y: 8, stagger: .06, duration: .4 }, '-=.28')
         .from('.person-toni .character, .person-toni h2', {
           autoAlpha: 0,
@@ -157,17 +163,15 @@ export default function Home() {
             .fromTo(panel, {
               autoAlpha: 0,
               y: -12,
-              scale: .97,
               clipPath: 'inset(0 0 100% 0 round 28px)',
               transformOrigin: '50% 0%',
             }, {
               autoAlpha: 1,
               y: 0,
-              scale: 1,
               clipPath: 'inset(0 0 0% 0 round 28px)',
               duration: .42,
               ease: 'power4.out',
-              clearProps: 'clipPath',
+              clearProps: 'clipPath,opacity,visibility,transform',
             })
             .from(details.classList.contains('home-hidden-drawer')
               ? panel.querySelectorAll('.home-utility-bar > *, .release-note, .countdown-drawer')
@@ -178,7 +182,6 @@ export default function Home() {
               stagger: .035,
               ease: 'power3.out',
             }, .1);
-          gsap.fromTo(summary, { scale: .97 }, { scale: 1, duration: .28, ease: 'back.out(2)' });
         };
 
         const handleClick = (event: MouseEvent) => {
@@ -188,7 +191,6 @@ export default function Home() {
           gsap.to(panel, {
             autoAlpha: 0,
             y: -10,
-            scale: .96,
             duration: .22,
             ease: 'power2.in',
             onComplete: () => {
@@ -207,16 +209,15 @@ export default function Home() {
       });
 
       const controller = root.querySelector<HTMLDetailsElement>('.controller-drawer');
-      const controllerSummary = controller?.querySelector<HTMLElement>(':scope > summary');
       const controllerPanel = controller?.querySelector<HTMLElement>(':scope > .controller-popover');
       const openController = () => {
         if (!controller?.open || !controllerPanel) return;
-        gsap.fromTo(controllerPanel, { autoAlpha: 0, y: -9, scale: .97 }, {
+        gsap.fromTo(controllerPanel, { autoAlpha: 0, y: -9 }, {
           autoAlpha: 1,
           y: 0,
-          scale: 1,
           duration: .34,
           ease: 'power4.out',
+          clearProps: 'opacity,visibility,transform',
         });
       };
       controller?.addEventListener('toggle', openController);
@@ -244,11 +245,18 @@ export default function Home() {
       const pressSelector = '.home-hidden-trigger, .home-utility-bar a, .home-utility-bar summary, .countdown-drawer > summary, .letter-discussion-bar';
       const press = (event: PointerEvent) => {
         const target = (event.target as HTMLElement).closest<HTMLElement>(pressSelector);
-        if (target) gsap.to(target, { scale: .96, y: 1, duration: .1, ease: 'power2.out' });
+        if (target) gsap.to(target, { y: 1, duration: .1, ease: 'power2.out' });
       };
       const release = (event: PointerEvent) => {
         const target = (event.target as HTMLElement).closest<HTMLElement>(pressSelector);
-        if (target) gsap.to(target, { scale: 1, y: 0, duration: .28, ease: 'back.out(2)' });
+        if (target) {
+          gsap.to(target, {
+            y: 0,
+            duration: .22,
+            ease: 'power2.out',
+            onComplete: () => gsap.set(target, { clearProps: 'transform' }),
+          });
+        }
       };
       root.addEventListener('pointerdown', press);
       root.addEventListener('pointerup', release);
@@ -262,7 +270,6 @@ export default function Home() {
       return () => {
         cleanups.forEach((cleanup) => cleanup());
         if (controllerPanel) gsap.killTweensOf(controllerPanel);
-        if (controllerSummary) gsap.killTweensOf(controllerSummary);
       };
     });
 
@@ -409,12 +416,12 @@ export default function Home() {
           <details className="countdown-drawer">
             <summary>
               <span>倒计时</span>
-              <small>{isReunited ? '已归队' : '展开查看'}</small>
+              <small>{isReunited ? '已结束' : '展开查看'}</small>
               <i aria-hidden="true" />
             </summary>
             <section className="countdown" aria-atomic="true">
               <p className="reunion-copy" aria-live="polite">
-                {isReunited ? '已归队' : (
+                {isReunited ? '已结束' : (
                   <span className="countdown-copy-content">
                     <span><span className="work-emphasis">干</span>活倒计时</span>
                     <img className="countdown-charm" src={controllerSource} alt="" aria-hidden="true" />

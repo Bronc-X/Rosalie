@@ -1,5 +1,5 @@
 :root {
-  --font-ui: "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "HarmonyOS Sans SC", "Noto Sans CJK SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
   --stage-accent: #c7567d;
   --stage-accent-strong: #9f345c;
   --stage-ink: #392d32;
@@ -13,6 +13,12 @@
   --radius-control: 16px;
   --radius-panel: 24px;
   --radius-sheet: 28px;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-synthesis: none;
+  -webkit-font-smoothing: auto;
 }
 
 html[data-theme="dark"] {
@@ -63,7 +69,7 @@ html[data-theme="dark"] {
 .site-quick-actions b {
   font-family: var(--font-ui);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0;
 }
 
@@ -126,7 +132,7 @@ html[data-theme="dark"] {
 
 .site-dock a span {
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: .02em;
 }
 
@@ -326,7 +332,7 @@ body:has(.schedule-modal-layer) .site-quick-actions {
   color: var(--stage-muted);
   font-family: var(--font-ui);
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .home-utility-link > strong { font-size: 14px; }
@@ -368,6 +374,7 @@ body:has(.schedule-modal-layer) .site-quick-actions {
   color: var(--stage-ink);
   background: color-mix(in srgb, var(--stage-accent) 11%, var(--stage-surface-solid));
   box-shadow: 0 10px 24px rgb(116 58 82 / 10%), inset 0 1px var(--stage-highlight);
+  transform: none;
 }
 
 .controller-palette legend,
@@ -390,7 +397,7 @@ body:has(.schedule-modal-layer) .site-quick-actions {
 .whisper {
   color: var(--stage-ink);
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: .08em;
 }
 
@@ -450,7 +457,7 @@ body:has(.schedule-modal-layer) .site-quick-actions {
 .countdown-drawer > summary small {
   color: var(--stage-muted);
   font-size: 12px;
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .countdown-drawer .countdown {
@@ -557,7 +564,7 @@ body:has(.schedule-modal-layer) .site-quick-actions {
   color: var(--stage-muted);
   font-family: var(--font-ui);
   font-size: 15px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: .08em;
 }
 
@@ -615,7 +622,7 @@ body:has(.schedule-modal-layer) .site-quick-actions {
   margin: 0;
   font-family: var(--font-chinese), "Songti SC", "STSong", serif;
   font-size: clamp(16px, 2.2vw, 18px);
-  font-weight: 430;
+  font-weight: 400;
   line-height: 1.95;
   letter-spacing: .025em;
   text-align: left;
@@ -630,7 +637,7 @@ body:has(.schedule-modal-layer) .site-quick-actions {
 
 .home-letter p:last-child {
   color: color-mix(in srgb, var(--stage-ink) 90%, var(--stage-accent-strong));
-  font-weight: 520;
+  font-weight: 400;
 }
 
 html[data-theme="dark"] .reunion {
@@ -895,7 +902,7 @@ html[data-theme="dark"] .home-letter {
 
 .home-hidden-trigger strong {
   font-size: 14px;
-  font-weight: 680;
+  font-weight: 600;
   letter-spacing: .02em;
 }
 
@@ -1105,7 +1112,7 @@ html[data-theme="dark"] .home-letter {
 }
 .letter-discussion-bar:disabled { cursor: wait; opacity: .8; }
 .letter-discussion-bar > span:nth-child(2) { min-width: 0; display: grid; gap: 2px; }
-.letter-discussion-bar strong { font-size: 15px; font-weight: 680; letter-spacing: .02em; }
+.letter-discussion-bar strong { font-size: 15px; font-weight: 600; letter-spacing: .02em; }
 .letter-discussion-bar small { color: #8b707e; font-size: 12px; }
 .letter-discussion-bar > b {
   min-width: 46px;
@@ -1118,7 +1125,7 @@ html[data-theme="dark"] .home-letter {
   color: #765866;
   background: rgb(255 255 255 / 28%);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .letter-notes-layer {
@@ -1197,7 +1204,7 @@ html[data-theme="dark"] .home-letter {
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 72%);
 }
 
-.letter-note-composer label { display: block; margin-bottom: 7px; color: #735866; font-size: 13px; font-weight: 680; }
+.letter-note-composer label { display: block; margin-bottom: 7px; color: #735866; font-size: 13px; font-weight: 600; }
 .letter-note-composer textarea,
 .letter-reply-form textarea {
   width: 100%;
@@ -1237,7 +1244,7 @@ html[data-theme="dark"] .home-letter {
   background: linear-gradient(145deg, #c55a82, #a94369);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 24%), 0 9px 22px rgb(147 55 93 / 17%);
   font-size: 13px;
-  font-weight: 680;
+  font-weight: 600;
 }
 .letter-note-composer button:disabled,
 .letter-reply-form button:disabled { cursor: not-allowed; opacity: .45; }
@@ -1362,6 +1369,14 @@ html[data-theme="dark"] .letter-reply-list li { background: rgb(255 226 238 / 5%
   top: max(8px, env(safe-area-inset-top));
   right: max(8px, env(safe-area-inset-right));
   gap: 5px;
+  align-items: center;
+}
+
+.home-hidden-trigger,
+.site-quick-actions button {
+  box-sizing: border-box;
+  height: 44px;
+  min-height: 44px;
 }
 
 .site-quick-actions button {
@@ -1387,48 +1402,57 @@ html[data-theme="dark"] .letter-reply-list li { background: rgb(255 226 238 / 5%
 }
 
 .site-quick-actions .site-wechat-action {
-  width: 70px;
-  min-width: 70px;
-  padding-inline: 8px;
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
 }
 
 .site-quick-actions .site-wechat-action b {
-  position: static;
-  width: auto;
-  height: auto;
-  overflow: visible;
-  clip: auto;
-  font-size: 12px;
-  white-space: normal;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .home-hidden-drawer {
   position: fixed;
   z-index: 121;
   top: max(8px, env(safe-area-inset-top));
-  right: calc(max(8px, env(safe-area-inset-right)) + 125px);
-  width: 132px;
+  right: calc(max(8px, env(safe-area-inset-right)) + 98px);
+  width: 44px;
+  height: 44px;
   min-height: 44px;
 }
 
 .home-hidden-trigger {
-  width: 132px;
+  width: 44px;
   min-height: 44px;
-  padding: 4px 7px 4px 5px;
-  grid-template-columns: 34px 1fr 8px;
-  gap: 6px;
+  padding: 4px;
+  grid-template-columns: 1fr;
+  place-items: center;
+  gap: 0;
   border-radius: 16px;
 }
 
 .home-hidden-trigger img {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   padding: 2px;
   border-radius: 12px;
 }
 
-.home-hidden-trigger strong { font-size: 12px; }
-.home-hidden-trigger small { font-size: 9px; }
+.home-hidden-trigger > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.home-hidden-trigger > i { display: none; }
 
 .home-hidden-panel {
   position: fixed;
@@ -1437,8 +1461,25 @@ html[data-theme="dark"] .letter-reply-list li { background: rgb(255 226 238 / 5%
   left: auto;
   width: min(420px, calc(100% - 16px));
   max-height: calc(100dvh - 76px - env(safe-area-inset-top));
+  box-sizing: border-box;
   transform: none;
 }
+
+.home-hidden-panel .home-utility-bar { align-items: start; }
+.home-hidden-panel .controller-drawer { min-width: 0; }
+.home-hidden-panel .controller-popover {
+  position: relative;
+  inset: auto;
+  width: calc(300% + 10px);
+  max-width: none;
+  margin-top: 8px;
+  box-sizing: border-box;
+  transform: none;
+}
+
+.controller-choice span,
+.controller-palette legend,
+.palette-choice span { font-weight: 600; }
 
 @media (max-width: 350px) {
   .controller-drawer summary,

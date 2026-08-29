@@ -80,6 +80,24 @@ test('the homepage collapses secondary controls and countdown over the original 
   assert.match(styles, /\.site-quick-actions button\s*\{[\s\S]*?width:\s*44px/);
 });
 
+test('the homepage keeps its compact drawer accurate, aligned, and legible', async () => {
+  const [source, styles] = await Promise.all([
+    readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../app/pocket-stage.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.doesNotMatch(source, /已归队/);
+  assert.match(source, /isReunited \? '已结束'/);
+  assert.match(styles, /--font-ui:\s*system-ui,\s*-apple-system/);
+  assert.doesNotMatch(styles, /font-weight:\s*(?:650|680|720|750)\b/);
+  assert.match(styles, /\.home-hidden-panel \.controller-popover\s*\{[\s\S]*?position:\s*relative/);
+  assert.match(styles, /\.home-hidden-trigger,\s*\n\.site-quick-actions button\s*\{[\s\S]*?height:\s*44px/);
+  const compactControls = styles.split('/* Keep the three homepage controls compact and together at the top-right. */')[1] ?? '';
+  assert.match(compactControls.match(/\.site-quick-actions \.site-wechat-action\s*\{[^}]*\}/)?.[0] ?? '', /width:\s*44px/);
+  assert.match(compactControls.match(/\.home-hidden-drawer\s*\{[^}]*\}/)?.[0] ?? '', /width:\s*44px/);
+  assert.doesNotMatch(source, /scale:\s*\.(?:94|96|97)/);
+});
+
 test('the homepage letter accepts persistent notes and replies', async () => {
   const [page, board] = await Promise.all([
     readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
