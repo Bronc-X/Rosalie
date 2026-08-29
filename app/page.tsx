@@ -399,7 +399,7 @@ export default function Home() {
               title={`${INTERVIEW_MODEL_LABEL} 面试官 Agent`}
             >
               <span className="utility-interview-mark" aria-hidden="true"><i /><i /></span>
-              <strong>{INTERVIEW_MODEL_LABEL.replace('GPT-', '')} 面试</strong>
+              <strong><span className="utility-model-version">{INTERVIEW_MODEL_LABEL.replace('GPT-', '')} </span>面试</strong>
             </Link>
 
             <Link className="home-utility-link utility-game" href="/play" aria-label="进入小游戏">
@@ -448,39 +448,68 @@ export default function Home() {
         </div>
       </details>
 
-      <header className="intro">
-        <p className="whisper">多余的</p>
-      </header>
+      <section className="home-masthead" aria-label="Rosalie 首页封面">
+      <div className="home-cover">
+        <img
+          className="home-cover-image home-cover-image-light"
+          src="/art/rosalie-cover-light-v2.webp"
+          alt="左右相向的玫粉折面，土豆与樱花由一根细线相连"
+          width="768"
+          height="768"
+          decoding="async"
+          fetchPriority="high"
+        />
+        <img
+          className="home-cover-image home-cover-image-dark"
+          src="/art/rosalie-cover-dark-v2.webp"
+          alt=""
+          aria-hidden="true"
+          width="768"
+          height="768"
+          decoding="async"
+          loading="lazy"
+        />
 
-      <section className="meeting-scene" aria-label="Toni 和 Rosalie 的十日倒计时">
-        <div className="glow-arc" aria-hidden="true" />
-        <div className="closing-thread" aria-hidden="true">
-          <span className="thread-center" />
-        </div>
+        <header className="intro">
+          <p className="whisper">founlosophy</p>
+        </header>
 
-        <article className="person person-toni">
-          <h2>Toni</h2>
-          <div className="character potato" role="img" aria-label="一颗微笑的蜂蜜色小土豆">
-            <span className="potato-sprout" aria-hidden="true"><i /><i /></span>
-            <span className="potato-freckles" aria-hidden="true"><i /><i /><i /><i /></span>
-            <span className="face"><i /><i /><b /></span>
+        <section className="meeting-scene" aria-label="Toni 和 Rosalie">
+          <div className="glow-arc" aria-hidden="true" />
+          <div className="closing-thread" aria-hidden="true">
+            <span className="thread-center" />
           </div>
-        </article>
 
-        <article className="person person-rosalie">
-          <h2>Rosalie</h2>
-          <div className="character sakura" role="img" aria-label="一朵微笑的樱花粉小樱花">
-            <span className="petal petal-1" />
-            <span className="petal petal-2" />
-            <span className="petal petal-3" />
-            <span className="petal petal-4" />
-            <span className="petal petal-5" />
-            <span className="flower-core"><span className="face"><i /><i /><b /></span></span>
-          </div>
-        </article>
+          <article className="person person-toni">
+            <h2>Toni</h2>
+            <div className="character potato" role="img" aria-label="一颗微笑的蜂蜜色小土豆">
+              <span className="potato-sprout" aria-hidden="true"><i /><i /></span>
+              <span className="potato-freckles" aria-hidden="true"><i /><i /><i /><i /></span>
+              <span className="face"><i /><i /><b /></span>
+            </div>
+          </article>
+
+          <article className="person person-rosalie">
+            <h2>Rosalie</h2>
+            <div className="character sakura" role="img" aria-label="一朵微笑的樱花粉小樱花">
+              <span className="petal petal-1" />
+              <span className="petal petal-2" />
+              <span className="petal petal-3" />
+              <span className="petal petal-4" />
+              <span className="petal petal-5" />
+              <span className="flower-core"><span className="face"><i /><i /><b /></span></span>
+            </div>
+          </article>
+        </section>
+      </div>
+
+      <p className="home-cover-caption"><strong>Toni</strong><span>Rosalie</span></p>
 
       </section>
 
+      <section className="home-feed" aria-label="写给 Rosalie 的内容">
+      <img className="home-feed-signal" src="/art/rosalie-signal-wave-v2.webp" alt="" aria-hidden="true" width="1200" height="400" decoding="async" loading="lazy" />
+      <h2 className="home-feed-title">写给你</h2>
       <section className="home-letter" aria-label="写给 Rosalie 的话">
         {HOME_LETTER_PARAGRAPHS.map((paragraph) => (
           <p key={paragraph}>{paragraph}</p>
@@ -495,6 +524,7 @@ export default function Home() {
           </button>
         </div>
       )}
+      </section>
 
       {tapParticles.map((particle) => (
         <span

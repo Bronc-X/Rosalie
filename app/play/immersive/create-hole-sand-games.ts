@@ -50,18 +50,74 @@ class ToneKit {
   }
 }
 
-function addBackdrop(scene: Phaser.Scene, tint: 'peach' | 'lilac') {
-  const art = scene.add.graphics();
-  art.fillStyle(tint === 'peach' ? 0xffd6bb : 0xd7d5ff, 0.45).fillCircle(380, 115, 192);
-  art.fillStyle(tint === 'peach' ? 0xf2d5ef : 0xf4d3e7, 0.55).fillCircle(10, 650, 210);
-  art.fillStyle(0xffffff, 0.68).fillRoundedRect(18, 74, 354, 632, 42);
-  art.lineStyle(1, 0xffffff, 0.92).strokeRoundedRect(18, 74, 354, 632, 42);
+function addHoleObservatoryBackdrop(scene: Phaser.Scene, reducedMotion: boolean) {
+  scene.cameras.main.setBackgroundColor('#eee8df');
+  const shell = scene.add.graphics();
+  shell.fillStyle(0xd4c5b5, 0.28).fillRoundedRect(20, 79, 350, 632, 40);
+  shell.fillStyle(0xf8f2e8, 0.98).fillRoundedRect(16, 73, 358, 634, 40);
+  shell.lineStyle(1, 0xffffff, 0.94).strokeRoundedRect(16, 73, 358, 634, 40);
+  shell.fillStyle(0x171b2d, 0.98).fillRoundedRect(29, 137, 332, 540, 31);
+  shell.lineStyle(1, 0x9ea7d1, 0.24).strokeRoundedRect(29, 137, 332, 540, 31);
 
-  for (let index = 0; index < 20; index += 1) {
-    const x = 28 + ((index * 83) % 334);
-    const y = 96 + ((index * 107) % 584);
-    art.fillStyle(index % 3 === 0 ? 0xde81a3 : 0xf0b77e, index % 4 === 0 ? 0.36 : 0.2)
-      .fillCircle(x, y, index % 5 === 0 ? 2.3 : 1.25);
+  const observatory = scene.add.graphics().setDepth(0);
+  observatory.lineStyle(1, 0xaeb8e8, 0.11);
+  for (let index = 0; index < 7; index += 1) {
+    observatory.strokeEllipse(195, 585, 94 + index * 42, 38 + index * 26);
+  }
+  observatory.lineStyle(1, 0xf0b980, 0.12)
+    .beginPath().moveTo(45, 505).lineTo(342, 315).strokePath();
+  observatory.lineStyle(1, 0xd989ac, 0.1)
+    .beginPath().moveTo(58, 202).lineTo(330, 606).strokePath();
+
+  for (let index = 0; index < 34; index += 1) {
+    const x = 40 + ((index * 79) % 304);
+    const y = 155 + ((index * 113) % 490);
+    const star = scene.add.circle(x, y, index % 8 === 0 ? 2.2 : 1.1, index % 5 === 0 ? 0xf1bb7f : 0xd9e1ff, index % 4 === 0 ? 0.72 : 0.38).setDepth(0);
+    if (!reducedMotion && index % 4 === 0) {
+      scene.tweens.add({
+        targets: star,
+        alpha: { from: 0.2, to: 0.88 },
+        scale: { from: 0.72, to: 1.16 },
+        duration: 1_180 + index * 37,
+        yoyo: true,
+        repeat: -1,
+      });
+    }
+  }
+
+  const planet = scene.add.circle(307, 187, 15, 0xd894ad, 0.78).setDepth(0);
+  scene.add.ellipse(307, 187, 46, 12, 0xffffff, 0).setStrokeStyle(2, 0xf2d0b4, 0.46).setRotation(-0.28).setDepth(0);
+  if (!reducedMotion) {
+    scene.tweens.add({ targets: planet, y: { from: 184, to: 190 }, duration: 1_900, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+  }
+}
+
+function addSandLightboxBackdrop(scene: Phaser.Scene, reducedMotion: boolean) {
+  scene.cameras.main.setBackgroundColor('#f4ead2');
+  const lightbox = scene.add.graphics();
+  lightbox.fillStyle(0xc89d62, 0.2).fillRoundedRect(21, 81, 348, 627, 42);
+  lightbox.fillStyle(0xfff8df, 0.98).fillRoundedRect(16, 73, 358, 634, 42);
+  lightbox.lineStyle(1, 0xffffff, 0.92).strokeRoundedRect(16, 73, 358, 634, 42);
+  lightbox.fillStyle(0xf2c887, 0.2).fillEllipse(55, 665, 270, 124);
+  lightbox.fillStyle(0xdca373, 0.14).fillEllipse(330, 665, 238, 94);
+  lightbox.fillStyle(0xffdf9e, 0.2).fillEllipse(195, 248, 340, 204);
+
+  const contours = scene.add.graphics().setDepth(0);
+  for (let index = 0; index < 6; index += 1) {
+    contours.lineStyle(1, index % 2 ? 0xc98663 : 0xdbaa63, 0.12)
+      .strokeEllipse(192, 632, 112 + index * 54, 24 + index * 25);
+  }
+  contours.lineStyle(1, 0xbd7c58, 0.12)
+    .beginPath().moveTo(30, 361).lineTo(72, 326).lineTo(111, 317).lineTo(154, 331)
+    .lineTo(195, 352).lineTo(238, 374).lineTo(281, 376).lineTo(321, 358).lineTo(358, 334).strokePath();
+
+  for (let index = 0; index < 28; index += 1) {
+    const x = 32 + ((index * 73) % 326);
+    const y = 94 + ((index * 127) % 588);
+    const grain = scene.add.ellipse(x, y, index % 5 === 0 ? 3.2 : 1.8, index % 5 === 0 ? 1.8 : 1.2, index % 3 === 0 ? 0xb87858 : 0xd6a05f, 0.28).setDepth(0);
+    if (!reducedMotion && index % 7 === 0) {
+      scene.tweens.add({ targets: grain, y: y + 8, alpha: { from: 0.16, to: 0.5 }, duration: 2_100 + index * 31, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+    }
   }
 }
 
@@ -197,8 +253,7 @@ class HoleScene extends Phaser.Scene {
   create() {
     prepareHighDpiScene(this);
     this.sound.mute = this.options.muted;
-    this.cameras.main.setBackgroundColor('#fff4ee');
-    addBackdrop(this, 'peach');
+    addHoleObservatoryBackdrop(this, this.options.reducedMotion);
     this.drawPlayfield();
     this.objectLayer = this.add.container(0, 0).setDepth(5);
     this.createHole();
@@ -278,12 +333,12 @@ class HoleScene extends Phaser.Scene {
 
   private drawPlayfield() {
     const field = this.add.graphics();
-    field.fillStyle(0xfffbf7, 0.42).fillRoundedRect(34, 138, 322, 536, 34);
-    field.lineStyle(1, 0xd8a9b8, 0.18).strokeRoundedRect(34, 138, 322, 536, 34);
-    field.fillStyle(0x8f6071, 0.08).fillEllipse(195, 663, 250, 21);
+    field.fillStyle(0x080a13, 0.18).fillRoundedRect(34, 142, 322, 528, 28);
+    field.lineStyle(1, 0xb7c0ee, 0.14).strokeRoundedRect(34, 142, 322, 528, 28);
+    field.fillStyle(0x060811, 0.46).fillEllipse(195, 663, 250, 21);
     for (let index = 0; index < 8; index += 1) {
       const ring = this.add.circle(195, 590, 52 + index * 22, 0xffffff, 0)
-        .setStrokeStyle(1, index % 2 ? 0xefac83 : 0xdc8da9, 0.07)
+        .setStrokeStyle(1, index % 2 ? 0xefac83 : 0xa9b8f0, 0.12)
         .setDepth(1);
       if (!this.options.reducedMotion) {
         this.tweens.add({
@@ -574,8 +629,7 @@ class SandScene extends Phaser.Scene {
   create() {
     prepareHighDpiScene(this);
     this.sound.mute = this.options.muted;
-    this.cameras.main.setBackgroundColor('#fff5ef');
-    addBackdrop(this, 'lilac');
+    addSandLightboxBackdrop(this, this.options.reducedMotion);
     this.drawBoardFrame();
     this.tileLayer = this.add.container(0, 0).setDepth(6);
     this.createHud();
@@ -602,11 +656,12 @@ class SandScene extends Phaser.Scene {
 
   private drawBoardFrame() {
     const frame = this.add.graphics();
-    frame.fillStyle(0x866073, 0.1).fillRoundedRect(45, 164, 300, 430, 32);
-    frame.fillStyle(0xfffcf8, 0.83).fillRoundedRect(42, 158, 306, 430, 32);
-    frame.lineStyle(1, 0xffffff, 1).strokeRoundedRect(42, 158, 306, 430, 32);
-    frame.fillStyle(0xd6b0c5, 0.12).fillRoundedRect(58, 174, 274, 398, 24);
-    frame.fillStyle(0x8f6071, 0.09).fillEllipse(195, 590, 260, 18);
+    frame.fillStyle(0x865c36, 0.16).fillRoundedRect(45, 166, 300, 430, 31);
+    frame.fillStyle(0xfff7df, 0.94).fillRoundedRect(42, 158, 306, 430, 31);
+    frame.lineStyle(2, 0xd3a86c, 0.3).strokeRoundedRect(42, 158, 306, 430, 31);
+    frame.fillStyle(0xe6bc78, 0.16).fillRoundedRect(58, 174, 274, 398, 23);
+    frame.lineStyle(1, 0xffffff, 0.74).strokeRoundedRect(59, 175, 272, 396, 22);
+    frame.fillStyle(0x8b633f, 0.13).fillEllipse(195, 590, 260, 18);
   }
 
   private createHud() {

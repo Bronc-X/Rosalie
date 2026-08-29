@@ -148,7 +148,9 @@ export function LinkMatchGame() {
 
   return (
     <main className="link-game-page">
-      <div className="link-game-glow" aria-hidden="true" />
+      <div className="link-game-glow" aria-hidden="true">
+        <i /><i /><i />
+      </div>
       <header className="link-game-header">
         <div>
           <small>第 {level} 关</small>

@@ -587,6 +587,14 @@
   gap: 10px;
 }
 
+.game-grid-featured { grid-template-columns: 1fr; }
+.game-collection-table .game-grid > a {
+  border-color: color-mix(in srgb, #b6914f 34%, var(--stage-line));
+  background:
+    radial-gradient(circle at 92% 18%, rgb(218 184 111 / 13%), transparent 32%),
+    color-mix(in srgb, #5b1830 5%, var(--stage-surface));
+}
+
 .game-grid > a {
   min-width: 0;
   min-height: 78px;
@@ -635,14 +643,24 @@
 
 html[data-theme="dark"] .play-lab {
   --game-icon-bg: color-mix(in srgb, var(--stage-accent) 8%, var(--stage-surface-solid));
-  background:
-    radial-gradient(circle at 12% 2%, rgb(108 75 145 / 23%), transparent 31%),
-    radial-gradient(circle at 92% 26%, rgb(137 71 62 / 20%), transparent 35%),
-    linear-gradient(165deg, #0b080a, #120b0f 52%, #180d0c);
+  background: var(--stage-canvas);
+  background-image: none;
 }
 
-html[data-theme="dark"] .game-portal-art,
-html[data-theme="dark"] .game-grid > a { box-shadow: inset 0 1px var(--stage-highlight); }
+html[data-theme="dark"] .play-lab::before { opacity: .025; }
+html[data-theme="dark"] .lab-sync-state,
+html[data-theme="dark"] .game-cartridge,
+html[data-theme="dark"] .game-grid > a {
+  border-color: var(--stage-line);
+  background: var(--stage-surface-solid);
+  background-image: none;
+  box-shadow: inset 0 1px var(--stage-highlight);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html[data-theme="dark"] .game-portal-art { border-color: var(--stage-line); background: #101115; background-image: none; box-shadow: inset 0 1px var(--stage-highlight); }
+html[data-theme="dark"] .game-grid > a.is-active { border-color: color-mix(in srgb, var(--stage-accent) 58%, transparent); background: color-mix(in srgb, var(--stage-accent) 8%, #18191e); box-shadow: inset 0 1px var(--stage-highlight); }
+html[data-theme="dark"] .game-portal-copy > a { color: #111216; background: var(--stage-accent); box-shadow: none; }
 
 @media (max-width: 620px) {
   .play-lab { padding-inline: 12px; }

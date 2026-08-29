@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 
 const siteUi = await import('../lib/site-ui.mjs').catch(() => ({}));
 
-test('the global function bar exposes interview as the central fifth destination', () => {
+test('the global function bar exposes food as a primary destination', () => {
   assert.deepEqual(siteUi.PRIMARY_NAV, [
     { href: '/', label: '首页' },
     { href: '/treehole', label: '留言' },
     { href: '/interview', label: '面试' },
     { href: '/schedule', label: '日历' },
+    { href: '/food', label: '食路' },
     { href: '/play', label: '游戏' },
   ]);
 });
@@ -18,11 +19,16 @@ test('the interview route activates its own primary destination', () => {
   assert.equal(siteUi.isPrimaryNavActive('/interview', '/play'), false);
 });
 
+test('the food route activates the new food destination', () => {
+  assert.equal(siteUi.isPrimaryNavActive('/food', '/food'), true);
+  assert.equal(siteUi.isPrimaryNavActive('/food', '/play'), false);
+});
+
 test('the homepage release note exposes the current mobile release highlights', () => {
   assert.deepEqual(siteUi.LATEST_RELEASE, {
-    date: '2026-08-26',
-    label: '08.26',
-    items: ['面试', '10 款游戏', '控制器配色'],
+    date: '2026-08-29',
+    label: '08.29',
+    items: ['汕头食路', '德州围桌', '抽象头像'],
   });
 });
 

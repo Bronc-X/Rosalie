@@ -8,6 +8,7 @@ import {
   ChatCircleText,
   GameController,
   House,
+  MapPinLine,
   MicrophoneStage,
   MoonStars,
   SunDim,
@@ -23,11 +24,24 @@ import {
   THEME_STORAGE_KEY,
 } from '@/lib/site-ui.mjs';
 import type { SiteTheme } from '@/lib/site-ui.mjs';
+import { HOLDEM_WECHAT_BONUS, SITE_WECHAT_ACTION_EVENT } from '@/lib/holdem-ui.mjs';
 
 const SHARE_PAYLOAD = {
-  title: '就差最后一步了',
+  title: '祝你成功喝到嘉士伯',
   text: '点开，时间会告诉你答案。',
   url: 'https://rosalie.toni.asia/',
+};
+
+const HOLDEM_SHARE_PAYLOAD = {
+  title: '求你爸爸，给你多点筹码',
+  text: '点开微信，给我多点筹码。',
+  url: 'https://rosalie.toni.asia/play/holdem',
+};
+
+const FOOD_SHARE_PAYLOAD = {
+  title: '汕头食路',
+  text: '53 间店，照这张慢慢食。',
+  url: 'https://rosalie.toni.asia/food',
 };
 
 function NavIcon({ label }: { label: string }) {
@@ -36,6 +50,7 @@ function NavIcon({ label }: { label: string }) {
   if (label === '留言') return <ChatCircleText {...props} />;
   if (label === '面试') return <MicrophoneStage {...props} />;
   if (label === '日历') return <CalendarDots {...props} />;
+  if (label === '食路') return <MapPinLine {...props} />;
   return <GameController {...props} />;
 }
 
@@ -77,6 +92,10 @@ export function SiteChrome() {
 
   if (pathname === '/unlock') return null;
   const isGameDetail = pathname.startsWith('/play/');
+  const isHoldem = pathname === '/play/holdem';
+  const isFood = pathname === '/food';
+  const showQuickActions = !isGameDetail || isHoldem;
+  const sharePayload = isHoldem ? HOLDEM_SHARE_PAYLOAD : isFood ? FOOD_SHARE_PAYLOAD : SHARE_PAYLOAD;
   const activeIndex = PRIMARY_NAV.findIndex((item) => isPrimaryNavActive(pathname, item.href));
 
   function toggleTheme() {
@@ -88,47 +107,54 @@ export function SiteChrome() {
   }
 
   async function shareToWechat() {
+    const bonusPrefix = isHoldem ? '到账 100,000，' : '';
+    if (isHoldem) {
+      window.dispatchEvent(new CustomEvent(SITE_WECHAT_ACTION_EVENT, {
+        detail: { amount: HOLDEM_WECHAT_BONUS },
+      }));
+      setShareNotice('到账 100,000');
+    }
     const mode = getShareMode({
       userAgent: navigator.userAgent,
       canNativeShare: typeof navigator.share === 'function',
     });
 
     if (mode === 'wechat-menu') {
-      setShareNotice('点右上角分享');
+      setShareNotice(`${bonusPrefix}点右上角分享`);
       return;
     }
 
     if (mode === 'wechat-launch') {
-      void copyText(SHARE_PAYLOAD.url);
-      setShareNotice('链接已复制，正在打开微信');
+      void copyText(sharePayload.url);
+      setShareNotice(`${bonusPrefix}链接已复制，正在打开微信`);
       window.location.href = 'weixin://';
       return;
     }
 
     if (mode === 'native-share') {
       try {
-        await navigator.share(SHARE_PAYLOAD);
-        setShareNotice('已打开分享');
+        await navigator.share(sharePayload);
+        setShareNotice(`${bonusPrefix}已打开分享`);
         return;
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return;
       }
     }
 
-    const copied = await copyText(SHARE_PAYLOAD.url);
-    setShareNotice(copied ? '链接已复制' : '请从地址栏分享');
+    const copied = await copyText(sharePayload.url);
+    setShareNotice(`${bonusPrefix}${copied ? '链接已复制' : '请从地址栏分享'}`);
   }
 
   return (
     <>
-      {!isGameDetail && <div className="site-quick-actions" aria-label="页面显示与分享">
-        <button type="button" onClick={toggleTheme} aria-label={`切换到${theme === 'light' ? '深色' : '浅色'}模式`}>
+      {showQuickActions && <div className="site-quick-actions" aria-label={isHoldem ? '微信筹码' : '页面显示与分享'}>
+        {!isGameDetail && <button type="button" onClick={toggleTheme} aria-label={`切换到${theme === 'light' ? '深色' : '浅色'}模式`}>
           {theme === 'light' ? <MoonStars aria-hidden="true" /> : <SunDim aria-hidden="true" />}
           <b>{theme === 'light' ? '深色' : '浅色'}</b>
-        </button>
-        <button type="button" className="site-wechat-action" aria-label="微信分享" onClick={() => void shareToWechat()}>
+        </button>}
+        <button type="button" className="site-wechat-action" aria-label={isHoldem ? '微信求筹码并领取十万' : '微信分享'} onClick={() => void shareToWechat()}>
           <WechatLogo aria-hidden="true" />
-          <b>微信</b>
+          <b>{isHoldem ? '求筹码' : '微信'}</b>
         </button>
       </div>}
 

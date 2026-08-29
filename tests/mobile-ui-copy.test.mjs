@@ -29,7 +29,7 @@ test('the interview setup presents each instruction once', async () => {
 test('the homepage folds secondary tools into the top and removes the invitation flow', async () => {
   const source = await readFile(new URL('../app/page.tsx', import.meta.url), 'utf8');
 
-  assert.match(source, /<p className="whisper">多余的<\/p>/);
+  assert.match(source, /<p className="whisper">founlosophy<\/p>/);
   assert.doesNotMatch(source, /从来都是负距离|2026\.08\.19 - 08\.29/);
   assert.match(source, /className="home-utility-bar"/);
   assert.match(source, /<details className="controller-drawer">/);

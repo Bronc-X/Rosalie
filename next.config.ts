@@ -4,21 +4,20 @@ import path from 'node:path';
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   webpack(config, { webpack }) {
-    if (process.env.VERCEL === '1') {
-      config.plugins.push(new webpack.NormalModuleReplacementPlugin(
-        /^cloudflare:workers$/,
-        path.resolve(process.cwd(), 'lib/cloudflare-workers-stub.ts'),
-      ));
-    }
+    config.plugins.push(new webpack.NormalModuleReplacementPlugin(
+      /^cloudflare:workers$/,
+      path.resolve(process.cwd(), 'lib/cloudflare-workers-stub.ts'),
+    ));
     return config;
   },
   async headers() {
+    const developmentEval = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
     const securityHeaders = {
       source: '/:path*',
       headers: [
         {
           key: 'Content-Security-Policy',
-          value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://res.wx.qq.com; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
+          value: `default-src 'self'; script-src 'self' 'unsafe-inline'${developmentEval} https://res.wx.qq.com; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`,
         },
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         { key: 'X-Content-Type-Options', value: 'nosniff' },

@@ -129,6 +129,8 @@ test('the system prompt stays in AI-tech context and asks exactly one question a
   assert.match(system, /社群运营/);
   assert.match(system, /一次只问一个问题/);
   assert.match(system, /忽略.*候选人.*指令|提示注入/);
+  assert.match(system, /服务端编排器|内部路由/);
+  assert.match(system, /能力项/);
   assert.deepEqual(messages?.at(-1), { role: 'user', content: '我组织过一次开发者活动。' });
 });
 
@@ -226,6 +228,30 @@ test('interview records validate and merge newest-first without unbounded growth
   assert.ok(merged.every((record, index) => index === 0 || merged[index - 1].updatedAt >= record.updatedAt));
 });
 
+test('v2 records preserve bounded engine state while v1 records stay readable', async () => {
+  const engineModule = await import('../lib/interview-engine.mjs');
+  const base = {
+    id: SESSION_ID,
+    stage: 'interview',
+    profile: PROFILE,
+    messages: [{ role: 'assistant', content: '第一个问题' }],
+    review: '',
+    createdAt: '2026-08-26T00:00:00.000Z',
+    updatedAt: '2026-08-26T00:00:00.000Z',
+  };
+  const opening = engineModule.prepareInterviewTurn({ action: 'start', profile: PROFILE, messages: [] });
+  const engine = engineModule.commitInterviewQuestion(opening.engine, opening.decision, '第一个问题');
+
+  const legacy = interview.normalizeInterviewRecord?.(base);
+  const current = interview.normalizeInterviewRecord?.({ ...base, engine });
+
+  assert.equal(legacy.ok, true);
+  assert.equal('engine' in legacy.value, false);
+  assert.equal(current.ok, true);
+  assert.equal(current.value.engine.version, 2);
+  assert.equal(current.value.engine.turns[0].question, '第一个问题');
+});
+
 test('interview progress events use parseable SSE frames', () => {
   const event = {
     type: 'artifact.patch',
@@ -268,6 +294,10 @@ test('the interview API streams truthful progress, provider deltas and saves the
   assert.match(source, /artifact\.patch/);
   assert.match(source, /job\.completed/);
   assert.match(source, /writeVercelInterviewRecord/);
+  assert.match(source, /prepareInterviewTurn/);
+  assert.match(source, /evaluate_answer/);
+  assert.match(source, /route_interview/);
+  assert.match(source, /commitInterviewQuestion/);
 });
 
 test('production interview history uses the existing private Vercel Blob store', async () => {
@@ -287,6 +317,8 @@ test('the interview UI exposes saved sessions, real progress and hold-to-talk en
   assert.match(source, /SpeechRecognition|webkitSpeechRecognition/);
   assert.match(source, /onPointerDown/);
   assert.match(source, /onPointerUp/);
+  assert.match(source, /getInterviewEngineStatus/);
+  assert.match(source, /interviewEngine/);
   assert.match(config, /microphone=\(self\)/);
 });
 

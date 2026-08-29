@@ -67,21 +67,84 @@ class ToyAudio {
   }
 }
 
-function drawToyBackdrop(scene: Phaser.Scene, accent: number) {
-  scene.cameras.main.setBackgroundColor('#fff7f1');
-  const wash = scene.add.graphics().setDepth(-20);
-  wash.fillStyle(0xf8dfe9, 0.58).fillCircle(16, 116, 170);
-  wash.fillStyle(0xffd4ae, 0.38).fillCircle(388, 285, 210);
-  wash.fillStyle(0xdce4ff, 0.34).fillCircle(52, 742, 205);
-  wash.fillStyle(0xffffff, 0.64).fillRoundedRect(15, 72, 360, 660, 44);
-  wash.lineStyle(1, 0xffffff, 0.9).strokeRoundedRect(15, 72, 360, 660, 44);
+function drawToyBackdrop(
+  scene: Phaser.Scene,
+  accent: number,
+  world: 'water-lab' | 'storm-shelter',
+  reducedMotion: boolean,
+) {
+  if (world === 'water-lab') {
+    scene.cameras.main.setBackgroundColor('#dce9ea');
+    const lab = scene.add.graphics().setDepth(-20);
+    lab.fillStyle(0x6f929a, 0.2).fillRoundedRect(19, 79, 352, 636, 42);
+    lab.fillStyle(0xf0f6f2, 1).fillRoundedRect(14, 72, 362, 638, 42);
+    lab.lineStyle(1, 0xffffff, 0.88).strokeRoundedRect(14, 72, 362, 638, 42);
+    lab.fillStyle(0x9bc9d4, 0.13).fillRoundedRect(24, 151, 342, 473, 25);
+    lab.lineStyle(1, 0x6e9ca8, 0.1);
+    for (let x = 43; x < 365; x += 47) lab.lineBetween(x, 151, x, 624);
+    for (let y = 179; y < 624; y += 43) lab.lineBetween(24, y, 366, y);
+    lab.fillStyle(0x8ec8d3, 0.18).fillCircle(195, 390, 160);
+    lab.fillStyle(0xffffff, 0.38).fillCircle(195, 390, 139);
+    lab.lineStyle(3, 0xffffff, 0.56).strokeCircle(195, 390, 146);
+    lab.lineStyle(1, accent, 0.14).strokeCircle(195, 390, 153);
+    lab.lineStyle(2, 0x8eb5bd, 0.18).lineBetween(38, 574, 352, 574);
+    lab.lineStyle(1, 0xffffff, 0.72).lineBetween(44, 577, 346, 577);
 
-  for (let index = 0; index < 22; index += 1) {
-    const x = 28 + ((index * 83) % 334);
-    const y = 92 + ((index * 113) % 610);
-    const dot = scene.add.circle(x, y, index % 5 === 0 ? 2.2 : 1.2, index % 3 === 0 ? accent : PALETTE.peach, 0.22).setDepth(-19);
-    if (index % 5 === 0) dot.setStrokeStyle(1, 0xffffff, 0.66);
+    for (let index = 0; index < 17; index += 1) {
+      const x = 37 + ((index * 89) % 318);
+      const y = 175 + ((index * 107) % 421);
+      const radius = 2 + (index % 4) * 1.4;
+      const bubble = scene.add.circle(x, y, radius, 0xffffff, 0.14)
+        .setStrokeStyle(1, index % 3 === 0 ? accent : PALETTE.sky, 0.28)
+        .setDepth(-19);
+      if (!reducedMotion && index % 2 === 0) {
+        scene.tweens.add({
+          targets: bubble,
+          y: y - 18 - (index % 3) * 7,
+          x: x + (index % 4 < 2 ? -5 : 5),
+          alpha: { from: 0.1, to: 0.46 },
+          duration: 2_300 + index * 83,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.InOut',
+        });
+      }
+    }
+    return;
   }
+
+  scene.cameras.main.setBackgroundColor('#e8dcd4');
+  const shelter = scene.add.graphics().setDepth(-20);
+  shelter.fillStyle(0x5b4555, 0.2).fillRoundedRect(19, 80, 352, 635, 42);
+  shelter.fillStyle(0xf4ebe3, 1).fillRoundedRect(14, 72, 362, 640, 42);
+  shelter.lineStyle(1, 0xffffff, 0.84).strokeRoundedRect(14, 72, 362, 640, 42);
+  shelter.fillStyle(0x1f2b3a, 0.96).fillRoundedRect(28, 145, 334, 389, 29);
+  shelter.fillStyle(0x42556a, 0.52).fillRoundedRect(38, 158, 314, 344, 23);
+  shelter.fillStyle(0xe5c59a, 0.1).fillTriangle(195, 142, 80, 520, 310, 520);
+
+  for (let index = 0; index < 9; index += 1) {
+    const width = 24 + (index % 3) * 10;
+    const height = 32 + (index % 4) * 16;
+    const x = 40 + index * 36;
+    shelter.fillStyle(index % 2 ? 0x17212d : 0x263446, 0.92).fillRect(x, 501 - height, width, height);
+    if (index % 3 === 0) shelter.fillStyle(0xecc36e, 0.42).fillRect(x + 7, 482 - height / 2, 4, 6);
+  }
+  shelter.lineStyle(2, 0xffffff, 0.09).lineBetween(195, 155, 195, 507);
+  shelter.lineStyle(2, 0xffffff, 0.09).lineBetween(42, 331, 348, 331);
+
+  for (let index = 0; index < 20; index += 1) {
+    const x = 44 + ((index * 73) % 302);
+    const y = 165 + ((index * 97) % 322);
+    const rain = scene.add.line(0, 0, x, y, x - 8, y + 28, index % 4 === 0 ? 0xc7daf2 : 0xffffff, index % 4 === 0 ? 0.34 : 0.18)
+      .setOrigin(0)
+      .setDepth(-19);
+    if (!reducedMotion && index % 3 === 0) {
+      scene.tweens.add({ targets: rain, y: 17, alpha: { from: 0.12, to: 0.4 }, duration: 1_250 + index * 43, yoyo: true, repeat: -1 });
+    }
+  }
+  shelter.fillStyle(0x7c5f51, 0.1).fillRoundedRect(24, 542, 342, 120, 20);
+  shelter.lineStyle(1, 0x7c5f51, 0.13);
+  for (let y = 563; y < 660; y += 22) shelter.lineBetween(31, y, 359, y);
 }
 
 function createController(scene: Phaser.Scene, x = 334, y = 704) {
@@ -236,7 +299,7 @@ class WaterSortScene extends Phaser.Scene {
 
   create() {
     prepareHighDpiScene(this);
-    drawToyBackdrop(this, PALETTE.sky);
+    drawToyBackdrop(this, PALETTE.sky, 'water-lab', this.options.reducedMotion);
     this.createHud();
     this.controller = createController(this);
     this.startLevel();
@@ -616,7 +679,7 @@ class RescueScene extends Phaser.Scene {
 
   create() {
     prepareHighDpiScene(this);
-    drawToyBackdrop(this, PALETTE.mint);
+    drawToyBackdrop(this, PALETTE.mint, 'storm-shelter', this.options.reducedMotion);
     this.createHud();
     this.createKittenAndCage();
     this.createTrayFrame();

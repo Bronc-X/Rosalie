@@ -5,6 +5,8 @@ export {
   INTERVIEW_PRIMARY_FIRST_TOKEN_TIMEOUT_MS,
 } from './interview-model.mjs';
 
+import type { InterviewEngineState, InterviewOrchestration } from './interview-engine.mjs';
+
 export type InterviewAction = 'start' | 'reply' | 'review';
 export type InterviewRoleId = 'community' | 'pr' | 'brand' | 'product-marketing';
 export type InterviewExperienceId = 'entry' | 'junior' | 'senior';
@@ -25,6 +27,7 @@ export type InterviewRequest = {
   action: InterviewAction;
   profile: InterviewProfile;
   messages: InterviewMessage[];
+  engine?: InterviewEngineState;
 };
 
 export type InterviewJobRequest = InterviewRequest & { sessionId: string };
@@ -35,6 +38,7 @@ export type InterviewRecord = {
   profile: InterviewProfile;
   messages: InterviewMessage[];
   review: string;
+  engine?: InterviewEngineState;
   createdAt: string;
   updatedAt: string;
 };
@@ -64,7 +68,7 @@ export function normalizeInterviewRecord(input: unknown):
   | { ok: true; value: InterviewRecord }
   | { ok: false; error: string };
 export function mergeInterviewRecords(...collections: unknown[]): InterviewRecord[];
-export function buildInterviewMessages(request: InterviewRequest): Array<{ role: 'system' | InterviewMessageRole; content: string }>;
+export function buildInterviewMessages(request: InterviewRequest, orchestration?: InterviewOrchestration): Array<{ role: 'system' | InterviewMessageRole; content: string }>;
 export function extractAssistantContent(payload: unknown): string | null;
 export function extractAssistantDelta(payload: unknown): string | null;
 export function encodeInterviewEvent(event: InterviewJobEvent): string;

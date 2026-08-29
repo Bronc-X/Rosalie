@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 type SharePayload = {
   title: string;
@@ -31,6 +32,7 @@ declare global {
 }
 
 export function WechatShare() {
+  const pathname = usePathname();
   const [status, setStatus] = useState<'idle' | 'ready' | 'fallback'>('idle');
 
   useEffect(() => {
@@ -40,12 +42,19 @@ export function WechatShare() {
 
     let cancelled = false;
     const pageUrl = window.location.href.split('#')[0];
-    const shareData: SharePayload = {
-      title: '就差最后一步了',
-      desc: '点开，时间会告诉你答案。',
-      link: 'https://rosalie.toni.asia/',
-      imgUrl: 'https://rosalie.toni.asia/og.png',
-    };
+    const shareData: SharePayload = pathname === '/play/holdem'
+      ? {
+          title: '求你爸爸，给你多点筹码',
+          desc: '进牌桌，给我多点筹码。',
+          link: 'https://rosalie.toni.asia/play/holdem',
+          imgUrl: 'https://rosalie.toni.asia/og.png',
+        }
+      : {
+          title: '祝你成功喝到嘉士伯',
+          desc: '点开，时间会告诉你答案。',
+          link: 'https://rosalie.toni.asia/',
+          imgUrl: 'https://rosalie.toni.asia/og.png',
+        };
 
     void (async () => {
       try {
@@ -102,7 +111,7 @@ export function WechatShare() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [pathname]);
 
   return <span className="sr-only" data-wechat-share={status}>微信分享状态：{status}</span>;
 }

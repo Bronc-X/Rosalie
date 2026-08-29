@@ -24,6 +24,32 @@ test('ten distinct endless games are registered, including snake', () => {
   assert.equal(endless.isEndlessGameId('hole'), false);
 });
 
+test('every endless game owns a distinct world, palette and progression brief', () => {
+  const worlds = EXPECTED_IDS.map((id) => endless.ENDLESS_GAME_WORLDS?.[id]);
+
+  assert.ok(worlds.every((world) => world?.id && world?.motif && world?.phaseNames?.length === 4));
+  assert.equal(new Set(worlds.map((world) => world.id)).size, EXPECTED_IDS.length);
+  assert.equal(new Set(worlds.map((world) => world.motif)).size, EXPECTED_IDS.length);
+  assert.equal(new Set(worlds.map((world) => world.light?.join('|'))).size, EXPECTED_IDS.length);
+  assert.ok(endless.ENDLESS_GAME_CATALOG?.every((game) => game.worldId && game.objective));
+});
+
+test('run meta advances through bounded phases and exposes each game challenge', () => {
+  for (const id of EXPECTED_IDS) {
+    const state = endless.createEndlessGameState(id, 1212);
+    const opening = endless.getEndlessGameRunMeta?.(state);
+    state.score = 80;
+    state.combo = 99;
+    const late = endless.getEndlessGameRunMeta?.(state);
+
+    assert.equal(opening.phase, 0);
+    assert.equal(late.phase, 3);
+    assert.equal(late.multiplier, 4);
+    assert.ok(opening.challenge.length > 0);
+    assert.notEqual(opening.phaseName, late.phaseName);
+  }
+});
+
 test('2048-style rows merge once per move and report their score', () => {
   assert.deepEqual(endless.mergeTileLine([2, 2, 4, 4]), {
     line: [4, 8, 0, 0],
@@ -43,6 +69,23 @@ test('stack overlap keeps only the shared horizontal span', () => {
     { x: 55, width: 65 },
   );
   assert.equal(endless.getStackOverlap({ x: 0, width: 20 }, { x: 30, width: 20 }), null);
+});
+
+test('a prism bubble clears its nearby cluster instead of behaving like a reskinned bubble', () => {
+  const state = endless.createEndlessGameState('bubble', 1212);
+  state.bubbles = [
+    { x: 120, y: 180, radius: 22, prism: true, popped: false },
+    { x: 170, y: 180, radius: 20, prism: false, popped: false },
+    { x: 300, y: 180, radius: 20, prism: false, popped: false },
+  ];
+
+  endless.controlEndlessGame(state, { type: 'tap', x: 120, y: 180 });
+
+  assert.equal(state.bubbles[0].popped, true);
+  assert.equal(state.bubbles[1].popped, true);
+  assert.equal(state.bubbles[2].popped, false);
+  assert.equal(state.combo, 2);
+  assert.ok(state.score >= 4);
 });
 
 test('controller artwork accepts both loaded images and tinted canvas sources', () => {

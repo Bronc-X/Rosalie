@@ -19,6 +19,8 @@ import {
   createEndlessGameState,
   drawEndlessGame,
   ENDLESS_GAME_CATALOG,
+  ENDLESS_GAME_WORLDS,
+  getEndlessGameRunMeta,
 } from '@/lib/endless-games.mjs';
 import type { EndlessGameId, EndlessGameInput, EndlessGameState } from '@/lib/endless-games.mjs';
 
@@ -51,6 +53,7 @@ export function EndlessGameScreen({ gameId }: { gameId: EndlessGameId }) {
   const [runKey, setRunKey] = useState(0);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  const [runMeta, setRunMeta] = useState(() => getEndlessGameRunMeta(createEndlessGameState(gameId)));
   const [controllerSource, setControllerSource] = useState('/soft-pull-controller.webp');
   const [controllerPalette, setControllerPalette] = useState<ControllerPaletteId>('original');
 
@@ -58,7 +61,15 @@ export function EndlessGameScreen({ gameId }: { gameId: EndlessGameId }) {
   const visibleBest = Math.max(storedBest, score);
   const saveProgress = playerProgress.saveProgress;
   const controllerTone = controllerPaletteFilter(controllerPalette);
-  const screenStyle = { '--controller-tone': controllerTone } as CSSProperties;
+  const world = ENDLESS_GAME_WORLDS[gameId];
+  const screenStyle = {
+    '--controller-tone': controllerTone,
+    '--endless-shell-a': world.shell[0],
+    '--endless-shell-b': world.shell[1],
+    '--endless-shell-dark-a': world.shellDark[0],
+    '--endless-shell-dark-b': world.shellDark[1],
+    '--endless-world-accent': world.accent,
+  } as CSSProperties;
 
   useEffect(() => {
     let storedChoice: string | null = null;
@@ -116,24 +127,36 @@ export function EndlessGameScreen({ gameId }: { gameId: EndlessGameId }) {
     const context = canvas?.getContext('2d');
     if (!canvas || !context) return undefined;
 
-    const scale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    const scale = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
     canvas.width = Math.round(LOGICAL_WIDTH * scale);
     canvas.height = Math.round(LOGICAL_HEIGHT * scale);
     context.setTransform(scale, 0, 0, scale, 0, 0);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
 
     let animationFrame = 0;
     let previous = performance.now();
     let displayedScore = stateRef.current.score;
     let savedGameOver = false;
+    let displayedMeta = '';
 
     const loop = (timestamp: number) => {
       const state = advanceEndlessGame(stateRef.current, timestamp - previous);
       previous = timestamp;
+      state.dark = document.documentElement.dataset.theme === 'dark';
       drawEndlessGame(context, state, controllerImageRef.current);
+
+      const nextMeta = getEndlessGameRunMeta(state);
+      const metaSignature = `${nextMeta.phase}:${nextMeta.combo}:${nextMeta.multiplier}:${nextMeta.challenge}`;
+      if (metaSignature !== displayedMeta) {
+        displayedMeta = metaSignature;
+        setRunMeta(nextMeta);
+      }
 
       if (state.score !== displayedScore) {
         displayedScore = state.score;
         setScore(state.score);
+        if (state.score > 0) navigator.vibrate?.(6);
       }
 
       if (state.alive && state.score > persistedScoreRef.current && timestamp - lastPersistedAtRef.current > 2800) {
@@ -145,6 +168,7 @@ export function EndlessGameScreen({ gameId }: { gameId: EndlessGameId }) {
       if (!state.alive && !savedGameOver) {
         savedGameOver = true;
         setGameOver(true);
+        navigator.vibrate?.([18, 45, 24]);
         persistedScoreRef.current = Math.max(persistedScoreRef.current, state.score);
         saveProgress(gameId, 0, state.score);
       }
@@ -175,6 +199,7 @@ export function EndlessGameScreen({ gameId }: { gameId: EndlessGameId }) {
 
   function send(input: EndlessGameInput) {
     controlEndlessGame(stateRef.current, input);
+    setRunMeta(getEndlessGameRunMeta(stateRef.current));
   }
 
   function startPointer(event: ReactPointerEvent<HTMLCanvasElement>) {
@@ -240,6 +265,7 @@ export function EndlessGameScreen({ gameId }: { gameId: EndlessGameId }) {
     lastPersistedAtRef.current = 0;
     setScore(0);
     setGameOver(false);
+    setRunMeta(getEndlessGameRunMeta(stateRef.current));
     setRunKey((current) => current + 1);
     window.requestAnimationFrame(() => canvasRef.current?.focus());
   }
@@ -254,7 +280,7 @@ export function EndlessGameScreen({ gameId }: { gameId: EndlessGameId }) {
         <GameIcon gameId={gameId} size={26} />
         <div className="endless-hud-copy">
           <h1>{catalog.label}</h1>
-          <p>{catalog.instruction}</p>
+          <p>{catalog.objective}</p>
         </div>
         <dl>
           <div><dt>本局</dt><dd>{score}</dd></div>
@@ -263,6 +289,11 @@ export function EndlessGameScreen({ gameId }: { gameId: EndlessGameId }) {
       </header>
 
       <section className="endless-stage" aria-label={`${catalog.label}游戏区`}>
+        <div className="endless-stage-meta" aria-live="polite">
+          <span>{runMeta.phaseName}</span>
+          <b>{runMeta.challenge}</b>
+          {runMeta.combo >= 2 && <em>×{runMeta.multiplier} · {runMeta.combo} 连续</em>}
+        </div>
         <canvas
           ref={canvasRef}
           tabIndex={0}

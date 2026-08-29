@@ -6,9 +6,9 @@
   padding: max(14px, env(safe-area-inset-top)) 10px calc(112px + env(safe-area-inset-bottom));
   color: var(--stage-ink);
   background:
-    radial-gradient(circle at 10% 3%, rgb(190 174 235 / 24%), transparent 30%),
-    radial-gradient(circle at 94% 30%, rgb(246 183 137 / 20%), transparent 34%),
-    linear-gradient(165deg, color-mix(in srgb, var(--stage-canvas) 91%, #eeecff), var(--stage-canvas) 52%, color-mix(in srgb, var(--stage-canvas) 91%, #ffe7db));
+    radial-gradient(circle at 16% 18%, rgb(141 154 205 / 30%), transparent 27%),
+    radial-gradient(circle at 84% 72%, rgb(216 167 188 / 24%), transparent 29%),
+    linear-gradient(158deg, #e9e7e0 0%, #d5d8e6 45%, #cbc4d5 100%);
   font-family: var(--font-ui);
 }
 
@@ -17,18 +17,66 @@
   position: absolute;
   z-index: -1;
   inset: 0;
-  opacity: .07;
+  opacity: .24;
   pointer-events: none;
-  background-image: radial-gradient(circle, var(--stage-accent) 0 1px, transparent 1.3px);
-  background-size: 28px 28px;
+  background-image:
+    radial-gradient(circle at 6px 6px, rgb(64 76 119 / 52%) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 18px 20px, rgb(154 91 122 / 38%) 0 1px, transparent 1.3px);
+  background-size: 31px 31px, 43px 43px;
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 12%, #000 84%, transparent);
   mask-image: linear-gradient(180deg, transparent, #000 12%, #000 84%, transparent);
 }
 
-.link-game-glow { display: none; }
+.link-game-glow {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.link-game-glow::before {
+  content: "";
+  position: absolute;
+  width: min(92vw, 650px);
+  aspect-ratio: 1;
+  left: 50%;
+  top: 38%;
+  border: 1px solid rgb(75 86 132 / 14%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 48px rgb(75 86 132 / 5%),
+    0 0 0 114px rgb(75 86 132 / 4%),
+    0 0 0 190px rgb(75 86 132 / 3%);
+  transform: translate(-50%, -50%) rotate(-13deg);
+}
+.link-game-glow::after {
+  content: "";
+  position: absolute;
+  top: 9%;
+  right: 7%;
+  width: 78px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #eef0fa;
+  box-shadow: -18px 9px 0 2px #a7aec9, 0 18px 48px rgb(73 81 122 / 18%);
+  opacity: .62;
+}
+.link-game-glow i {
+  position: absolute;
+  width: 72px;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgb(97 111 168 / 46%), transparent);
+  transform: rotate(-23deg);
+  animation: link-comet 5.8s ease-in-out infinite;
+}
+.link-game-glow i:nth-child(1) { left: 5%; top: 26%; }
+.link-game-glow i:nth-child(2) { right: 3%; top: 52%; width: 94px; animation-delay: -2.2s; }
+.link-game-glow i:nth-child(3) { left: 12%; top: 78%; width: 55px; animation-delay: -4.1s; }
 
 .link-game-header {
   position: relative;
+  z-index: 1;
   width: min(520px, 100%);
   min-height: 64px;
   margin: 0 auto 12px;
@@ -84,6 +132,7 @@
 
 .link-game-card {
   position: relative;
+  z-index: 1;
   width: min(510px, 100%);
   margin: 0 auto;
   padding: 12px;
@@ -119,8 +168,11 @@
   padding: 8px;
   border: 1px solid var(--stage-line);
   border-radius: var(--radius-panel);
-  background: color-mix(in srgb, var(--stage-surface-solid) 54%, transparent);
-  box-shadow: inset 0 1px 10px rgb(90 54 69 / 6%);
+  background:
+    radial-gradient(circle at 52% 38%, rgb(255 255 255 / 78%), transparent 52%),
+    repeating-radial-gradient(circle at 50% 50%, rgb(91 104 151 / 8%) 0 1px, transparent 1px 32px),
+    color-mix(in srgb, var(--stage-surface-solid) 60%, #dfe3f2);
+  box-shadow: inset 0 1px 10px rgb(57 65 98 / 8%), 0 16px 34px rgb(66 70 101 / 8%);
 }
 .link-board {
   position: relative;
@@ -276,11 +328,16 @@
 
 html[data-theme="dark"] .link-game-page {
   background:
-    radial-gradient(circle at 10% 3%, rgb(91 64 126 / 24%), transparent 30%),
-    radial-gradient(circle at 94% 30%, rgb(128 66 54 / 18%), transparent 34%),
-    linear-gradient(165deg, #0a0709, #120b0f 52%, #180d0c);
+    radial-gradient(circle at 16% 18%, rgb(80 93 143 / 18%), transparent 27%),
+    radial-gradient(circle at 84% 72%, rgb(121 69 95 / 15%), transparent 29%),
+    linear-gradient(158deg, #090c14 0%, #111625 48%, #171320 100%);
 }
-html[data-theme="dark"] .link-board button { background: color-mix(in srgb, var(--stage-surface-solid) 90%, #422331); }
+html[data-theme="dark"] .link-game-glow::before { border-color: rgb(153 168 226 / 12%); box-shadow: 0 0 0 48px rgb(107 123 180 / 4%), 0 0 0 114px rgb(107 123 180 / 3%), 0 0 0 190px rgb(107 123 180 / 2%); }
+html[data-theme="dark"] .link-game-glow::after { background: #969ebd; box-shadow: -18px 9px 0 2px #242b42, 0 18px 48px rgb(0 0 0 / 28%); opacity: .46; }
+html[data-theme="dark"] :where(.link-game-header > button, .link-game-card, .link-win) { border-color: var(--stage-line); background: var(--stage-surface-solid); box-shadow: inset 0 1px var(--stage-highlight), 0 16px 42px rgb(0 0 0 / 22%); -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-theme="dark"] .link-board button { border-color: var(--stage-line); background: #18191e; box-shadow: inset 0 1px var(--stage-highlight); }
+html[data-theme="dark"] .link-board button.is-selected { border-color: var(--stage-accent); background: color-mix(in srgb, var(--stage-accent) 10%, #18191e); box-shadow: inset 0 0 0 1px var(--stage-accent); }
+html[data-theme="dark"] .link-win button { color: #111216; background: var(--stage-accent); box-shadow: none; }
 
 @keyframes link-hint {
   0%, 100% { transform: translateY(0); box-shadow: 0 0 0 0 color-mix(in srgb, var(--stage-accent) 0%, transparent); }
@@ -289,6 +346,7 @@ html[data-theme="dark"] .link-board button { background: color-mix(in srgb, var(
 @keyframes link-mismatch { 0%, 100% { transform: translateX(0); } 30% { transform: translateX(-4px); } 65% { transform: translateX(4px); } }
 @keyframes link-line { from { stroke-dashoffset: 1; opacity: 0; } 25% { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }
 @keyframes link-win-in { from { opacity: 0; transform: scale(.96); } }
+@keyframes link-comet { 0%, 100% { opacity: .22; transform: translate3d(-8px, 8px, 0) rotate(-23deg); } 50% { opacity: .78; transform: translate3d(14px, -7px, 0) rotate(-23deg); } }
 
 @media (max-width: 390px) {
   .link-game-page { padding-inline: 7px; }
@@ -310,5 +368,6 @@ html[data-theme="dark"] .link-board button { background: color-mix(in srgb, var(
 @media (prefers-reduced-motion: reduce) {
   .link-board button,
   .link-path polyline,
-  .link-win { animation: none !important; transition: none !important; }
+  .link-win,
+  .link-game-glow i { animation: none !important; transition: none !important; }
 }

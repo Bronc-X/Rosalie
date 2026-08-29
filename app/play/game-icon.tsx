@@ -5,6 +5,7 @@ import {
   ArrowsClockwise,
   BowlFood,
   CarProfile,
+  CardsThree,
   Cat,
   CirclesThree,
   CloudArrowUp,
@@ -28,6 +29,7 @@ import type { Icon } from '@phosphor-icons/react';
 import type { GameId } from '@/lib/player-progress.mjs';
 
 const GAME_ICONS: Record<GameId, Icon> = {
+  holdem: CardsThree,
   hole: CirclesThree,
   sand: GridFour,
   parking: CarProfile,
@@ -49,6 +51,7 @@ const GAME_ICONS: Record<GameId, Icon> = {
 };
 
 const GAME_ACCENTS: Record<GameId, string> = {
+  holdem: 'gold',
   hole: 'ink',
   sand: 'apricot',
   parking: 'lilac',

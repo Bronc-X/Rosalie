@@ -376,18 +376,24 @@
 .treehole-loading i:nth-child(3) { animation-delay: .24s; }
 
 html[data-theme="dark"] .treehole-page {
-  background:
-    radial-gradient(circle at 10% 2%, rgb(130 70 113 / 25%), transparent 31%),
-    radial-gradient(circle at 92% 26%, rgb(144 78 49 / 18%), transparent 32%),
-    linear-gradient(165deg, #0b090d 0%, var(--stage-canvas) 48%, #1b0f0e 100%);
+  background: var(--stage-canvas);
+  background-image: none;
 }
 
+html[data-theme="dark"] .treehole-page::before { opacity: .025; }
+html[data-theme="dark"] .treehole-backdrop { display: none; }
+
 html[data-theme="dark"] .treehole-compose,
-html[data-theme="dark"] .treehole-messages,
 html[data-theme="dark"] .message-list > .message-card,
 html[data-theme="dark"] .reply-form {
-  background: color-mix(in srgb, var(--stage-surface-solid) 84%, transparent);
+  border-color: var(--stage-line);
+  background: var(--stage-surface-solid);
+  box-shadow: inset 0 1px var(--stage-highlight);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
+
+html[data-theme="dark"] .treehole-messages { border-color: transparent; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
 
 html[data-theme="dark"] .message-card .reply-list > li {
   border-color: transparent;
@@ -404,8 +410,21 @@ html[data-theme="dark"] .treehole-list-heading button,
 html[data-theme="dark"] .treehole-empty button,
 html[data-theme="dark"] .reply-trigger,
 html[data-theme="dark"] .reply-form-actions button {
-  background: color-mix(in srgb, var(--stage-surface-solid) 86%, transparent);
+  border-color: var(--stage-line);
+  color: var(--stage-muted);
+  background: #101115;
+  box-shadow: inset 0 1px var(--stage-highlight);
 }
+
+html[data-theme="dark"] .treehole-form-bottom button,
+html[data-theme="dark"] .reply-form-actions button:last-of-type {
+  color: #111216;
+  background: var(--stage-accent);
+  background-image: none;
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .message-card::before { background: var(--stage-accent); opacity: .68; }
 
 @keyframes message-arrive {
   from { opacity: 0; transform: translateY(8px); }

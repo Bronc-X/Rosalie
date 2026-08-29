@@ -1,5 +1,5 @@
 export type GameId =
-  | 'hole' | 'sand' | 'parking' | 'screw' | 'water' | 'rescue' | 'arrow' | 'connect'
+  | 'holdem' | 'hole' | 'sand' | 'parking' | 'screw' | 'water' | 'rescue' | 'arrow' | 'connect'
   | 'snake' | 'bubble' | 'merge' | 'breakout' | 'hop' | 'stack' | 'drift' | 'wave' | 'slice' | 'orbit';
 export type GameProgress = { gameId: GameId; level: number; bestScore: number };
 export const GAME_IDS: GameId[];

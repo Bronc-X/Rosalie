@@ -8,7 +8,11 @@ import type { GameId } from '@/lib/player-progress.mjs';
 import { GameIcon, GameLaunchIcon } from './game-icon';
 import { usePlayerProgress } from './use-player-progress';
 
-type GameCard = { id: GameId; label: string; action: string; endless?: boolean };
+type GameCard = { id: GameId; label: string; action: string; endless?: boolean; href?: string };
+
+const TABLE_GAMES: GameCard[] = [
+  { id: 'holdem', label: '德州牌桌', action: '最多 8 名对手，难度可选', href: '/play/holdem' },
+];
 
 const CORE_GAMES: GameCard[] = [
   { id: 'hole', label: '黑洞降临', action: '拖动吞下更小的物体' },
@@ -22,6 +26,7 @@ const CORE_GAMES: GameCard[] = [
 ];
 
 const GAMES: GameCard[] = [
+  ...TABLE_GAMES,
   ...CORE_GAMES,
   ...ENDLESS_GAME_CATALOG.map((game) => ({
     id: game.id,
@@ -32,7 +37,7 @@ const GAMES: GameCard[] = [
 ];
 
 export function GameLab() {
-  const [activeGame, setActiveGame] = useState<GameId>('hole');
+  const [activeGame, setActiveGame] = useState<GameId>('holdem');
   const playerProgress = usePlayerProgress();
   const active = GAMES.find((game) => game.id === activeGame) ?? GAMES[0];
   const activeLevel = (playerProgress.progress[activeGame]?.level ?? 0) + 1;
@@ -59,7 +64,7 @@ export function GameLab() {
               <span className="game-progress-label">{active.endless ? `最高 ${bestScore} 分` : `第 ${activeLevel} 关`}</span>
               <h2>{active.label}</h2>
               <p>{active.action}</p>
-              <Link href={`/play/${active.id}`}>开始游戏 <GameLaunchIcon /></Link>
+              <Link href={active.href ?? `/play/${active.id}`}>开始游戏 <GameLaunchIcon /></Link>
             </div>
             <div className="game-portal-art" aria-hidden="true">
               <i />
@@ -68,6 +73,29 @@ export function GameLab() {
           </section>
         ) : <div className="game-save-loading" role="status"><i /><p>读取进度</p></div>}
       </div>
+
+      <section className="game-collection game-collection-table" aria-labelledby="game-collection-table">
+        <div className="game-collection-heading">
+          <h2 id="game-collection-table">牌桌</h2>
+          <span>1 款</span>
+        </div>
+        <div className="game-grid game-grid-featured" role="list">
+          {TABLE_GAMES.map((game) => (
+            <Link
+              className={activeGame === game.id ? 'is-active' : ''}
+              role="listitem"
+              key={game.id}
+              href={game.href ?? `/play/${game.id}`}
+              onPointerEnter={() => setActiveGame(game.id)}
+              onFocus={() => setActiveGame(game.id)}
+            >
+              <GameIcon gameId={game.id} />
+              <span><strong>{game.label}</strong><small>最高 {playerProgress.progress[game.id]?.bestScore ?? 1_000} 筹码</small></span>
+              <GameLaunchIcon />
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <section className="game-collection" aria-labelledby="game-collection-core">
         <div className="game-collection-heading">
@@ -95,7 +123,7 @@ export function GameLab() {
       <section className="game-collection" aria-labelledby="game-collection-endless">
         <div className="game-collection-heading">
           <h2 id="game-collection-endless">无尽</h2>
-          <span>{GAMES.length - CORE_GAMES.length} 款</span>
+          <span>{GAMES.filter((game) => game.endless).length} 款</span>
         </div>
         <div className="game-grid" role="list">
           {GAMES.filter((game) => game.endless).map((game) => (

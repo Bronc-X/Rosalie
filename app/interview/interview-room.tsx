@@ -1,16 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  ArrowClockwise,
-  ArrowUp,
-  CaretRight,
-  CheckCircle,
-  ClockCounterClockwise,
-  Microphone,
-  Plus,
-  X,
-} from '@phosphor-icons/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 
@@ -32,12 +22,18 @@ import type {
   InterviewRecord,
   InterviewRoleId,
 } from '@/lib/interview.mjs';
+import {
+  getInterviewEngineStatus,
+  INTERVIEW_MAX_TURNS,
+  normalizeInterviewEngineState,
+} from '@/lib/interview-engine.mjs';
+import type { InterviewEngineState } from '@/lib/interview-engine.mjs';
 import { gsap, useGSAP } from '@/lib/gsap-client';
 
 const LEGACY_STORAGE_KEY = 'rosalie-interview-session-v1';
 const HISTORY_STORAGE_KEY = 'rosalie-interview-history-v1';
 const ACTIVE_STORAGE_KEY = 'rosalie-interview-active-v1';
-const MAX_QUESTIONS = 8;
+const MAX_QUESTIONS = INTERVIEW_MAX_TURNS;
 
 type Stage = 'setup' | 'interview' | 'review';
 type RequestState = 'idle' | 'waiting';
@@ -145,21 +141,12 @@ function experienceLabel(experience: InterviewExperienceId) {
 }
 
 function progressLabel(event: InterviewJobEvent) {
-  const name = typeof event.name === 'string' ? event.name : '';
-  if (event.type === 'job.started') return '已接收';
-  if (event.type === 'step.started') return typeof event.title === 'string' ? event.title : '继续处理';
-  if (event.type === 'tool.started' && name === 'prepare_context') return '整理对话';
-  if (event.type === 'tool.completed' && name === 'prepare_context') return '对话已整理';
-  if (event.type === 'tool.started' && name === 'call_interviewer') return '连接面试官';
-  if (event.type === 'tool.completed' && name === 'call_interviewer') return '回答已生成';
-  if (event.type === 'tool.started' && name === 'call_fallback_interviewer') return '切换备用模型';
-  if (event.type === 'tool.completed' && name === 'call_fallback_interviewer') return '备用模型已回应';
-  if (event.type === 'tool.started' && name === 'save_record') return '保存记录';
-  if (event.type === 'tool.completed' && name === 'save_record') return '记录已保存';
-  if (event.type === 'artifact.created') return '内容已保存';
-  if (event.type === 'job.completed') return '完成';
   if (event.type === 'step.failed' && event.error === 'HISTORY_UNAVAILABLE') return '云端未保存，本机仍保留';
   if (event.type === 'step.failed') return '生成中断';
+  if (typeof event.outputSummary === 'string') return event.outputSummary;
+  if (typeof event.inputSummary === 'string') return event.inputSummary;
+  if (typeof event.title === 'string') return event.title;
+  if (event.type === 'job.completed') return '完成';
   return '正在处理';
 }
 
@@ -215,6 +202,7 @@ export function InterviewRoom() {
   const [profile, setProfile] = useState<InterviewProfile>(DEFAULT_PROFILE);
   const [messages, setMessages] = useState<InterviewMessage[]>([]);
   const [review, setReview] = useState('');
+  const [interviewEngine, setInterviewEngine] = useState<InterviewEngineState | null>(null);
   const [answer, setAnswer] = useState('');
   const [requestState, setRequestState] = useState<RequestState>('idle');
   const [error, setError] = useState('');
@@ -240,6 +228,10 @@ export function InterviewRoom() {
     [messages],
   );
   const hasCandidateAnswer = messages.some((message) => message.role === 'user');
+  const engineStatus = useMemo(
+    () => getInterviewEngineStatus(profile, interviewEngine),
+    [interviewEngine, profile],
+  );
 
   useGSAP(() => {
     if (!restored || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -285,6 +277,7 @@ export function InterviewRoom() {
         setProfile(activeRecord.profile);
         setMessages(activeRecord.messages);
         setReview(activeRecord.review);
+        setInterviewEngine(activeRecord.engine ?? null);
       }
       setRestored(true);
     }, 0);
@@ -327,6 +320,7 @@ export function InterviewRoom() {
         profile,
         messages,
         review,
+        ...(interviewEngine ? { engine: interviewEngine } : {}),
         createdAt,
         updatedAt: new Date().toISOString(),
       };
@@ -338,7 +332,7 @@ export function InterviewRoom() {
       try { window.localStorage.setItem(ACTIVE_STORAGE_KEY, sessionId); } catch { /* in-memory copy remains */ }
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [createdAt, messages, profile, restored, review, sessionId, stage]);
+  }, [createdAt, interviewEngine, messages, profile, restored, review, sessionId, stage]);
 
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -359,12 +353,18 @@ export function InterviewRoom() {
     const response = await fetch('/api/interview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, sessionId: activeSessionId, profile, messages: nextMessages }),
+      body: JSON.stringify({
+        action,
+        sessionId: activeSessionId,
+        profile,
+        messages: nextMessages,
+        ...(interviewEngine ? { engine: interviewEngine } : {}),
+      }),
     });
     const contentType = response.headers.get('content-type') ?? '';
     if (!response.ok || !contentType.includes('text/event-stream')) {
       const data = await response.json().catch(() => ({})) as { ok?: boolean; message?: string; error?: string };
-      if (response.ok && data.ok && data.message) return data.message;
+      if (response.ok && data.ok && data.message) return { content: data.message, engine: interviewEngine };
       throw new Error(data.error ?? 'INTERVIEW_UNAVAILABLE');
     }
     if (!response.body) throw new Error('INTERVIEW_UNAVAILABLE');
@@ -375,6 +375,7 @@ export function InterviewRoom() {
     let finalContent = '';
     let streamedContent = '';
     let failure = '';
+    let resolvedEngine = interviewEngine;
 
     const consumeFrame = (frame: string) => {
       const event = parseInterviewEventFrame(frame);
@@ -392,9 +393,13 @@ export function InterviewRoom() {
       setProgressEvents((current) => [...current, event].slice(-12));
       if (event.type === 'artifact.created') {
         const data = event.data && typeof event.data === 'object'
-          ? event.data as { content?: unknown }
+          ? event.data as { content?: unknown; engine?: unknown }
           : null;
         if (typeof data?.content === 'string') finalContent = data.content;
+        if (data?.engine) {
+          const normalizedEngine = normalizeInterviewEngineState(data.engine, profile);
+          if (normalizedEngine.ok) resolvedEngine = normalizedEngine.value;
+        }
       }
       if (event.type === 'step.failed' && event.error !== 'HISTORY_UNAVAILABLE') {
         failure = typeof event.error === 'string' ? event.error : 'INTERVIEW_UNAVAILABLE';
@@ -413,7 +418,7 @@ export function InterviewRoom() {
     if (failure) throw new Error(failure);
     const content = finalContent || streamedContent;
     if (!content) throw new Error('INTERVIEW_UNAVAILABLE');
-    return content;
+    return { content, engine: resolvedEngine };
   }
 
   async function startInterview(event: FormEvent<HTMLFormElement>) {
@@ -425,12 +430,14 @@ export function InterviewRoom() {
     setError('');
     setMessages([]);
     setReview('');
+    setInterviewEngine(null);
 
     try {
-      const message = await askAgent('start', [], nextSessionId);
+      const response = await askAgent('start', [], nextSessionId);
       setSessionId(nextSessionId);
       setCreatedAt(now);
-      setMessages([{ role: 'assistant', content: message }]);
+      setInterviewEngine(response.engine);
+      setMessages([{ role: 'assistant', content: response.content }]);
       setStage('interview');
       window.setTimeout(() => textareaRef.current?.focus(), 80);
     } catch (caught) {
@@ -455,11 +462,12 @@ export function InterviewRoom() {
 
     try {
       const response = await askAgent(shouldReview ? 'review' : 'reply', nextMessages, sessionId);
+      setInterviewEngine(response.engine);
       if (shouldReview) {
-        setReview(response);
+        setReview(response.content);
         setStage('review');
       } else {
-        setMessages((current) => [...current, { role: 'assistant', content: response }]);
+        setMessages((current) => [...current, { role: 'assistant', content: response.content }]);
       }
     } catch (caught) {
       setMessages(previousMessages);
@@ -476,7 +484,8 @@ export function InterviewRoom() {
     setRequestState('waiting');
     try {
       const response = await askAgent('review', messages, sessionId);
-      setReview(response);
+      setInterviewEngine(response.engine);
+      setReview(response.content);
       setStage('review');
     } catch (caught) {
       setError(friendlyError(caught instanceof Error ? caught.message : undefined));
@@ -492,6 +501,7 @@ export function InterviewRoom() {
     setCreatedAt('');
     setMessages([]);
     setReview('');
+    setInterviewEngine(null);
     setAnswer('');
     setError('');
     setProgressEvents([]);
@@ -507,6 +517,7 @@ export function InterviewRoom() {
     setProfile(record.profile);
     setMessages(record.messages);
     setReview(record.review);
+    setInterviewEngine(record.engine ?? null);
     setAnswer('');
     setError('');
     setHistoryOpen(false);
@@ -589,7 +600,7 @@ export function InterviewRoom() {
           aria-label={`面试记录，共 ${records.length} 场`}
           onClick={() => setHistoryOpen(true)}
           disabled={requestState === 'waiting'}
-        ><ClockCounterClockwise aria-hidden="true" />记录 <b>{records.length}</b></button>
+        >记录 <b>{records.length}</b></button>
       </header>
 
       {stage === 'setup' && (
@@ -652,7 +663,7 @@ export function InterviewRoom() {
             <button className="interview-primary-button" type="submit" disabled={requestState === 'waiting' || !profile.company.trim()}>
               {requestState === 'waiting'
                 ? <><span className="interview-button-dots" aria-hidden="true"><i /><i /><i /></span>正在连接</>
-                : <>开始面试<ArrowUp aria-hidden="true" /></>}
+                : '开始面试'}
             </button>
             {requestState === 'waiting' && <ProgressWorkspace events={progressEvents} draft={liveDraft} elapsed={elapsed} />}
             {error && <p className="interview-error" role="alert">{error}</p>}
@@ -664,8 +675,12 @@ export function InterviewRoom() {
       {stage === 'interview' && (
         <section className="interview-session" data-interview-stage aria-label="模拟面试对话">
           <div className="interview-session-meta">
-            <div className="interview-session-meta-copy"><span>{profile.company}</span><b>{roleLabel(profile.role)}</b></div>
-            <div className="interview-session-state"><span>{experienceLabel(profile.experience)}</span><strong>{questionCount}/{MAX_QUESTIONS}</strong></div>
+            <div className="interview-session-meta-copy">
+              <span>{profile.company}</span>
+              <b>{roleLabel(profile.role)}</b>
+              <small>{engineStatus.competency}，{engineStatus.depth}</small>
+            </div>
+            <div className="interview-session-state"><span>{experienceLabel(profile.experience)}</span><strong>{questionCount}/{engineStatus.maxTurns}</strong></div>
             <div className="interview-session-progress" aria-hidden="true"><i style={{ width: `${Math.min(100, (questionCount / MAX_QUESTIONS) * 100)}%` }} /></div>
           </div>
 
@@ -707,11 +722,11 @@ export function InterviewRoom() {
                   onPointerUp={stopVoice}
                   onPointerCancel={stopVoice}
                   onContextMenu={(event) => event.preventDefault()}
-                ><Microphone aria-hidden="true" />{voiceState === 'listening' ? '松开结束' : voiceState === 'processing' ? '识别中' : '按住说话'}</button>
+                >{voiceState === 'listening' ? '松开结束' : voiceState === 'processing' ? '识别中' : '按住说话'}</button>
               )}
               <span>{voiceHint || `${answer.length}/${INTERVIEW_MESSAGE_MAX_LENGTH}`}</span>
               <button className="interview-send-button" type="submit" disabled={!answer.trim() || requestState === 'waiting'}>
-                <span>{questionCount >= MAX_QUESTIONS ? '提交复盘' : '发送'}</span><ArrowUp aria-hidden="true" />
+                <span>{questionCount >= MAX_QUESTIONS ? '提交复盘' : '提交回答'}</span>
               </button>
             </div>
           </form>
@@ -719,8 +734,8 @@ export function InterviewRoom() {
           {error && <div className="interview-inline-error" role="alert"><span>{error}</span><button type="button" onClick={() => setError('')}>关闭</button></div>}
 
           <div className="interview-session-actions">
-            <button type="button" onClick={() => void finishInterview()} disabled={!hasCandidateAnswer || requestState === 'waiting'}><CheckCircle aria-hidden="true" />结束并复盘</button>
-            <button type="button" onClick={resetInterview} disabled={requestState === 'waiting'}><ArrowClockwise aria-hidden="true" />重新开始</button>
+            <button type="button" onClick={() => void finishInterview()} disabled={!hasCandidateAnswer || requestState === 'waiting'}>结束并复盘</button>
+            <button type="button" onClick={resetInterview} disabled={requestState === 'waiting'}>重新开始</button>
           </div>
           <div ref={transcriptEndRef} />
         </section>
@@ -752,7 +767,7 @@ export function InterviewRoom() {
           <section className="interview-history-sheet" role="dialog" aria-modal="true" aria-labelledby="interview-history-title">
             <header>
               <div><span>{records.length} 场</span><h2 id="interview-history-title">面试记录</h2></div>
-              <button type="button" aria-label="关闭面试记录" onClick={() => setHistoryOpen(false)}><X aria-hidden="true" /></button>
+              <button type="button" aria-label="关闭面试记录" onClick={() => setHistoryOpen(false)}>关闭</button>
             </header>
             {records.length ? (
               <ol>
@@ -762,13 +777,12 @@ export function InterviewRoom() {
                       <time>{new Date(record.updatedAt).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</time>
                       <b>{record.profile.company}</b>
                       <span>{roleLabel(record.profile.role)}，{record.messages.filter((message) => message.role === 'user').length} 个回答，{record.stage === 'review' ? '已复盘' : '进行中'}</span>
-                      <CaretRight aria-hidden="true" />
                     </button>
                   </li>
                 ))}
               </ol>
             ) : <p className="interview-history-empty">暂无记录</p>}
-            <button className="interview-history-new" type="button" onClick={() => { resetInterview(); setHistoryOpen(false); }}><Plus aria-hidden="true" />新面试</button>
+            <button className="interview-history-new" type="button" onClick={() => { resetInterview(); setHistoryOpen(false); }}>新面试</button>
           </section>
         </div>
       )}

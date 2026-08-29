@@ -61,27 +61,71 @@ class ToyScene extends Phaser.Scene {
     this.time.delayedCall(58, () => this.cameras.main.zoomTo(1, 100, 'Quad.Out', true));
   }
 
-  protected drawBackdrop(accent: number, warm: number) {
-    this.cameras.main.setBackgroundColor('#fff7f2');
-    const background = this.add.graphics();
-    background.fillStyle(accent, 0.16).fillCircle(-8, 95, 170);
-    background.fillStyle(warm, 0.2).fillCircle(402, 292, 190);
-    background.fillStyle(0xbfc9ff, 0.12).fillCircle(24, 760, 210);
-    background.fillStyle(0xffffff, 0.58).fillRoundedRect(16, 76, 358, 650, 44);
-    background.lineStyle(1, 0xffffff, 0.9).strokeRoundedRect(16, 76, 358, 650, 44);
+  protected drawBackdrop(accent: number, warm: number, world: 'garage' | 'workshop') {
+    if (world === 'garage') {
+      this.drawParkingGarage(accent, warm);
+      return;
+    }
+    this.drawScrewWorkshop(accent, warm);
+  }
 
-    for (let index = 0; index < 17; index += 1) {
-      const x = 28 + ((index * 67) % 335);
-      const y = 98 + ((index * 103) % 605);
-      const dot = this.add.circle(x, y, index % 4 === 0 ? 2.2 : 1.25, index % 3 === 0 ? accent : warm, 0.3);
-      if (!this.options.reducedMotion) {
-        this.tweens.add({
-          targets: dot,
-          alpha: { from: 0.12, to: 0.55 },
-          duration: 1_250 + index * 47,
-          yoyo: true,
-          repeat: -1,
-        });
+  private drawParkingGarage(accent: number, warm: number) {
+    this.cameras.main.setBackgroundColor('#dfe5e2');
+    const garage = this.add.graphics();
+    garage.fillStyle(0x566067, 0.22).fillRoundedRect(19, 81, 352, 630, 38);
+    garage.fillStyle(0xecefec, 1).fillRoundedRect(15, 74, 360, 634, 38);
+    garage.lineStyle(1, 0xffffff, 0.76).strokeRoundedRect(15, 74, 360, 634, 38);
+    garage.fillStyle(0x252f35, 0.96).fillRoundedRect(23, 146, 344, 500, 23);
+    garage.fillStyle(0x11191f, 0.32).fillRect(23, 474, 344, 172);
+
+    garage.fillStyle(0xf6f2df, 0.86).fillRoundedRect(58, 88, 96, 8, 4);
+    garage.fillStyle(0xf6f2df, 0.86).fillRoundedRect(236, 88, 96, 8, 4);
+    garage.fillStyle(accent, 0.68).fillRoundedRect(37, 119, 42, 8, 4);
+    garage.fillStyle(warm, 0.68).fillRoundedRect(311, 119, 42, 8, 4);
+
+    garage.lineStyle(2, 0xe7e5c9, 0.34);
+    for (let lane = 0; lane < 4; lane += 1) {
+      const x = 51 + lane * 96;
+      garage.beginPath().moveTo(195, 153).lineTo(x, 641).strokePath();
+    }
+    garage.lineStyle(2, 0xffffff, 0.18);
+    for (let y = 185; y < 625; y += 74) garage.lineBetween(33, y, 357, y);
+
+    const lamp = this.add.rectangle(195, 90, 70, 7, 0xfff8d8, 0.5).setDepth(0);
+    if (!this.options.reducedMotion) {
+      this.tweens.add({ targets: lamp, alpha: { from: 0.34, to: 0.76 }, duration: 1_760, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+    }
+  }
+
+  private drawScrewWorkshop(accent: number, warm: number) {
+    this.cameras.main.setBackgroundColor('#e8dfd6');
+    const workshop = this.add.graphics();
+    workshop.fillStyle(0x7b675c, 0.17).fillRoundedRect(20, 80, 350, 633, 38);
+    workshop.fillStyle(0xf3ebe2, 1).fillRoundedRect(15, 74, 360, 634, 38);
+    workshop.lineStyle(1, 0xffffff, 0.8).strokeRoundedRect(15, 74, 360, 634, 38);
+    workshop.fillStyle(0xb8a18f, 0.22).fillRoundedRect(24, 150, 342, 393, 24);
+    workshop.fillStyle(0x705d52, 0.12).fillRoundedRect(24, 536, 342, 114, 18);
+    workshop.lineStyle(2, 0x6f5c50, 0.17).lineBetween(25, 544, 365, 544);
+    workshop.lineStyle(1, 0xffffff, 0.4).lineBetween(25, 548, 365, 548);
+
+    for (let row = 0; row < 12; row += 1) {
+      for (let column = 0; column < 11; column += 1) {
+        workshop.fillStyle((row + column) % 5 === 0 ? accent : 0x735f55, (row + column) % 5 === 0 ? 0.18 : 0.12)
+          .fillCircle(42 + column * 31, 169 + row * 30, 1.8);
+      }
+    }
+
+    workshop.lineStyle(5, warm, 0.24)
+      .beginPath().moveTo(48, 582).lineTo(86, 611).lineTo(52, 630).strokePath();
+    workshop.lineStyle(4, accent, 0.2)
+      .beginPath().moveTo(314, 574).lineTo(342, 610).lineTo(312, 633).strokePath();
+    workshop.lineStyle(2, 0x665247, 0.18).strokeCircle(73, 603, 23);
+    workshop.lineStyle(2, 0x665247, 0.18).strokeCircle(326, 603, 21);
+
+    for (let index = 0; index < 8; index += 1) {
+      const dust = this.add.circle(46 + ((index * 71) % 290), 174 + ((index * 83) % 430), index % 3 === 0 ? 2 : 1, index % 2 ? warm : accent, 0.24).setDepth(0);
+      if (!this.options.reducedMotion && index % 2 === 0) {
+        this.tweens.add({ targets: dust, y: dust.y - 11, alpha: { from: 0.1, to: 0.42 }, duration: 2_000 + index * 120, yoyo: true, repeat: -1 });
       }
     }
   }
@@ -216,7 +260,7 @@ class ParkingScene extends ToyScene {
 
   create() {
     prepareHighDpiScene(this);
-    this.drawBackdrop(ROSE, PEACH);
+    this.drawBackdrop(ROSE, PEACH, 'garage');
     this.drawBoard();
     this.createHud();
     this.carsLayer = this.add.container(0, 0).setDepth(8);
@@ -598,7 +642,7 @@ class ScrewScene extends ToyScene {
 
   create() {
     prepareHighDpiScene(this);
-    this.drawBackdrop(LILAC, PEACH);
+    this.drawBackdrop(LILAC, PEACH, 'workshop');
     this.createHud();
     this.drawTray();
     this.boardLayer = this.add.container(0, 0).setDepth(7);

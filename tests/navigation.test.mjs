@@ -12,9 +12,9 @@ test('nested game routes keep the global game destination active', () => {
   assert.equal(siteUi.isPrimaryNavActive?.('/treehole', '/'), false);
 });
 
-test('the mobile dock allocates five equal columns without reducing touch height', async () => {
+test('the mobile dock allocates six equal columns without reducing touch height', async () => {
   const source = await readFile(new URL('../app/site-chrome.css', import.meta.url), 'utf8');
-  assert.match(source, /grid-template-columns:\s*repeat\(5,\s*1fr\)/);
+  assert.match(source, /grid-template-columns:\s*repeat\(6,\s*1fr\)/);
   assert.match(source, /\.site-dock a\s*\{[^}]*min-height:\s*56px/s);
 });
 

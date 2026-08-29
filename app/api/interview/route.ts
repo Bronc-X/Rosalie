@@ -11,6 +11,10 @@ import {
 } from '@/lib/interview.mjs';
 import type { InterviewJobEvent, InterviewRecord } from '@/lib/interview.mjs';
 import {
+  commitInterviewQuestion,
+  prepareInterviewTurn,
+} from '@/lib/interview-engine.mjs';
+import {
   INTERVIEW_FALLBACK_MODEL_ID,
   INTERVIEW_MODEL_ID,
   INTERVIEW_MODEL_LABEL,
@@ -248,11 +252,36 @@ export async function POST(request: NextRequest) {
       }));
 
       try {
-        const providerMessages = buildInterviewMessages(normalized.value);
+        const orchestration = prepareInterviewTurn(normalized.value);
+        const providerMessages = buildInterviewMessages(normalized.value, orchestration);
         emit(eventAt('tool.completed', jobId, {
           callId: contextCallId,
           name: 'prepare_context',
-          outputSummary: `已整理 ${providerMessages.length} 条上下文`,
+          outputSummary: `已整理 ${providerMessages.length} 条上下文 · ${orchestration.decision.competencyLabel}`,
+        }));
+        if (orchestration.evaluation) {
+          const evaluationCallId = toolId('evaluation');
+          emit(eventAt('tool.started', jobId, {
+            callId: evaluationCallId,
+            name: 'evaluate_answer',
+            inputSummary: '提取回答证据',
+          }));
+          emit(eventAt('tool.completed', jobId, {
+            callId: evaluationCallId,
+            name: 'evaluate_answer',
+            outputSummary: `证据已提取 · ${orchestration.evaluation.answerType}`,
+          }));
+        }
+        const routeCallId = toolId('route');
+        emit(eventAt('tool.started', jobId, {
+          callId: routeCallId,
+          name: 'route_interview',
+          inputSummary: '决定追问、换题与难度',
+        }));
+        emit(eventAt('tool.completed', jobId, {
+          callId: routeCallId,
+          name: 'route_interview',
+          outputSummary: `${orchestration.decision.action} · ${orchestration.decision.competencyLabel} · ${orchestration.decision.difficulty}/3`,
         }));
         emit(eventAt('tool.started', jobId, {
           callId: modelCallId,
@@ -326,11 +355,23 @@ export async function POST(request: NextRequest) {
           }
         }
         if (!content) throw new Error('INTERVIEW_UNAVAILABLE');
+        const nextEngine = normalized.value.action === 'review'
+          ? orchestration.engine
+          : commitInterviewQuestion(orchestration.engine, orchestration.decision, content);
         emit(eventAt('artifact.created', jobId, {
           artifactId: normalized.value.sessionId,
           kind: normalized.value.action === 'review' ? 'interview.review' : 'assistant.message',
           title: normalized.value.action === 'review' ? '面试复盘' : '面试问题',
-          data: { content, modelId: modelUsed },
+          data: {
+            content,
+            modelId: modelUsed,
+            engine: nextEngine,
+            route: {
+              action: orchestration.decision.action,
+              competency: orchestration.decision.competencyLabel,
+              difficulty: orchestration.decision.difficulty,
+            },
+          },
         }));
 
         if (usesVercelBlob()) {
@@ -350,6 +391,7 @@ export async function POST(request: NextRequest) {
                 ? normalized.value.messages
                 : [...normalized.value.messages, { role: 'assistant', content }],
               review: normalized.value.action === 'review' ? content : '',
+              engine: nextEngine,
               createdAt: now,
               updatedAt: now,
             };

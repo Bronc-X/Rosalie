@@ -39,6 +39,7 @@ class ArrowScene extends Phaser.Scene {
   private startedAt = 0;
   private locked = false;
   private audioContext: AudioContext | null = null;
+  private darkStage = false;
 
   constructor(options: ArrowGameOptions) {
     super('arrow');
@@ -52,7 +53,8 @@ class ArrowScene extends Phaser.Scene {
 
   create() {
     prepareHighDpiScene(this);
-    this.cameras.main.setBackgroundColor('#fff5ef');
+    this.darkStage = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark';
+    this.cameras.main.setBackgroundColor(this.darkStage ? '#080e17' : '#e8ddd2');
     this.drawWorld();
     this.createTarget();
     this.createLauncher();
@@ -118,32 +120,69 @@ class ArrowScene extends Phaser.Scene {
   }
 
   private drawWorld() {
-    const backdrop = this.add.graphics();
-    backdrop.fillStyle(0xf8e5f0, 0.62).fillCircle(25, 100, 165);
-    backdrop.fillStyle(0xffd7b5, 0.45).fillCircle(380, 245, 190);
-    backdrop.fillStyle(0xcbd4ff, 0.28).fillCircle(75, 720, 210);
-    backdrop.fillStyle(0xffffff, 0.64).fillRoundedRect(18, 78, 354, 620, 42);
-    backdrop.lineStyle(1, 0xffffff, 0.88).strokeRoundedRect(18, 78, 354, 620, 42);
+    const dusk = this.add.graphics();
+    dusk.fillStyle(0x0f1727, 0.2).fillRoundedRect(20, 84, 350, 619, 39);
+    dusk.fillStyle(this.darkStage ? 0x101827 : 0x29354a, 1).fillRoundedRect(16, 78, 358, 620, 39);
+    dusk.lineStyle(1, this.darkStage ? 0x7182a8 : 0xffffff, this.darkStage ? 0.24 : 0.46)
+      .strokeRoundedRect(16, 78, 358, 620, 39);
 
-    for (let index = 0; index < 18; index += 1) {
-      const x = 30 + ((index * 71) % 330);
-      const y = 108 + ((index * 97) % 515);
-      const dot = this.add.circle(x, y, index % 4 === 0 ? 2.5 : 1.4, index % 3 === 0 ? 0xe785a7 : 0xf2bb87, 0.42);
-      if (!this.options.reducedMotion) {
-        this.tweens.add({ targets: dot, alpha: { from: 0.16, to: 0.7 }, duration: 1100 + index * 63, yoyo: true, repeat: -1 });
-      }
+    const skyBands = this.darkStage
+      ? [0x111a2a, 0x172238, 0x25304a, 0x4b3e58, 0x705263]
+      : [0x27344d, 0x3d4d69, 0x77728c, 0xc98b8c, 0xe6ab80];
+    skyBands.forEach((color, index) => {
+      dusk.fillStyle(color, 0.92).fillRect(25, 87 + index * 65, 340, 66);
+    });
+    dusk.fillStyle(this.darkStage ? 0xcbbd99 : 0xffd39a, this.darkStage ? 0.5 : 0.78).fillCircle(302, 172, 28);
+    dusk.fillStyle(this.darkStage ? 0x111a2a : 0x27344d, 0.7).fillCircle(313, 163, 27);
+
+    dusk.fillStyle(0x263044, 0.94).fillTriangle(25, 408, 112, 298, 202, 408);
+    dusk.fillStyle(0x313a4b, 0.98).fillTriangle(126, 408, 247, 276, 365, 408);
+    dusk.fillStyle(0x182331, 0.98).fillTriangle(25, 434, 159, 326, 272, 434);
+    dusk.fillStyle(this.darkStage ? 0x13231f : 0x293b32, 1).fillRoundedRect(25, 403, 340, 286, 0);
+    dusk.fillStyle(this.darkStage ? 0x1b3028 : 0x354c3c, 0.9).fillEllipse(90, 430, 190, 68);
+    dusk.fillStyle(this.darkStage ? 0x1a2a25 : 0x425a45, 0.86).fillEllipse(292, 438, 230, 82);
+
+    dusk.fillStyle(0xd4b37f, 0.08).fillTriangle(195, 250, 86, 675, 304, 675);
+    dusk.lineStyle(1, 0xf4d19f, 0.16)
+      .beginPath().moveTo(195, 250).lineTo(86, 675).strokePath();
+    dusk.lineStyle(1, 0xf4d19f, 0.16)
+      .beginPath().moveTo(195, 250).lineTo(304, 675).strokePath();
+    for (let y = 482; y < 666; y += 49) {
+      const halfWidth = 42 + (y - 482) * 0.44;
+      dusk.lineStyle(1, 0xf4d19f, 0.08).lineBetween(195 - halfWidth, y, 195 + halfWidth, y);
     }
 
-    const shelf = this.add.graphics();
-    shelf.lineStyle(2, 0xc98aa0, 0.16).beginPath().moveTo(44, 570).lineTo(346, 570).strokePath();
-    shelf.lineStyle(1, 0xffffff, 0.7).beginPath().moveTo(52, 572).lineTo(338, 572).strokePath();
+    dusk.lineStyle(1, 0xf2c190, 0.16)
+      .beginPath().moveTo(38, 253).lineTo(87, 238).lineTo(132, 235).lineTo(177, 241)
+      .lineTo(222, 248).lineTo(264, 259).lineTo(304, 257).lineTo(352, 238).strokePath();
+    dusk.lineStyle(1, 0xb9c9eb, 0.12)
+      .beginPath().moveTo(52, 285).lineTo(101, 298).lineTo(151, 302).lineTo(198, 293)
+      .lineTo(242, 278).lineTo(282, 267).lineTo(319, 270).lineTo(348, 287).strokePath();
+
+    for (let index = 0; index < 22; index += 1) {
+      const x = 32 + ((index * 71) % 326);
+      const y = 102 + ((index * 97) % 518);
+      const firefly = this.add.circle(x, y, index % 5 === 0 ? 2.4 : 1.2, index % 3 === 0 ? 0xffcf83 : 0xe7edf9, y > 410 ? 0.48 : 0.24).setDepth(1);
+      if (!this.options.reducedMotion && index % 3 === 0) {
+        this.tweens.add({
+          targets: firefly,
+          x: x + (index % 2 ? 7 : -7),
+          y: y - 10,
+          alpha: { from: 0.12, to: 0.78 },
+          duration: 1_420 + index * 61,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.InOut',
+        });
+      }
+    }
   }
 
   private createTarget() {
-    const outer = this.add.circle(0, 0, 35, 0xf7b7cf, 0.36).setStrokeStyle(2, 0xe682a6, 0.52);
-    const middle = this.add.circle(0, 0, 25, 0xfff8f5, 0.95).setStrokeStyle(5, 0xf3ad74, 0.6);
-    const hole = this.add.circle(0, 0, 14, 0x4e3741, 0.94);
-    const shine = this.add.ellipse(-5, -6, 8, 5, 0xffffff, 0.48);
+    const outer = this.add.circle(0, 0, 35, 0x765046, 0.94).setStrokeStyle(3, 0xd9a86f, 0.8);
+    const middle = this.add.circle(0, 0, 25, 0xf1dfbd, 0.98).setStrokeStyle(5, 0xc97762, 0.78);
+    const hole = this.add.circle(0, 0, 14, 0x111722, 0.98).setStrokeStyle(2, 0xf2bf78, 0.42);
+    const shine = this.add.ellipse(-5, -6, 8, 5, 0xffffff, 0.36);
     this.target = this.add.container(195, 205, [outer, middle, hole, shine]);
     this.targetGlow = this.add.circle(195, 205, 38, 0xffffff, 0).setStrokeStyle(2, 0xe682a6, 0.3);
     if (!this.options.reducedMotion) {
@@ -160,16 +199,16 @@ class ArrowScene extends Phaser.Scene {
   }
 
   private createHud() {
-    const textStyle = { color: '#7c5865', fontFamily: 'Georgia, serif' };
+    const textStyle = { color: '#f4e8dc', fontFamily: 'Georgia, serif' };
     this.levelCopy = this.add.text(43, 104, '', { ...textStyle, fontSize: '13px', letterSpacing: 2 }).setDepth(8);
     this.shotCopy = this.add.text(347, 104, '', { ...textStyle, fontSize: '12px' }).setOrigin(1, 0).setDepth(8);
     this.instruction = this.add.text(195, 718, '按住图标，拉开后松手', {
-      color: '#8e6873', fontFamily: 'system-ui, sans-serif', fontSize: '12px', letterSpacing: 2,
+      color: '#f0dec8', fontFamily: 'system-ui, sans-serif', fontSize: '12px', letterSpacing: 2,
     }).setOrigin(0.5).setDepth(8);
     this.statusLayer = this.add.container(195, 390).setDepth(20).setVisible(false);
-    const card = this.add.rectangle(0, 0, 280, 154, 0xfffbf8, 0.94).setStrokeStyle(1, 0xffffff, 1);
-    const title = this.add.text(0, -22, '', { color: '#77525f', fontFamily: 'Georgia, serif', fontSize: '28px' }).setOrigin(0.5);
-    const note = this.add.text(0, 22, '', { color: '#aa7888', fontFamily: 'system-ui, sans-serif', fontSize: '11px', letterSpacing: 2 }).setOrigin(0.5);
+    const card = this.add.rectangle(0, 0, 280, 154, 0x17202d, 0.94).setStrokeStyle(1, 0xe9caa4, 0.42);
+    const title = this.add.text(0, -22, '', { color: '#f8e8d5', fontFamily: 'Georgia, serif', fontSize: '28px' }).setOrigin(0.5);
+    const note = this.add.text(0, 22, '', { color: '#d8bfa8', fontFamily: 'system-ui, sans-serif', fontSize: '11px', letterSpacing: 2 }).setOrigin(0.5);
     this.statusLayer.add([card, title, note]);
     this.statusLayer.setData({ title, note });
   }
