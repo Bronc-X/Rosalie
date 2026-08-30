@@ -67,4 +67,7 @@ test('the pixel pair stays in the right journal margin above the shared dock', a
   assert.match(css, /\.pet-dock\.is-collapsed \{[^}]*bottom:\s*calc\(var\(--experience-dock-space\) \+ \.5rem\);/s);
   assert.match(pet, /const dockClassName = `pet-dock is-right\$\{settings\.collapsed \? ' is-collapsed' : ''\}`;/);
   assert.doesNotMatch(pet, /onMouseDown=\{beginPetDrag\}|可拖动/);
+  assert.doesNotMatch(css, /\.pet-dock\s*\{\s*display:\s*none;\s*\}/);
+  assert.match(css, /@media \(max-width: 800px\)[\s\S]*\.mouse-follower-character \{[^}]*height:\s*10rem;/s);
+  assert.match(css, /@media \(pointer: coarse\)[\s\S]*\.pet-character-hide \{[^}]*opacity:\s*1;/s);
 });

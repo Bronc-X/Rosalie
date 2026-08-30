@@ -765,7 +765,19 @@ html body .site-dock.is-experience { left: 0; z-index: 1250; }
 }
 
 @media (max-width: 800px) {
-  .pet-dock { display: none; }
+  .pet-dock { right: .35rem; bottom: calc(var(--experience-dock-space) + .25rem); }
+  .mouse-follower-pair { min-height: 6rem; gap: .1rem; }
+  .mouse-follower-character { height: 10rem; }
+  .mouse-follower-character[data-member='toni'][data-pose='stand'] { height: 10.2rem; }
+  .mouse-follower-character[data-pose='crouch'] { height: 7rem; }
+  .mouse-follower-character[data-pose='sit'] { height: 8.5rem; }
+  .pet-wardrobe {
+    position: fixed;
+    right: .6rem !important;
+    bottom: calc(var(--experience-dock-space) + .4rem);
+    width: calc(100vw - 1.2rem);
+    max-height: calc(100svh - var(--experience-dock-space) - 6.5rem);
+  }
   .access-page { grid-template-columns: 1fr; }
   .access-image { min-height: 42svh; }
   .access-image > img { min-height: 42svh; }
@@ -867,5 +879,5 @@ html body .site-dock.is-experience { left: 0; z-index: 1250; }
 }
 
 @media (pointer: coarse) {
-  .pet-dock { display: none; }
+  .pet-character-hide { opacity: 1; }
 }
