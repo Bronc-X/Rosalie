@@ -4,6 +4,16 @@ import { describe, test } from 'node:test';
 const security = await import('../../lib/server/security.ts').catch(() => null);
 
 describe('shared-space security primitives', () => {
+  test('uses the strongest PBKDF2 iteration count supported by Cloudflare Workers', async () => {
+    const verifier = await security.deriveKeyVerifier('ninechars', {
+      pepper: 'deployment-only-pepper',
+      salt: new Uint8Array(16).fill(3),
+    });
+
+    assert.equal(verifier.iterations, 100_000);
+    assert.equal(await security.verifySharedKey('ninechars', verifier, 'deployment-only-pepper'), true);
+  });
+
   test('derives a peppered PBKDF2 verifier and checks keys without storing the key', async () => {
     assert.equal(typeof security?.deriveKeyVerifier, 'function');
 
@@ -109,4 +119,3 @@ describe('shared-space security primitives', () => {
     );
   });
 });
-

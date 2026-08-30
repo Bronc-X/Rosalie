@@ -2,7 +2,8 @@ const encoder = new TextEncoder();
 
 export const SESSION_COOKIE_NAME = 'tr_session';
 export const SESSION_TTL_SECONDS = 12 * 60 * 60;
-export const DEFAULT_PBKDF2_ITERATIONS = 310_000;
+// Cloudflare Workers Web Crypto rejects PBKDF2 counts above 100,000.
+export const DEFAULT_PBKDF2_ITERATIONS = 100_000;
 
 export type KeyVerifier = {
   salt: string;
