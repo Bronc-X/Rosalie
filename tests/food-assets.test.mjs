@@ -20,6 +20,14 @@ test('food atlas keeps its atmospheric hero local and removes legacy map thumbna
   assert.match(source, /latitude > 23\.33/);
 });
 
+test('NTO map CSP allows the exact OSM Standard tile host used by Leaflet', async () => {
+  const source = await readFile(new URL('../app/FoodAtlas.tsx', import.meta.url), 'utf8');
+  const config = await readFile(new URL('../next.config.ts', import.meta.url), 'utf8');
+
+  assert.match(source, /https:\/\/tile\.openstreetmap\.org\/\{z\}\/\{x\}\/\{y\}\.png/);
+  assert.match(config, /img-src[^;]+https:\/\/tile\.openstreetmap\.org(?:\s|;)/);
+});
+
 test('all 53 restaurants resolve to local photos and never render style placeholders', async () => {
   const atlasSource = await readFile(new URL('../app/food/food-atlas.tsx', import.meta.url), 'utf8');
   const restaurantSource = await readFile(new URL('../app/food/restaurants.ts', import.meta.url), 'utf8');

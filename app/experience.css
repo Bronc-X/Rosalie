@@ -419,19 +419,15 @@ html body .site-dock.is-experience { left: 0; z-index: 1250; }
 .pet-dock {
   position: fixed;
   z-index: 1200;
-  bottom: -3px;
+  bottom: calc(var(--experience-dock-space) + .5rem);
   width: max-content;
   pointer-events: none;
   user-select: none;
   isolation: isolate;
 }
 .pet-dock.is-right { right: clamp(.5rem, 1.6vw, 1.5rem); }
-.pet-dock.is-left { left: clamp(.5rem, 1.6vw, 1.5rem); }
-.pet-dock.is-collapsed { bottom: 5rem; }
+.pet-dock.is-collapsed { bottom: calc(var(--experience-dock-space) + .5rem); }
 .pet-dock.is-collapsed.is-right { right: 0; }
-.pet-dock.is-collapsed.is-left { left: 0; }
-.pet-dock.is-positioned { transition: filter .16s ease; }
-.pet-dock[data-dragging='true'] { filter: drop-shadow(0 10px 9px rgba(23,38,31,.18)); }
 .pet-dock button { font-family: var(--sans); }
 .pet-dock button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 
@@ -452,7 +448,6 @@ html body .site-dock.is-experience { left: 0; z-index: 1250; }
 }
 .pet-dock-handle span { font-size: .42rem; opacity: .7; }
 .pet-dock.is-right .pet-dock-handle { margin-right: -.5rem; border-radius: 1.2rem 0 0 1.2rem; }
-.pet-dock.is-left .pet-dock-handle { margin-left: -.5rem; border-radius: 0 1.2rem 1.2rem 0; }
 .pet-dock.is-collapsed .pet-dock-handle { margin-inline: 0; }
 
 .pet-dock-toolbar {
@@ -466,7 +461,6 @@ html body .site-dock.is-experience { left: 0; z-index: 1250; }
   transition: opacity .18s ease, transform .18s ease;
 }
 .pet-dock.is-right .pet-dock-toolbar { right: 0; }
-.pet-dock.is-left .pet-dock-toolbar { left: 0; }
 .pet-dock:hover .pet-dock-toolbar, .pet-dock:focus-within .pet-dock-toolbar { opacity: 1; transform: translateY(-2px); }
 .pet-dock-toolbar button {
   display: grid;
@@ -499,7 +493,6 @@ html body .site-dock.is-experience { left: 0; z-index: 1250; }
   min-height: 9rem;
   pointer-events: none;
 }
-.pet-dock[data-dragging='true'] .mouse-follower-pair { cursor: grabbing; }
 .mouse-follower-pair::after {
   content: '';
   position: absolute;
@@ -544,11 +537,9 @@ html body .site-dock.is-experience { left: 0; z-index: 1250; }
   border: 0;
   color: inherit;
   background: transparent;
-  cursor: grab;
+  cursor: pointer;
   pointer-events: auto;
-  touch-action: none;
 }
-.pet-dock[data-dragging='true'] .pet-character-button { cursor: grabbing; }
 .pet-character-button:hover .mouse-follower-sprite { filter: drop-shadow(0 4px 3px rgba(23,38,31,.2)); }
 .pet-character-hide {
   position: absolute;
@@ -713,7 +704,6 @@ html body .site-dock.is-experience { left: 0; z-index: 1250; }
   animation: pet-wardrobe-in .2s ease both;
 }
 .pet-dock.is-right .pet-wardrobe { right: calc(100% + .8rem); }
-.pet-dock.is-left .pet-wardrobe { left: calc(100% + .8rem); }
 .pet-wardrobe > header { position: sticky; z-index: 2; top: 0; display: flex; align-items: center; justify-content: space-between; padding: .75rem .8rem; color: var(--paper); background: var(--ink); }
 .pet-wardrobe > header strong { font: 900 .78rem/1 var(--serif); letter-spacing: .12em; }
 .pet-wardrobe > header button { width: 1.45rem; height: 1.45rem; padding: 0; border: 1px solid rgba(255,255,255,.28); color: white; background: transparent; cursor: pointer; }

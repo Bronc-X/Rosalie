@@ -58,3 +58,13 @@ test('the search is compact while quick tags sit below the state filters and ful
   assert.match(css, /\.filter-ribbon \{[^}]*grid-template-columns:\s*minmax\(8rem,\s*11rem\)\s+minmax\(0,\s*1fr\)\s+auto\s+auto;/s);
   assert.match(css, /\.quick-tag-tabs \{[^}]*overflow-x:\s*auto;/s);
 });
+
+test('the pixel pair stays in the right journal margin above the shared dock', async () => {
+  const { css } = await readHomeUi();
+  const pet = await readFile(new URL('app/MouseFollowerPet.tsx', root), 'utf8');
+
+  assert.match(css, /\.pet-dock \{[^}]*bottom:\s*calc\(var\(--experience-dock-space\) \+ \.5rem\);/s);
+  assert.match(css, /\.pet-dock\.is-collapsed \{[^}]*bottom:\s*calc\(var\(--experience-dock-space\) \+ \.5rem\);/s);
+  assert.match(pet, /const dockClassName = `pet-dock is-right\$\{settings\.collapsed \? ' is-collapsed' : ''\}`;/);
+  assert.doesNotMatch(pet, /onMouseDown=\{beginPetDrag\}|可拖动/);
+});

@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -12,7 +11,6 @@ import {
 import {
   DEFAULT_PET_DOCK_SETTINGS,
   PET_OUTFIT_CUSTOMIZATION_ENABLED,
-  clampPetDockPosition,
   defaultPetVisibility,
   normalizePointerVector,
   parsePetDockSettings,
@@ -21,7 +19,6 @@ import {
   petVisibilityAfterToggle,
   selectAmbientPetFrame,
   shouldAnimatePetPair,
-  snapPetDockToSide,
   type PetDockSettings,
   type PetFrame,
   type PetMemberId,
@@ -32,16 +29,6 @@ import {
 } from './mouse-follower-pet';
 
 const PET_DOCK_STORAGE_KEY = 'toni-rosalie-pet-dock-v1';
-const PET_DOCK_INSETS = { horizontal: 8, top: 42, bottom: 8 } as const;
-const PET_DRAG_THRESHOLD = 5;
-
-type PetDragSession = {
-  start: Point;
-  offset: Point;
-  size: { width: number; height: number };
-  position: Point;
-  moved: boolean;
-};
 
 const PETS = {
   toni: {
@@ -163,10 +150,7 @@ function CharacterSprite({
 export default function MouseFollowerPet({ currentMemberId }: Readonly<{ currentMemberId: PetMemberId }>) {
   const pairRef = useRef<HTMLDivElement>(null);
   const hydratedRef = useRef(false);
-  const dragSessionRef = useRef<PetDragSession | null>(null);
-  const suppressCharacterClickUntilRef = useRef(0);
   const [settings, setSettings] = useState<PetDockSettings>(DEFAULT_PET_DOCK_SETTINGS);
-  const [draggingPosition, setDraggingPosition] = useState<Point | null>(null);
   const [visiblePets, setVisiblePets] = useState<PetVisibility>(() => defaultPetVisibility(currentMemberId));
   const [wardrobeOpen, setWardrobeOpen] = useState(false);
   const [wardrobeMember, setWardrobeMember] = useState<PetMemberId>(() => currentMemberId === 'toni' ? 'rosalie' : 'toni');
@@ -175,8 +159,9 @@ export default function MouseFollowerPet({ currentMemberId }: Readonly<{ current
   useEffect(() => {
     const animationFrame = window.requestAnimationFrame(() => {
       const restored = parsePetDockSettings(window.localStorage.getItem(PET_DOCK_STORAGE_KEY));
-      setSettings(restored);
-      setDraftLooks(cloneLooks(restored));
+      const normalized = { ...restored, side: 'right' as const, position: null };
+      setSettings(normalized);
+      setDraftLooks(cloneLooks(normalized));
       hydratedRef.current = true;
     });
     return () => window.cancelAnimationFrame(animationFrame);
@@ -314,73 +299,7 @@ export default function MouseFollowerPet({ currentMemberId }: Readonly<{ current
       coarsePointer.removeEventListener('change', updateMotionPolicy);
       pair.removeEventListener('pet-react', handleReaction);
     };
-  }, [settings.collapsed, settings.position?.x, settings.position?.y, visiblePets.toni, visiblePets.rosalie, renderedLooks.poses.toni, renderedLooks.poses.rosalie]);
-
-  useEffect(() => {
-    if (settings.collapsed || !settings.position) return;
-
-    let animationFrame = 0;
-    const keepDockVisible = () => {
-      const dock = pairRef.current;
-      if (!dock) return;
-      const bounds = dock.getBoundingClientRect();
-      const position = clampPetDockPosition(
-        settings.position as Point,
-        { width: bounds.width, height: bounds.height },
-        { width: window.innerWidth, height: window.innerHeight },
-        PET_DOCK_INSETS,
-      );
-      if (position.x === settings.position?.x && position.y === settings.position?.y) return;
-      setSettings((current) => ({ ...current, position }));
-    };
-    const scheduleClamp = () => {
-      window.cancelAnimationFrame(animationFrame);
-      animationFrame = window.requestAnimationFrame(keepDockVisible);
-    };
-
-    scheduleClamp();
-    window.addEventListener('resize', scheduleClamp, { passive: true });
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener('resize', scheduleClamp);
-    };
-  }, [settings.collapsed, settings.position, visiblePets.toni, visiblePets.rosalie, renderedLooks.poses.toni, renderedLooks.poses.rosalie]);
-
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      const drag = dragSessionRef.current;
-      if (!drag) return;
-      if (!drag.moved && Math.hypot(event.clientX - drag.start.x, event.clientY - drag.start.y) < PET_DRAG_THRESHOLD) return;
-
-      drag.moved = true;
-      drag.position = clampPetDockPosition(
-        { x: event.clientX - drag.offset.x, y: event.clientY - drag.offset.y },
-        drag.size,
-        { width: window.innerWidth, height: window.innerHeight },
-        PET_DOCK_INSETS,
-      );
-      setDraggingPosition(drag.position);
-      event.preventDefault();
-    };
-    const handleMouseUp = () => {
-      const drag = dragSessionRef.current;
-      if (!drag) return;
-      dragSessionRef.current = null;
-      setDraggingPosition(null);
-      if (!drag.moved) return;
-
-      suppressCharacterClickUntilRef.current = window.performance.now() + 350;
-      const side = drag.position.x + drag.size.width / 2 <= window.innerWidth / 2 ? 'left' : 'right';
-      setSettings((current) => ({ ...current, side, position: drag.position }));
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: false });
-    window.addEventListener('mouseup', handleMouseUp, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
+  }, [settings.collapsed, visiblePets.toni, visiblePets.rosalie, renderedLooks.poses.toni, renderedLooks.poses.rosalie]);
 
   const openWardrobe = () => {
     setDraftLooks(cloneLooks(settings));
@@ -415,10 +334,6 @@ export default function MouseFollowerPet({ currentMemberId }: Readonly<{ current
   }));
   const handleCharacterClick = (event: ReactMouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-    if (window.performance.now() < suppressCharacterClickUntilRef.current) {
-      event.preventDefault();
-      return;
-    }
     if (visibleCount === 1) {
       setVisiblePets((current) => petVisibilityAfterCharacterClick(current));
       return;
@@ -426,49 +341,16 @@ export default function MouseFollowerPet({ currentMemberId }: Readonly<{ current
     pairRef.current?.dispatchEvent(new Event('pet-react'));
   };
 
-  const beginPetDrag = (event: ReactMouseEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || (event.target as Element).closest('.pet-character-hide')) return;
-    const dock = pairRef.current;
-    if (!dock) return;
-    const bounds = dock.getBoundingClientRect();
-    dragSessionRef.current = {
-      start: { x: event.clientX, y: event.clientY },
-      offset: { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
-      size: { width: bounds.width, height: bounds.height },
-      position: { x: bounds.left, y: bounds.top },
-      moved: false,
-    };
-    event.preventDefault();
-  };
-
   const collapseDock = () => {
-    const dock = pairRef.current;
-    if (!dock) {
-      setSettings((current) => ({ ...current, collapsed: true }));
-      return;
-    }
-    const bounds = dock.getBoundingClientRect();
-    const snapped = snapPetDockToSide(
-      { x: bounds.left, y: bounds.top },
-      { width: bounds.width, height: bounds.height },
-      { width: window.innerWidth, height: window.innerHeight },
-      PET_DOCK_INSETS,
-    );
     setWardrobeOpen(false);
-    setSettings((current) => ({ ...current, collapsed: true, side: snapped.side, position: snapped.position }));
+    setSettings((current) => ({ ...current, collapsed: true, side: 'right', position: null }));
   };
 
   const currentDraft = draftLooks.outfits[wardrobeMember];
-  const activePosition = draggingPosition ?? settings.position;
-  const dockClassName = useMemo(() => `pet-dock is-${settings.side}${settings.collapsed ? ' is-collapsed' : activePosition ? ' is-positioned' : ''}`, [activePosition, settings.collapsed, settings.side]);
-  const dockStyle = useMemo<CSSProperties>(() => {
-    if (!activePosition) return {};
-    if (settings.collapsed) return { top: activePosition.y, bottom: 'auto' };
-    return { top: activePosition.y, right: 'auto', bottom: 'auto', left: activePosition.x };
-  }, [activePosition, settings.collapsed]);
+  const dockClassName = `pet-dock is-right${settings.collapsed ? ' is-collapsed' : ''}`;
 
   return (
-    <div className={dockClassName} data-side={settings.side} data-dragging={draggingPosition ? 'true' : 'false'} ref={pairRef} data-motion="still" style={dockStyle}>
+    <div className={dockClassName} data-side="right" ref={pairRef} data-motion="still">
       {settings.collapsed ? (
         <button
           className="pet-dock-handle"
@@ -505,8 +387,7 @@ export default function MouseFollowerPet({ currentMemberId }: Readonly<{ current
 
           <div
             className="mouse-follower-pair"
-            aria-label="Toni 和 Rosalie 像素宠物，可拖动"
-            onMouseDown={beginPetDrag}
+            aria-label="Toni 和 Rosalie 像素小人"
           >
             {(Object.keys(PETS) as PetMemberId[]).map((memberId) => {
               const pet = PETS[memberId];
