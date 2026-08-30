@@ -3,6 +3,10 @@ import path from 'node:path';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    serverActions: { bodySizeLimit: '11mb' },
+    proxyClientMaxBodySize: '11mb',
+  },
   webpack(config, { webpack }) {
     config.plugins.push(new webpack.NormalModuleReplacementPlugin(
       /^cloudflare:workers$/,
@@ -17,14 +21,14 @@ const nextConfig: NextConfig = {
       headers: [
         {
           key: 'Content-Security-Policy',
-          value: `default-src 'self'; script-src 'self' 'unsafe-inline'${developmentEval} https://res.wx.qq.com; connect-src 'self'; img-src 'self' data: blob: https://a.tile.openstreetmap.fr; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`,
+          value: `default-src 'self'; script-src 'self' 'unsafe-inline'${developmentEval} https://res.wx.qq.com; connect-src 'self'; img-src 'self' data: blob: https://a.tile.openstreetmap.fr https://*.tile.openstreetmap.org; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'`,
         },
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         { key: 'X-Content-Type-Options', value: 'nosniff' },
         { key: 'X-Frame-Options', value: 'DENY' },
         { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
         { key: 'X-DNS-Prefetch-Control', value: 'off' },
-        { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
+        { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' },
         { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
       ],
     };

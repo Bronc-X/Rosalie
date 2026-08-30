@@ -38,10 +38,10 @@ const HOLDEM_SHARE_PAYLOAD = {
   url: 'https://rosalie.toni.asia/play/holdem',
 };
 
-const FOOD_SHARE_PAYLOAD = {
-  title: '汕头食路',
-  text: '53 间店，照这张慢慢食。',
-  url: 'https://rosalie.toni.asia/food',
+const NTO_SHARE_PAYLOAD = {
+  title: 'Toni & Rosalie NTO',
+  text: '想留下的记忆。',
+  url: 'https://rosalie.toni.asia/experiences',
 };
 
 function NavIcon({ label }: { label: string }) {
@@ -50,7 +50,7 @@ function NavIcon({ label }: { label: string }) {
   if (label === '留言') return <ChatCircleText {...props} />;
   if (label === '面试') return <MicrophoneStage {...props} />;
   if (label === '日历') return <CalendarDots {...props} />;
-  if (label === '食路') return <MapPinLine {...props} />;
+  if (label === 'NTO') return <MapPinLine {...props} />;
   return <GameController {...props} />;
 }
 
@@ -93,9 +93,10 @@ export function SiteChrome() {
   if (pathname === '/unlock') return null;
   const isGameDetail = pathname.startsWith('/play/');
   const isHoldem = pathname === '/play/holdem';
-  const isFood = pathname === '/food';
-  const showQuickActions = !isGameDetail || isHoldem;
-  const sharePayload = isHoldem ? HOLDEM_SHARE_PAYLOAD : isFood ? FOOD_SHARE_PAYLOAD : SHARE_PAYLOAD;
+  const isExperience = pathname === '/calendar' || pathname.startsWith('/calendar/')
+    || pathname === '/experiences' || pathname.startsWith('/experiences/');
+  const showQuickActions = !isExperience && (!isGameDetail || isHoldem);
+  const sharePayload = isHoldem ? HOLDEM_SHARE_PAYLOAD : isExperience ? NTO_SHARE_PAYLOAD : SHARE_PAYLOAD;
   const activeIndex = PRIMARY_NAV.findIndex((item) => isPrimaryNavActive(pathname, item.href));
 
   function toggleTheme() {
@@ -158,7 +159,7 @@ export function SiteChrome() {
         </button>
       </div>}
 
-      <nav className="site-dock" data-active-index={Math.max(0, activeIndex)} aria-label="主要功能">
+      <nav className={`site-dock${isExperience ? ' is-experience' : ''}`} data-active-index={Math.max(0, activeIndex)} aria-label="主要功能">
         <span className="site-dock-indicator" aria-hidden="true" />
         {PRIMARY_NAV.map((item) => {
           const active = isPrimaryNavActive(pathname, item.href);

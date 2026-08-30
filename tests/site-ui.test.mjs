@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 
 const siteUi = await import('../lib/site-ui.mjs').catch(() => ({}));
 
-test('the global function bar exposes food as a primary destination', () => {
+test('the global function bar upgrades food to the NTO experience destination', () => {
   assert.deepEqual(siteUi.PRIMARY_NAV, [
     { href: '/', label: '首页' },
     { href: '/treehole', label: '留言' },
     { href: '/interview', label: '面试' },
     { href: '/schedule', label: '日历' },
-    { href: '/food', label: '食路' },
+    { href: '/experiences', label: 'NTO' },
     { href: '/play', label: '游戏' },
   ]);
 });
@@ -19,9 +19,13 @@ test('the interview route activates its own primary destination', () => {
   assert.equal(siteUi.isPrimaryNavActive('/interview', '/play'), false);
 });
 
-test('the food route activates the new food destination', () => {
-  assert.equal(siteUi.isPrimaryNavActive('/food', '/food'), true);
-  assert.equal(siteUi.isPrimaryNavActive('/food', '/play'), false);
+test('experience and calendar routes activate the shared NTO destination', () => {
+  assert.equal(siteUi.isPrimaryNavActive('/experiences', '/experiences'), true);
+  assert.equal(siteUi.isPrimaryNavActive('/experiences/shantou', '/experiences'), true);
+  assert.equal(siteUi.isPrimaryNavActive('/calendar', '/experiences'), true);
+  assert.equal(siteUi.isPrimaryNavActive('/calendar/day', '/experiences'), true);
+  assert.equal(siteUi.isPrimaryNavActive('/food', '/experiences'), false);
+  assert.equal(siteUi.isPrimaryNavActive('/experiences', '/play'), false);
 });
 
 test('the homepage release note exposes the current mobile release highlights', () => {

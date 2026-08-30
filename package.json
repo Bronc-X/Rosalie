@@ -4,15 +4,17 @@
   "private": true,
   "packageManager": "pnpm@11.19.0",
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=22.15.0"
   },
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
     "build:vercel": "next build --webpack",
+    "db:local": "wrangler d1 migrations apply DB --local --config wrangler.local.jsonc",
+    "typecheck": "tsc --noEmit --incremental false",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test \"tests/**/*.test.mjs\" \"tests/**/*.test.ts\" \"app/**/*.test.mjs\"",
     "check:performance": "node scripts/check-performance-budget.mjs",
     "qa:baseline": "node scripts/qa-baseline.mjs"
   },
@@ -22,7 +24,7 @@
     "@vercel/blob": "^2.8.0",
     "gsap": "^3.15.0",
     "leaflet": "1.9.4",
-    "next": "16.2.11",
+    "next": "16.3.3",
     "phaser": "4.2.1",
     "react": "19.2.8",
     "react-dom": "19.2.8"
@@ -39,7 +41,7 @@
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.34",
     "eslint": "9.39.4",
-    "eslint-config-next": "16.2.11",
+    "eslint-config-next": "16.3.3",
     "react-server-dom-webpack": "19.2.8",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
